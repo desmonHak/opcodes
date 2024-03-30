@@ -85,9 +85,15 @@ typedef enum Opcodes_x86 {
     PUSHAD = 0x60, POPAD = 0x61, BOUND = 0x62, APRL = 0x63, _Prefix_FS = 0x64, _Prefix_GS = 0x65, _Prefix_operand_size = 0x66, _Prefix_addr_size = 0x67, PUSH_1 = 0x68, IMUL_1 = 0x69, PUSH_2 = 0x6a, IMUL_2 = 0x6b,        INS = 0x6c,                OUTS = 0x6e,                  // 0x6
     JO     = 0x70,          JNO,           JB,         JNB,                JE,               JNE,                         JBE,                       JA,            JS,           JNS,           JPE,           JPO,                JL, JGE = 0x7d,            JLE, JG,              // 0x7      
     // las instrucciones que llevan los bits 1001 0000 y son ADD, ADC, AND, XOR, OR, SBB, SUB, CMP, pertenezen al grupo de instrucciones inmediatas
-    ADD_ADC_AND_XOR_OR_SBB_SUB_CMP = 0b10010000,                  TEST = 0x84,                                    XCHG = 0x86,                          MOV_REG = 0x88,                                              MOV_SREG_1 = 0x8c,        LEA,     MOV_SREG_2, POP,             // 0x8
+    ADD_ADC_AND_XOR_OR_SBB_SUB_CMP = 0b10010000,                TEST_1 = 0x84,                                    XCHG = 0x86,                          MOV_REG = 0x88,                                              MOV_SREG_1 = 0x8c,        LEA,     MOV_SREG_2, POP,             // 0x8
     // XCHG_EAX_OR_NOP puede ser la instruccion XCHG EAX o un NOP
     XCHG_EAX_OR_NOP = 0x90, XCHG_EAX = 0x90,                                                                                                                CWD = 0x98,           CDQ,         CALLF,          WAIT,            PUSHFD,      POPFD,           SAHF, LAHF,            // 0x9
+            MOV_EAX = 0xa0,                                       MOVS = 0xa4,                                    CMPS = 0xa6,                           TEST_2 = 0xa8,                  STOS = 0xaa,                      LODS = 0xac,                SCAS = 0xae,                  // 0xa
+    // MOV byte inmediato en registro byte
+                MOV = 0xb0,                                                                                                                                                                                                                                                          // 0xb
+    //    Shift Grp 21A                                                                                           Grp 111A - MOV                                                                                                                            
+          SHIFT_IMM = 0xc0,        RETN = 0xc2,                     LES = 0xc4,               LDS,                    MOV_IMM,                            ENTER = 0xc8,          LEAVE,         RETF,                      INT3 = 0xcc,     INT_IMM,           INTO, IRETD,          // 0xc
+    //    Shift Grp 21A                                                                                                                                                                                                                 
 } Opcodes_x86;
 
 typedef enum Prefix_x86_Segment_Register {
