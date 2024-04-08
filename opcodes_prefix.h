@@ -17,6 +17,52 @@
  */
 #include <stdint.h>
 
+
+#pragma pack(push, 1)
+
+typedef struct opcode {
+    uint8_t      s:1; /* 
+                       * Longitud del operando(size?):
+                       * Si s = 0, los operandos son registros de 8 bits y posiciones de memoria.
+                       * Si s = 1, los operandos son de 16 bits o de 32 bits:
+                       */
+    uint8_t      d:1; /* 
+                       * direcion:
+                       * Si d=0, REG es la fuente, MOD R/M <- REG.
+                       * Si d=1, REG es el destino, REG <- MOD R/M.
+                       */
+    uint8_t opcode:6; // opcode de 1 byte
+} opcode;
+
+typedef struct Mod_rm {
+    uint8_t    R_M:3; // Longitud del operando(size?)
+    uint8_t    reg:3; // direcion
+    uint8_t    mod:2; /*
+                       * campo MOD:
+                       *  - 00 Modo de direccionamiento indirecto de registro o SIB sin desplazamiento (cuando R/M = 100) o modo de direccionamiento de sólo desplazamiento (cuando R/M = 101).
+                       *  - 01 El desplazamiento con signo de un byte sigue a los bytes del modo de direccionamiento.
+                       *  - 10 El desplazamiento con signo de cuatro bytes sigue a los bytes del modo de direccionamiento.
+                       *  - 11 Modo de direccionamiento de registro.
+                       */
+} Mod_rm;
+
+/*
+ * Byte SIB (Byte de índice escalado): ( Valor SIB = Index * scale + base ) 
+ * El byte SIB es un byte opcional post-opcode en ensamblador x86 en el i386 y posteriores, utilizado 
+ * para direccionamiento complejo. El modo de direccionamiento indexado escalado utiliza el segundo byte (es decir, el byte SIB) 
+ * que sigue al byte MOD-REG-R/M en el formato de instrucción.
+ * El campo MOD todavía especifica el tamaño de desplazamiento de cero, uno o cuatro bytes.
+ * Los bytes MOD-REG-R/M y SIB son complejos, porque Intel reutilizó los circuitos de direccionamiento de 16 bits en el modo de 
+ * 32 bits, en lugar de abandonar simplemente el formato de 16 bits en el modo de 32 bits.
+ * Hay buenas razones de hardware para ello, pero el resultado final es un complejo esquema 
+ * para especificar los modos de direccionamiento en los opcodes.
+ */
+typedef struct SIB {
+    uint8_t    base:3; // Longitud del operando(size?)
+    uint8_t   index:3; // direcion
+    uint8_t   scale:2; 
+} SIB;
+
 /*
  * Cambios en 64 bits:
  * El byte ModR/M es fundamental para los cambios introducidos con la extensión de 64 bits de AMD al 
@@ -28,50 +74,15 @@
  * de registros disponibles en el procesador de ocho a dieciséis.
  */
 typedef struct Instruction {
-    uint8_t prefix[4]; // ?
-    struct opcode {
-        uint8_t opcode:6; // opcode de 1 byte
-        uint8_t      d:1; /* 
-                           * direcion:
-                           * Si d=0, REG es la fuente, MOD R/M <- REG.
-                           * Si d=1, REG es el destino, REG <- MOD R/M.
-                           */
-        uint8_t      s:1; /* 
-                           * Longitud del operando(size?):
-                           * Si s = 0, los operandos son registros de 8 bits y posiciones de memoria.
-                           * Si s = 1, los operandos son de 16 bits o de 32 bits:
-                           */
-    } opcode[3];
-    struct Mod_rm {
-        uint8_t    mod:2; /*
-                           * campo MOD:
-                           *  - 00 Modo de direccionamiento indirecto de registro o SIB sin desplazamiento (cuando R/M = 100) o modo de direccionamiento de sólo desplazamiento (cuando R/M = 101).
-                           *  - 01 El desplazamiento con signo de un byte sigue a los bytes del modo de direccionamiento.
-                           *  - 10 El desplazamiento con signo de cuatro bytes sigue a los bytes del modo de direccionamiento.
-                           *  - 11 Modo de direccionamiento de registro.
-                           */
-        uint8_t    reg:3; // direcion
-        uint8_t    R_M:3; // Longitud del operando(size?)
-    } Mod_rm;
-    /*
-     * Byte SIB (Byte de índice escalado): ( Valor SIB = Index * scale + base ) 
-     * El byte SIB es un byte opcional post-opcode en ensamblador x86 en el i386 y posteriores, utilizado 
-     * para direccionamiento complejo. El modo de direccionamiento indexado escalado utiliza el segundo byte (es decir, el byte SIB) 
-     * que sigue al byte MOD-REG-R/M en el formato de instrucción.
-     * El campo MOD todavía especifica el tamaño de desplazamiento de cero, uno o cuatro bytes.
-     * Los bytes MOD-REG-R/M y SIB son complejos, porque Intel reutilizó los circuitos de direccionamiento de 16 bits en el modo de 
-     * 32 bits, en lugar de abandonar simplemente el formato de 16 bits en el modo de 32 bits.
-     * Hay buenas razones de hardware para ello, pero el resultado final es un complejo esquema 
-     * para especificar los modos de direccionamiento en los opcodes.
-     */
-    struct SIB {
-        uint8_t   scale:2; 
-        uint8_t   index:3; // direcion
-        uint8_t    base:3; // Longitud del operando(size?)
-    } SIB;
+    uint8_t prefix[4]; // ? // 4
+    opcode opcode[3];       // 7
+    Mod_rm Mod_rm;          // 8
+    SIB    SIB;             // 9
     uint8_t displacement[4]; // desplazamiento de 0, 1, 2, 4 bytes
-    uint8_t    immediate[4]; // immediato de 0, 1, 2, 4 bytes
+    uint8_t immediate[4];    // immediato de 0, 1, 2, 4 bytes
 } Instruction;
+
+#pragma pack(pop)
 
 // (page: 2845) Intel® 64 and IA-32 Architectures Software Developer’s Manual, Combined Volumes: 1, 2A, 2B, 2C, 2D, 3A, 3B,
 typedef enum Opcodes_x86 {
@@ -79,7 +90,7 @@ typedef enum Opcodes_x86 {
     //                                                     |              |                     |                     |                    |                      |                       |                         |               |               |            |               |                 |           |               |                        |                                                                                             
     ADD                            = 0x00,                                                                                                                              PUSH_ES    = 0x06,            POP_ES = 0x07,     OR,                                                                                    PUSH_CS = 0x0E, TWO_BYTE = 0x0f,        // 0x00
     //                                                     |              |                     |                     |                    |                      |                       |                         |               |               |            |               |                 |           |               |                        |                                                                                                                                                                       
-    ADC                            = 0x10,                                                                                                                              PUSH_SS    = 0x16,            POP_ES = 0x17,    SBB,                                                                                    PUSH_DS = 0x1E, POP_DS,                 // 0x10
+    ADC                            = 0x10,                                                                                                                              PUSH_SS    = 0x16,            POP_SS = 0x17,    SBB,                                                                                    PUSH_DS = 0x1E, POP_DS,                 // 0x10
     //                                                     |              |                     |                     |                    |                      |                       |                         |               |               |            |               |                 |           |               |                        |                                                     
     AND                            = 0x20,                                                                                                                              _Prefix_ES = 0x26,                      DAA,    SUB,                                                                                        _Prefix_CS, DAS,                    // 0x20
     //                                                     |              |                     |                     |                    |                      |                       |                         |               |               |            |               |                 |           |               |                        |                                                                                 
@@ -87,7 +98,7 @@ typedef enum Opcodes_x86 {
     //                                                     |              |                     |                     |                    |                      |                       |                         |               |               |            |               |                 |           |               |                        |                                                                                             
     INC                            = 0x40,                                                                                                                                                                              DEC = 0x48,                                                                                                                     // 0x40
     //                                                     |              |                     |                     |                    |                      |                       |                         |               |               |            |               |                 |           |               |                        |                                                                                                         
-    PUSH                           = 0x50,                                                                                                                                                                              POP = 0x58,                                                                                                                     // 0x50
+    PUSH                           = 0x50,                                                                                                                                                                            POP_1 = 0x58,                                                                                                                     // 0x50
     //                                                     |              |                     |                     |                    |                      |                       |                         |               |               |            |               |                 |           |               |                        |                                                                                             
     PUSHAD                         = 0x60,                   POPAD = 0x61,         BOUND = 0x62,          APRL = 0x63, _Prefix_FS = 0x64,  _Prefix_GS = 0x65, _Prefix_operand_size = 0x66, _Prefix_addr_size = 0x67, PUSH_1 = 0x68, IMUL_1 = 0x69, PUSH_2 = 0x6a, IMUL_2 = 0x6b,        INS = 0x6c,                OUTS = 0x6e,                         // 0x60
     //                                                     |              |                     |                     |                                                                                                                                                                                                                                                                                                                    
@@ -95,7 +106,7 @@ typedef enum Opcodes_x86 {
     //                                                     |              |                     |                     |                    |                      |                       |                         |               |               |            |               |                 |           |               |                        |                                                                                                                     
     // las instrucciones que llevan los bi ts 1001 0000 y so|n ADD, ADC, A|ND, XOR, OR, SBB, SUB|, CMP, pertenezen al |grupo de instruccion|s  inmediatas         |                       |                         |               |               |            |               |                 |           |               |                        |                                                                                                                 
     //                                                     |              |                     |                     |                    |                      |                       |                         |               |               |            |               |                 |           |               |                        |                                                                                               
-    ADD_ADC_AND_XOR_OR_SBB_SUB_CMP = 0b10010000,                                                                             TEST_1 = 0x84,                                   XCHG = 0x86,                          MOV_REG = 0x88,                                              MOV_SREG_1 = 0x8c,        LEA,     MOV_SREG_2, POP,                    // 0x80
+    ADD_ADC_AND_XOR_OR_SBB_SUB_CMP = 0b10010000,                                                                             TEST_1 = 0x84,                                   XCHG = 0x86,                          MOV_REG = 0x88,                                              MOV_SREG_1 = 0x8c,        LEA,     MOV_SREG_2, POP_2,                    // 0x80
     //                                                     |              |                     |                     |                    |                      |                       |                         |               |               |            |               |                 |           |               |                        |                                                             
     // XCHG_EAX_OR_NOP puede ser la instru ccion XCHG EAX o| un NOP       |                     |                     |                    |                      |                       |                         |               |               |            |               |                 |           |               |                        |                                                                                       
     //                                                     |              |                     |                     |                    |                      |                       |                         |               |               |            |               |                 |           |               |                        |                                                             
@@ -146,4 +157,4 @@ typedef enum Prefix_x86_others {
                                                   // 0xF3 Prefijo REPE/REPZ   (sólo se utiliza con instrucciones de string)     
 } Prefix_x86_Segment_others;
 
-#endif __OPCODES_PREFIX_H_
+#endif 
