@@ -75,4 +75,31 @@ void print_instruccion(Instruction *my_instruccion){
     }
 }
 
+char* get_asm_opcode(Instruction *my_instruccion){
+    switch (*((uint8_t*)(&my_instruccion->opcode[2]))) // primer byte del opcode
+    {
+    case INC_DEC_CALL_JMP_PUSH:
+        printf("Se encontro en la posicion %d ADD_ADC_AND_XOR_OR_SBB_SUB_CMP\n", sizeof(Opcodes_x86_array_1)); break;
+        break;
+    case ADD_ADC_AND_XOR_OR_SBB_SUB_CMP:
+        printf("ADD_ADC_AND_XOR_OR_SBB_SUB_CMP\n"); break;
+        break;
+    case TEST_NOT_NEG_MUL_DIV:
+        printf("TEST_NOT_NEG_MUL_DIV\n"); break;
+        break;
+    case TWO_BYTE: // si el opcode corresponde a TWO_BYTE entonces se trata de una instruccion de dos bytes de opcode
+        break;
+    /*case THREE_BYTE: // ?// si el opcode corresponde a THREE_BYTE entonces se trata de una instruccion de tres bytes de opcode
+        break;*/
+    default: // caso por defecto (instrucciones de un byte de opcode)
+        for (uint8_t i = 0; i < sizeof(Opcodes_x86_array_1); i++) // 0xff+1 se uso para indicar el final de los arrays que contiene las instrucciones
+        {
+            if(Opcodes_x86_array[0][i] <= *((uint8_t*)(&my_instruccion->opcode[2])) && *((uint8_t*)(&my_instruccion->opcode[2])) < Opcodes_x86_array[0][i+1]){
+                printf("Se encontro en la posicion %d\n", (uint8_t)Opcodes_x86_array[0][i]); break;
+            } 
+        }
+         
+    }
+}
+
 #endif

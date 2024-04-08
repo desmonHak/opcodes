@@ -17,10 +17,31 @@
  *     
  * fuente: https://www.scs.stanford.edu/05au-cs240c/lab/i386/s17_02.htm
  * Prefijos:
+ * 
+ *          Grp 1, Grp 2, (optional)
+ *          Grp 3, Grp 4 (pag 2869 intel)
+ * 
+ *      ----------------------------------------------------------------------------------
+ *      Prefijos heredados (Consulte el capítulo 2, "Formato de las instrucciones", del Manual del desarrollador de software de las arquitecturas Intel® 64 e IA-32, Volumen 2A, para obtener más información sobre los prefijos heredados.):
+ *      0x66    Anulación del tamaño operativo
+ *      0x67    Anulación del tamaño de la dirección
+ * 
+ *      ===========================================================================
  *      0xF3    Prefijo REP (utilizado sólo con instrucciones de string)
  *      0xF3    Prefijo REPE/REPZ (sólo se utiliza con instrucciones de string)
+ *      ----------------------------------------------------------------------------------
  *      0xF2    Prefijo REPNE/REPNZ (utilizado sólo con instrucciones de cadena)
  *      0xF0    Prefijo LOCK
+ *      ===========================================================================
+ * 
+ *      Los prefihos heredados se utilizan en extensiones de instrucciones. Los prefijos Legacy(heredados) deben colocarse antes de los prefijos REX.
+ * 
+ * B.1.2 Prefijos REX
+ * Los prefijos REX son un conjunto de 16 opcodes que abarcan una fila del mapa de opcodes y ocupan las entradas 40H a 4FH. Estos
+ * opcodes representan instrucciones válidas (INC o DEC) en los modos de operación IA-32 y en modo de compatibilidad. En modo
+ * los mismos opcodes representan el prefijo de instrucción REX y no se tratan como instrucciones individuales.
+ * Consulte el capítulo 2, "Formato de las instrucciones", del Manual del desarrollador de software de las arquitecturas Intel® 64 e IA-32,
+ * Volumen 2A, para obtener más información sobre los prefijos REX.
  * 
  *      prefijos de anulacion de segmento:
  *          0x2E    Prefijo de anulación del segmento CS (segmento de codigo)
@@ -43,11 +64,25 @@
  *          doble (32 bits) en el segmento de datos y los está almacenando en el registro eax.
  * 
  * 
- *      0x66    Anulación del tamaño operativo
- *      0x67    Anulación del tamaño de la dirección
+
  * 
+ * (pag 2869 intel)
  * los opcodes 1000 00 indican que es una instruccion inmediata (superior a 0x80 = 1000 00)
  * 
+ * 
+ * B.1.4 Campos Especiales (pagina 2870)
+ * La Tabla B-1 enumera los campos de bits que aparecen en ciertas instrucciones, a veces dentro de los bytes del opcode. Todos estos campos
+ * (excepto el bit d) aparecen en los formatos de instrucciones de propósito general en la Tabla B-13.
+ * 
+ * El campo Reg puede utilizarse como campo de extensión opcode (TTT) y como manera de codificar registros de diagnóstico (eee).
+ * El campo reg tmb es especificador de registro general.    3bit
+ * w Especifica si los datos son bytes o de tamaño completo, donde tamaño completo es 16 o 32 bits -> 1bit
+ * s Especifica la extensión de signo de un campo inmediato -> 1bit
+ * sreg2 Especificador de registro de segmento para CS, SS, DS, ES -> 2bit
+ * sreg3 Especificador de registro de segmento para CS, SS, DS, ES, FS, GS -> 3bit
+ * eee Especifica un registro de propósito especial (control o depuración) -> 3bit
+ * tttn Para instrucciones condicionales, especifica una condición afirmada o negada -> 4bit
+ * d Especifica la dirección de la operación de datos -> 1bit
  * 
  * fuente: https://www-user.tu-chemnitz.de/~heha/hsn/chm/x86.chm/x86.htm
  * Si s = 0, los operandos son registros de 8 bits y posiciones de memoria.
@@ -57,9 +92,16 @@
  * insertar un byte especial de prefijo de tamaño de operando delante de la instrucción 
  * (ejemplo de esto más adelante).
  * 
- * Muchas instrucciones tienen el campo d (dirección) en su opcode para elegir el papel del operando REG:
- * Si d=0, REG es la fuente, MOD R/M <- REG.
- * Si d=1, REG es el destino, REG <- MOD R/M.
+ * B.1.4.8 Bit de Dirección (d)
+ * En muchas instrucciones de dos operandos, un bit de dirección (d) indica qué operando se considera origen y cuál
+ * es el destino. Véase la Tabla B-11.
+ * - Cuando se utiliza para instrucciones enteras, el bit d se encuentra en el bit 1 de un opcode primario de 1 byte. Tenga en cuenta que este bit
+ * no aparece como el símbolo "d" en la Tabla B-13; se da la codificación real del bit como 1 ó 0.
+ * - Cuando se utiliza para instrucciones de punto flotante (en la Tabla B-16), el bit d se muestra como bit 2 del primer byte del
+ * opcode primario.
+ * 
+ * Si d = 0, REG es la  fuente, MOD R/M destino,  MOD R/M <- REG.
+ * Si d = 1, REG es el destino, MOD R/M fuente    REG     <- MOD R/M.
  * 
  * 
  * fuente: https://en.wikipedia.org/wiki/ModR/M
@@ -85,7 +127,52 @@
  * Modo 11 (11b): El operando se codifica como un registro de memoria. En este modo, el campo "R/M" especifica el 
  *      registro de memoria.
  * 
- * Valores de REG:
+ * 
+ * 
+ * Valores de REG (Campo Reg (reg) para modos que no son de 64 bits): (pagina 2871)
+ * 
+ * Cuando el campo "w" no esta presente:
+ * |-------------------------------------------------------------------------|
+ * | reg value | si tamaño de datos es 16bits | si tamaño de datos es 32bits |
+ * |-------------------------------------------------------------------------|
+ * |    000    |              ax              |             eax              |
+ * |    001    |              cx              |             ecx              |
+ * |    010    |              dx              |             edx              |
+ * |    011    |              bx              |             ebx              |
+ * |    100    |              sp              |             esp              |
+ * |    101    |              bp              |             ebp              |
+ * |    110    |              si              |             esi              |
+ * |    111    |              di              |             edi              |
+ * |-------------------------------------------------------------------------|
+ * 
+ * 
+ * Registro especificado por el campo reg Durante operaciones de datos de 16 bits (en funcion del campo "w")
+ * |------------------------------------------------------------------------|
+ * | reg value |          Cuando w = 0       |         Cuando w = 1         |
+ * |------------------------------------------------------------------------|
+ * |    000    |             al              |              ax              |
+ * |    001    |             cl              |              cx              |
+ * |    010    |             dl              |              dx              |
+ * |    011    |             bl              |              bx              |
+ * |    100    |             ah              |              sp              |
+ * |    101    |             ch              |              bp              |
+ * |    110    |             dh              |              si              |
+ * |    111    |             bh              |              di              |
+ * |------------------------------------------------------------------------|
+ * 
+ * Registro especificado por el campo reg Durante operaciones de datos de 32 bits
+ * |------------------------------------------------------------------------|
+ * | reg value |          Cuando w = 0       |         Cuando w = 1         |
+ * |------------------------------------------------------------------------|
+ * |    000    |             al              |             eax              |
+ * |    001    |             cl              |             ecx              |
+ * |    010    |             dl              |             edx              |
+ * |    011    |             bl              |             ebx              |
+ * |    100    |             ah              |             esp              |
+ * |    101    |             ch              |             ebp              |
+ * |    110    |             dh              |             esi              |
+ * |    111    |             bh              |             edi              |
+ * |------------------------------------------------------------------------|
  * 
  * |-------------------------------------------------------------------------------------------------------|
  * | reg value | si tamaño de datos es 8bits | si tamaño de datos es 16bits | si tamaño de datos es 32bits |
@@ -100,6 +187,144 @@
  * |    111    |             bh              |              di              |             edi              |
  * |-------------------------------------------------------------------------------------------------------|
  * 
+ * Campo Reg (reg) para el modo de 64 bits
+ * Al igual que en los modos que no son de 64 bits, el campo reg del byte ModR/M especifica un operando de registro de propósito general. El grupo de registros
+ * grupo de registros especificado se modifica por la presencia y el estado del bit w en una codificación (consulte la Sección
+ * B.1.4.3). La Tabla B-4 muestra la codificación del campo reg cuando el bit w no está presente en una codificación; la Tabla B-5
+ * muestra la codificación del campo reg cuando el bit w está presente. * 
+ * 
+ * |-------------------------------------------------------------------------------------------------------|
+ * | reg value |si tamaño de datos es 16bits | si tamaño de datos es 32bits | si tamaño de datos es 64bits |
+ * |-------------------------------------------------------------------------------------------------------|
+ * |    000    |             ax              |             eax              |             rax              |
+ * |    001    |             cx              |             ecx              |             rcx              |
+ * |    010    |             dx              |             edx              |             rdx              |
+ * |    011    |             bx              |             ebx              |             rbx              |
+ * |    100    |             sp              |             esp              |             rsp              |
+ * |    101    |             bp              |             ebp              |             rbp              |
+ * |    110    |             si              |             esi              |             rsi              |
+ * |    111    |             di              |             edi              |             rdi              |
+ * |-------------------------------------------------------------------------------------------------------|
+ * Registro especificado por el campo reg Durante operaciones de datos de 16 bits (en funcion del campo "w")
+ * |------------------------------------------------------------------------|
+ * | reg value |          Cuando w = 0       |         Cuando w = 1         |
+ * |------------------------------------------------------------------------|
+ * |    000    |             al              |              ax              |
+ * |    001    |             cl              |              cx              |
+ * |    010    |             dl              |              dx              |
+ * |    011    |             bl              |              bx              |
+ * |    100    |            *ah              |              sp              |
+ * |    101    |            *ch              |              bp              |
+ * |    110    |            *dh              |              si              |
+ * |    111    |            *bh              |              di              |
+ * |------------------------------------------------------------------------|
+ * 
+ * Registro especificado por el campo reg Durante operaciones de datos de 32 bits
+ * |------------------------------------------------------------------------|
+ * | reg value |          Cuando w = 0       |         Cuando w = 1         |
+ * |------------------------------------------------------------------------|
+ * |    000    |             al              |             eax              |
+ * |    001    |             cl              |             ecx              |
+ * |    010    |             dl              |             edx              |
+ * |    011    |             bl              |             ebx              |
+ * |    100    |            *ah              |             esp              |
+ * |    101    |            *ch              |             ebp              |
+ * |    110    |            *dh              |             esi              |
+ * |    111    |            *bh              |             edi              |
+ * |------------------------------------------------------------------------|
+ *  AH, CH, DH, BH no pueden codificarse cuando se utiliza el prefijo REX. Una expresión de este tipo aparece por defecto en el byte inferior.
+ * 
+ * Codificación del bit de tamaño de operando (w)
+ * El atributo de tamaño de operando actual determina si el procesador está realizando operaciones de 16, 32 o 64 bits. Dentro de las limitaciones del atributo de tamaño de operando actual, el bit de tamaño de operando (w) puede utilizarse para indicar
+ * operaciones en operandos de 8 bits o el tamaño completo del operando especificado con el atributo operand-size. La Tabla B-6 muestra la
+ * codificación del bit w dependiendo del atributo operand-size actual
+ * |-------------------------------------------------------------------------------------------------|
+ * | w Bit | cuando el atributo Operand-Size es 16 bits | cuando el atributo Operand-Size es 32 bits |
+ * |-------------------------------------------------------------------------------------------------|
+ * |   0   |                     8Bits                  |                   8Bits                    |
+ * |   1   |                    16Bits                  |                  32Bits                    |
+ * |-------------------------------------------------------------------------------------------------|
+ * 
+ * Bit de extensión de signo (s)
+ * El bit de signo extendido (s) aparece en instrucciones con campos de datos inmediatos que se amplían de 8 bits a 16 ó 32 bits.
+ * o 32 bits. Véase la tabla B-7.
+ * |-----------------------------------------------------------------------------------------------------------------|
+ * | s Bit |        cuando el atributo Operand-Size es 16 bits          | cuando el atributo Operand-Size es 32 bits |
+ * |-----------------------------------------------------------------------------------------------------------------|
+ * |   0   |                      Nada                                  |                    Nada                    |
+ * |   1   | Extender el signo para rellenar el destino de 16 o 32 bits |                    Nada                    |
+ * |-----------------------------------------------------------------------------------------------------------------|
+ * 
+ * Campo de registro de segmento (sreg)
+ * Cuando una instrucción opera sobre un registro de segmento, el campo reg del byte ModR/M se 
+ * denomina campo sreg y se utiliza para especificar el registro de segmento.
+ * se utiliza para especificar el registro de segmento. La Tabla B-8 muestra la codificación del 
+ * campo sreg. Este campo es a veces un campo de 2 bits (sreg2) y otras veces de 3 bits (sreg3). 
+ * 
+ * |----------------------------------------------------|
+ * | 2 Bit sreg2 | registro de segmento seleccionado    |
+ * |----------------------------------------------------|
+ * |      00     |                 ES                   |
+ * |      01     |                 CS                   |
+ * |      10     |                 SS                   |
+ * |      11     |                 DS                   |
+ * |----------------------------------------------------|
+ * |----------------------------------------------------|
+ * | 3 Bit sreg3 | registro de segmento seleccionado    |
+ * |----------------------------------------------------|
+ * |     000     |                 ES                   |
+ * |     001     |                 CS                   |
+ * |     010     |                 SS                   |
+ * |     011     |                 DS                   |
+ * |     100     |                 FS                   |
+ * |     101     |                 GS                   |
+ * |     110     |              reservado               |
+ * |     111     |              reservado               |
+ * |----------------------------------------------------|
+ * 
+ * Campo de registro de propósito especial (eee) (pagina 2873)
+ * Cuando se hace referencia a registros de control o depuración en una instrucción, se codifican en el campo eee, situado en los bits 5
+ * aunque 3 del byte ModR/M (una codificación alternativa del campo sreg). Ver Tabla B-9.
+ * 
+ *
+ * B.1.4.7 Campo de Prueba de Condición (tttn)
+ * Para instrucciones condicionales (como saltos condicionales y set on condition), el campo de prueba de condición (tttn) está
+ * codifica la condición que se está comprobando. La parte ttt del campo indica la condición a comprobar y la parte n indica
+ * indica si se utiliza la condición (n = 0) o su negación (n = 1).
+ * - Para los opcodes primarios de 1 byte, el campo tttn se encuentra en los bits 3, 2, 1 y 0 del byte del opcode.
+ * - Para opcodes primarios de 2 bytes, el campo tttn se encuentra en los bits 3, 2, 1 y 0 del segundo byte del opcode.
+ * La Tabla B-10 muestra la codificación del campo tttn.
+ * |-----------------------------------------------------------|
+ * | tttn | Mnemonic |  Condition                              |  
+ * |-----------------------------------------------------------|       
+ * | 0000 | O        | Overflow                                |     
+ * | 0001 | NO       | No overflow                             |         
+ * | 0010 | B, NAE   | Below, Not above or equal               |                         
+ * | 0011 | NB, AE   | Not below, Above or equal               |                         
+ * | 0100 | E, Z     | Equal, Zero                             |         
+ * | 0101 | NE, NZ   | Not equal, Not zero                     |                 
+ * | 0110 | BE, NA   | Below or equal, Not above               |                         
+ * | 0111 | NBE, A   | Not below or equal, Above               |                         
+ * | 1000 | S        | Sign                                    | 
+ * | 1001 | NS       | Not sign                                |     
+ * | 1010 | P, PE    | Parity, Parity Even                     |                 
+ * | 1011 | NP, PO   | Not parity, Parity Odd                  |                     
+ * | 1100 | L, NGE   | Less than, Not greater than or equal to |                                     
+ * | 1101 | NL, GE   | Not less than, Greater than or equal to |                                     
+ * | 1110 | LE, NG   | Less than or equal to, Not greater than |                                     
+ * | 1111 | NLE, G   | Not less than or equal to, Greater than |
+ * |-----------------------------------------------------------|                                     
+ * 
+ * 
+ * Casi todas las instrucciones que hacen referencia a un registro y/o a un operando de memoria tienen un byte de modo de registro y/o de dirección
+ * a continuación del opcode. Este byte, el byte ModR/M, consta del campo mod (2 bits), el campo reg (3 bits; este campo
+ * es a veces una extensión del opcode), y el campo R/M (3 bits). Algunas codificaciones del byte ModR/M indican que
+ * debe utilizarse un segundo byte de modo de direccionamiento, el byte SIB.
+ * Si el modo de direccionamiento especifica un desplazamiento, el valor del desplazamiento se coloca inmediatamente después del byte
+ * byte ModR/M o byte SIB. Los tamaños posibles son 8, 16 o 32 bits. Si la instrucción especifica un valor inmediato, el valor
+ * valor inmediato sigue a cualquier byte de desplazamiento. El valor inmediato, si se especifica, es siempre el último campo de la instrucción.
+ * Consulte el Capítulo 2, "Formato de las instrucciones", del Manual del desarrollador de software de las arquitecturas Intel® 64 e IA-32,
+ * Volumen 2A, para obtener más información sobre los opcodes.
  * 
  *  MOD R/M Byte and Addressing Modes:
  * 
@@ -299,9 +524,572 @@
  * [ disp + edi*n ]
  * 
  * 
+ * Instrucciones de proposito general y formatos para modos no de 64bits(pagina 2875)
+ * ADD – Add 
+ *  register1 to register2      -> 0000 000w : mod(11)       reg1 reg2 (si d no esta activo)
+ *  register2 to register1      -> 0000 001w : mod(11)       reg1 reg2 (si d si esta activo)
+ *  memory to register          -> 0000 001w : mod           reg  r/m
+ *  register to memory          -> 0000 000w : mod           reg  r/m
+ *  immediate to register       -> 1000 00sw : mod(11) ¿r/m?(000) reg : immediate data
+ *  immediate to AL, AX, or EAX -> 0000 010w :                          immediate data
+ *  immediate to memory         -> 1000 00sw : mod       reg(000) r/m : immediate data
+ * 
+ * AND – Logical AND
+ *  register1 to register2 0010 000w : 11 reg1 reg2
+ *  register2 to register1 0010 001w : 11 reg1 reg2
+ *  memory to register 0010 001w : mod reg r/m
+ *  register to memory 0010 000w : mod reg r/m
+ *  immediate to register 1000 00sw : 11 100 reg : immediate data
+ *  immediate to AL, AX, or EAX 0010 010w : immediate data
+ *  immediate to memory 1000 00sw : mod 100 r/m : immediate data
+ * 
+ * ARPL – Adjust RPL Field of Selector
+ *  from register 0110 0011 : 11 reg1 reg2
+ *  from memory 0110 0011 : mod reg r/m
+ * 
+ * BOUND – Check Array Against Bounds 0110 0010 : modA reg r/m
+ * 
+ * BSF – Bit Scan Forward
+ *  register1, register2 0000 1111 : 1011 1100 : 11 reg1 reg2
+ *  memory, register 0000 1111 : 1011 1100 : mod reg r/m
+ *
+ * BSR – Bit Scan Reverse
+ *  register1, register2 0000 1111 : 1011 1101 : 11 reg1 reg2
+ *  memory, register 0000 1111 : 1011 1101 : mod reg r/m
+ * 
+ * BSWAP – Byte Swap 0000 1111 : 1100 1 reg
+ * 
+ * BT – Bit Test
+ *  register, immediate 0000 1111 : 1011 1010 : 11 100 reg: imm8 data
+ *  memory, immediate 0000 1111 : 1011 1010 : mod 100 r/m : imm8 data
+ *  register1, register2 0000 1111 : 1010 0011 : 11 reg2 reg1
+ *  memory, reg 0000 1111 : 1010 0011 : mod reg r/m
+ * 
+ * BTC – Bit Test and Complement
+ *  register, immediate 0000 1111 : 1011 1010 : 11 111 reg: imm8 data
+ *  memory, immediate 0000 1111 : 1011 1010 : mod 111 r/m : imm8 data
+ *  register1, register2 0000 1111 : 1011 1011 : 11 reg2 reg1
+ *  memory, reg 0000 1111 : 1011 1011 : mod reg r/m
+ * 
+ * BTR – Bit Test and Reset
+ *  register, immediate 0000 1111 : 1011 1010 : 11 110 reg: imm8 data
+ *  memory, immediate 0000 1111 : 1011 1010 : mod 110 r/m : imm8 data
+ *  register1, register2 0000 1111 : 1011 0011 : 11 reg2 reg1
+ *  memory, reg 0000 1111 : 1011 0011 : mod reg r/m
+ * 
+ * BTS – Bit Test and Set
+ *  register, immediate 0000 1111 : 1011 1010 : 11 101 reg: imm8 data
+ *  memory, immediate 0000 1111 : 1011 1010 : mod 101 r/m : imm8 data
+ *  register1, register2 0000 1111 : 1010 1011 : 11 reg2 reg1
+ *  memory, reg 0000 1111 : 1010 1011 : mod reg r/m
+ * 
+ * CALL – Call Procedure (in same segment)
+ *  direct 1110 1000 : full displacement
+ *  register indirect 1111 1111 : 11 010 reg
+ *  memory indirect 1111 1111 : mod 010 r/m
+ * 
+ * CALL – Call Procedure (in other segment)
+ *  direct 1001 1010 : unsigned full offset, selector
+ *  indirect 1111 1111 : mod 011 r/m
+ * 
+ * CBW – Convert Byte to Word 1001 1000
+ * CDQ – Convert Doubleword to Qword 1001 1001
+ * CLC – Clear Carry Flag 1111 1000
+ * CLD – Clear Direction Flag 1111 1100
+ * CLI – Clear Interrupt Flag 1111 1010
+ * CLTS – Clear Task-Switched Flag in CR0 0000 1111 : 0000 0110
+ * CMC – Complement Carry Flag 1111 0101
+ * 
+ * CMP – Compare Two Operands
+ *  register1 with register2      0011 100w : 11 reg1 reg2
+ *  register2 with register1      0011 101w : 11 reg1 reg2
+ *  memory with register          0011 100w : mod reg r/m
+ *  register with memory          0011 101w : mod reg r/m
+ *  immediate with register       1000 00sw : 11 111 reg : immediate data
+ *  immediate with AL, AX, or EAX 0011 110w : immediate data
+ *  immediate with memory         1000 00sw : mod 111 r/m : immediate data
+ * 
+ * CMPS/CMPSB/CMPSW/CMPSD – Compare String Operands 1010 011w
+ * 
+ * CMPXCHG – Compare and Exchange
+ *  register1, register2 0000 1111 : 1011 000w : 11 reg2 reg1
+ *  memory, register 0000 1111 : 1011 000w : mod reg r/m
+ * CPUID – CPU Identification 0000 1111 : 1010 0010
+ * 
+ * CWD – Convert Word to Doubleword 1001 1001
+ * 
+ * CWDE – Convert Word to Doubleword 1001 1000
+ * 
+ * DAA – Decimal Adjust AL after Addition 0010 0111
+ * 
+ * DAS – Decimal Adjust AL after Subtraction 0010 1111
+ * 
+ * DEC – Decrement by 1
+ *  register 1111 111w : 11 001 reg
+ *  register (alternate encoding) 0100 1 reg
+ *  memory 1111 111w : mod 001 r/m
+ * 
+ * DIV – Unsigned Divide
+ *  AL, AX, or EAX by register 1111 011w : 11 110 reg
+ *  AL, AX, or EAX by memory 1111 011w : mod 110 r/m
+ * 
+ * HLT – Halt 1111 0100
+ * 
+ * IDIV – Signed Divide
+ *  AL, AX, or EAX by register 1111 011w : 11 111 reg
+ *  AL, AX, or EAX by memory 1111 011w : mod 111 r/m
+ * 
+ * IMUL – Signed Multiply
+ *  AL, AX, or EAX with register 1111 011w : 11 101 reg
+ *  AL, AX, or EAX with memory 1111 011w : mod 101 reg
+ *  register1 with register2 0000 1111 : 1010 1111 : 11 : reg1 reg2
+ *  register with memory 0000 1111 : 1010 1111 : mod reg r/m
+ *  register1 with immediate to register2 0110 10s1 : 11 reg1 reg2 : immediate data
+ *  memory with immediate to register 0110 10s1 : mod reg r/m : immediate data
+ * 
+ * IN – Input From Port
+ *  fixed port 1110 010w : port number
+ *  variable port 1110 110w
+ * 
+ * INC – Increment by 1
+ *  reg 1111 111w : 11 000 reg
+ *  reg (alternate encoding) 0100 0 reg
+ *  memory 1111 111w : mod 000 r/m
+ * 
+ * INS – Input from DX Port 0110 110w
+ * 
+ * INT n – Interrupt Type n 1100 1101 : type
+ * 
+ * INT – Single-Step Interrupt 3 1100 1100
+ * 
+ * INTO – Interrupt 4 on Overflow 1100 1110
+ * 
+ * INVD – Invalidate Cache 0000 1111 : 0000 1000
+ * 
+ * INVLPG – Invalidate TLB Entry 0000 1111 : 0000 0001 : mod 111 r/m
+ * 
+ * INVPCID – Invalidate Process-Context Identifier 0110 0110:0000 1111:0011 1000:1000 0010: mod reg r/m
+ * 
+ * IRET/IRETD – Interrupt Return 1100 1111
+ * 
+ * Jcc – Jump if Condition is Met
+ *  8-bit displacement 0111 tttn : 8-bit displacement
+ *  full displacement 0000 1111 : 1000 tttn : full displacement
+ * 
+ * JCXZ/JECXZ – Jump on CX/ECX Zero
+ *  Address-size prefix differentiates JCXZ
+ *  and JECXZ
+ * 
+ * JMP – Unconditional Jump (to same segment)
+ *  short 1110 1011 : 8-bit displacement
+ *  direct 1110 1001 : full displacement
+ *  register indirect 1111 1111 : 11 100 reg
+ *  memory indirect 1111 1111 : mod 100 r/m
+ * 
+ * JMP – Unconditional Jump (to other segment)
+ *  direct intersegment 1110 1010 : unsigned full offset, selector
+ *  indirect intersegment 1111 1111 : mod 101 r/m
+ * 
+ * LAHF – Load Flags into AHRegister 1001 1111
+ * 
+ * LAR – Load Access Rights Byte
+ *  from register 0000 1111 : 0000 0010 : 11 reg1 reg2
+ *  from memory 0000 1111 : 0000 0010 : mod reg r/m
+ * 
+ * LDS – Load Pointer to DS 1100 0101 : modA,B reg r/m
+ * 
+ * LEA – Load Effective Address 1000 1101 : modA reg r/m
+ * 
+ * LEAVE – High Level Procedure Exit 1100 1001
+ * 
+ * LES – Load Pointer to ES 1100 0100 : modA,B reg r/m
+ * 
+ * LFS – Load Pointer to FS 0000 1111 : 1011 0100 : modA reg r/m
+ * 
+ * LGDT – Load Global Descriptor Table Register 0000 1111 : 0000 0001 : modA 010 r/m
+ * 
+ * LGS – Load Pointer to GS 0000 1111 : 1011 0101 : modA reg r/m
+ * 
+ * LIDT – Load Interrupt Descriptor Table Register 0000 1111 : 0000 0001 : modA 011 r/m
+ * 
+ * LLDT – Load Local Descriptor Table Register
+ *  LDTR from register 0000 1111 : 0000 0000 : 11 010 reg
+ *  LDTR from memory 0000 1111 : 0000 0000 : mod 010 r/m
+ * 
+ * LMSW – Load Machine Status Word
+ *  from register 0000 1111 : 0000 0001 : 11 110 reg
+ *  from memory 0000 1111 : 0000 0001 : mod 110 r/m
+ * 
+ * LOCK – Assert LOCK# Signal Prefix 1111 0000
+ * 
+ * LODS/LODSB/LODSW/LODSD – Load String Operand 1010 110w
+ * 
+ * LOOP – Loop Count 1110 0010 : 8-bit displacement
+ * 
+ * LOOPZ/LOOPE – Loop Count while Zero/Equal 1110 0001 : 8-bit displacement
+ * 
+ * LOOPNZ/LOOPNE – Loop Count while not Zero/Equal 1110 0000 : 8-bit displacement
+ * 
+ * LSL – Load Segment Limit
+ *  from register 0000 1111 : 0000 0011 : 11 reg1 reg2
+ *  from memory 0000 1111 : 0000 0011 : mod reg r/m
+ * 
+ * LSS – Load Pointer to SS 0000 1111 : 1011 0010 : modA reg r/m
+ * 
+ * LTR – Load Task Register
+ *  from register 0000 1111 : 0000 0000 : 11 011 reg
+ *  from memory 0000 1111 : 0000 0000 : mod 011 r/m
+ * 
+ * MOV – Move Data
+ *  register1 to register2                     1000 100w  : 11 reg1 reg2
+ *  register2 to register1                     1000 101w  : 11 reg1 reg2
+ *  memory to reg                              1000 101w  : mod reg r/m
+ *  reg to memory                              1000 100w  : mod reg r/m
+ *  immediate to register                      1100 011w  : 11 000 reg : immediate data
+ *  immediate to register (alternate encoding) 1011 w reg : immediate data
+ *  immediate to memory                        1100 011w  : mod 000 r/m : immediate data
+ *  memory to AL, AX, or EAX                   1010 000w  : full displacement
+ *  AL, AX, or EAX to memory                   1010 001w  : full displacement
+ * 
+ * MOV – Move to/from Control Registers
+ *  CR0 from register 0000 1111 : 0010 0010 : -- 000 reg
+ *  CR2 from register 0000 1111 : 0010 0010 : -- 010reg
+ *  CR3 from register 0000 1111 : 0010 0010 : -- 011 reg
+ *  CR4 from register 0000 1111 : 0010 0010 : -- 100 reg
+ *  register from CR0-CR4 0000 1111 : 0010 0000 : -- eee reg
+ * 
+ * MOV – Move to/from Debug Registers
+ *  DR0-DR3 from register 0000 1111 : 0010 0011 : -- eee reg
+ *  DR4-DR5 from register 0000 1111 : 0010 0011 : -- eee reg
+ *  DR6-DR7 from register 0000 1111 : 0010 0011 : -- eee reg
+ *  register from DR6-DR7 0000 1111 : 0010 0001 : -- eee reg
+ *  register from DR4-DR5 0000 1111 : 0010 0001 : -- eee reg
+ *  register from DR0-DR3 0000 1111 : 0010 0001 : -- eee reg
+ * 
+ * MOV – Move to/from Segment Registers
+ *  register to segment register 1000 1110 : 11 sreg3 reg
+ *  register to SS 1000 1110 : 11 sreg3 reg
+ *  memory to segment reg 1000 1110 : mod sreg3 r/m
+ *  memory to SS 1000 1110 : mod sreg3 r/m
+ *  segment register to register 1000 1100 : 11 sreg3 reg
+ *  segment register to memory 1000 1100 : mod sreg3 r/m
+ * 
+ * MOVBE – Move data after swapping bytes
+ *  memory to register 0000 1111 : 0011 1000:1111 0000 : mod reg r/m
+ *  register to memory 0000 1111 : 0011 1000:1111 0001 : mod reg r/m
+ * 
+ * MOVS/MOVSB/MOVSW/MOVSD – Move Data from String to String
+ *  1010 010w
+ * 
+ * MOVSX – Move with Sign-Extend
+ *  memory to reg 0000 1111 : 1011 111w : mod reg r/m
+ * 
+ * MOVZX – Move with Zero-Extend
+ *  register2 to register1 0000 1111 : 1011 011w : 11 reg1 reg2
+ *  memory to register 0000 1111 : 1011 011w : mod reg r/m
+ * 
+ * MUL – Unsigned Multiply
+ *  AL, AX, or EAX with register 1111 011w : 11 100 reg
+ *  AL, AX, or EAX with memory 1111 011w : mod 100 r/m
+ * 
+ * NEG – Two's Complement Negation
+ *  register 1111 011w : 11 011 reg
+ *  memory 1111 011w : mod 011 r/m
+ * 
+ * NOP – No Operation 1001 0000
+ * 
+ * NOP – Multi-byte No Operation1 ( 1. La instrucción NOP multibyte no altera el contenido del registro y no emitirá una operación de memoria. )
+ *  register 0000 1111 0001 1111 : 11 000 reg
+ *  memory   0000 1111 0001 1111 : mod 000 r/m
+ * 
+ * NOT – One's Complement Negation
+ *  register 1111 011w : 11 010 reg
+ *  memory 1111 011w : mod 010 r/m
+ * 
+ * OR – Logical Inclusive OR
+ *  register1 to register2 0000 100w : 11 reg1 reg2
+ *  register2 to register1 0000 101w : 11 reg1 reg2
+ *  memory to register 0000 101w : mod reg r/m
+ *  register to memory 0000 100w : mod reg r/m
+ *  immediate to register 1000 00sw : 11 001 reg : immediate data
+ *  immediate to AL, AX, or EAX 0000 110w : immediate data
+ *  immediate to memory 1000 00sw : mod 001 r/m : immediate data
+ * 
+ * OUT – Output to Port
+ *  fixed port 1110 011w : port number
+ *  variable port 1110 111w
+ * 
+ * OUTS – Output to DX Port 0110 111w
+ * 
+ * POP – Pop a Word from the Stack
+ *  register 1000 1111 : 11 000 reg
+ *  register (alternate encoding) 0101 1 reg
+ *  memory 1000 1111 : mod 000 r/m
+ * 
+ * POP – Pop a Segment Register from the Stack (Note: CS cannot be sreg2 in this usage.)
+ *  segment register DS, ES 000 sreg2 111
+ *  segment register SS 000 sreg2 111
+ *  segment register FS, GS 0000 1111: 10 sreg3 001
+ * 
+ * POPA/POPAD – Pop All General Registers 0110 0001
+ * 
+ * POPF/POPFD – Pop Stack into FLAGS or EFLAGS Register 1001 1101
+ * 
+ * PUSH – Push Operand onto the Stack
+ *  register 1111 1111 : 11 110 reg
+ *  register (alternate encoding) 0101 0 reg
+ *  memory 1111 1111 : mod 110 r/m
+ *  immediate 0110 10s0 : immediate data
+ * 
+ * PUSH – Push Segment Register onto the Stack
+ *  segment register CS,DS,ES,SS 000 sreg2 110
+ *  segment register FS,GS 0000 1111: 10 sreg3 000
+ * 
+ * PUSHA/PUSHAD – Push All General Registers 0110 0000
+ * 
+ * PUSHF/PUSHFD – Push Flags Register onto the Stack 1001 1100
+ * 
+ * RCL – Rotate thru Carry Left
+ *  register by 1 1101 000w : 11 010 reg
+ *  memory by 1 1101 000w : mod 010 r/m
+ *  register by CL 1101 001w : 11 010 reg
+ *  memory by CL 1101 001w : mod 010 r/m
+ *  register by immediate count 1100 000w : 11 010 reg : imm8 data
+ *  memory by immediate count 1100 000w : mod 010 r/m : imm8 data
+ * 
+ * RCR – Rotate thru Carry Right
+ *  register by 1 1101 000w : 11 011 reg
+ *  memory by 1 1101 000w : mod 011 r/m
+ *  register by CL 1101 001w : 11 011 reg
+ *  memory by CL 1101 001w : mod 011 r/m
+ *  register by immediate count 1100 000w : 11 011 reg : imm8 data
+ *  memory by immediate count 1100 000w : mod 011 r/m : imm8 data
+ * 
+ * RDMSR – Read from Model-Specific Register 0000 1111 : 0011 0010
+ * 
+ * RDPMC – Read Performance Monitoring Counters 0000 1111 : 0011 0011
+ * 
+ * RDTSC – Read Time-Stamp Counter 0000 1111 : 0011 0001
+ * 
+ * RDTSCP – Read Time-Stamp Counter and Processor ID 0000 1111 : 0000 0001: 1111 1001
+ * 
+ * REP INS – Input String 1111 0011 : 0110 110w
+ * 
+ * REP LODS – Load String 1111 0011 : 1010 110w
+ * 
+ * REP MOVS – Move String 1111 0011 : 1010 010w
+ * 
+ * REP OUTS – Output String 1111 0011 : 0110 111w
+ * 
+ * REP STOS – Store String 1111 0011 : 1010 101w
+ * 
+ * REPE CMPS – Compare String 1111 0011 : 1010 011w
+ * 
+ * REPE SCAS – Scan String 1111 0011 : 1010 111w
+ * 
+ * REPNE CMPS – Compare String 1111 0010 : 1010 011w
+ * 
+ * REPNE SCAS – Scan String 1111 0010 : 1010 111w
+ * 
+ * RET – Return from Procedure (to same segment)
+ *  no argument 1100 0011
+ *  adding immediate to SP 1100 0010 : 16-bit displacement
+ * 
+ * RET – Return from Procedure (to other segment)
+ *  intersegment 1100 1011
+ *  adding immediate to SP 1100 1010 : 16-bit displacement
+ * 
+ * ROL – Rotate Left
+ *  register by 1 1101 000w : 11 000 reg
+ *  memory by 1 1101 000w : mod 000 r/m
+ *  register by CL 1101 001w : 11 000 reg
+ *  memory by CL 1101 001w : mod 000 r/m
+ *  register by immediate count 1100 000w : 11 000 reg : imm8 data
+ *  memory by immediate count 1100 000w : mod 000 r/m : imm8 data
+ * 
+ * ROR – Rotate Right
+ *  register by 1 1101 000w : 11 001 reg
+ *  memory by 1 1101 000w : mod 001 r/m
+ *  register by CL 1101 001w : 11 001 reg
+ *  memory by CL 1101 001w : mod 001 r/m
+ *  register by immediate count 1100 000w : 11 001 reg : imm8 data
+ *  memory by immediate count 1100 000w : mod 001 r/m : imm8 data
+ * 
+ * RSM – Resume from System Management Mode 0000 1111 : 1010 1010
+ * 
+ * SAHF – Store AH into Flags 1001 1110
+ * 
+ * SAL – Shift Arithmetic Left same instruction as SHL
+ * 
+ * SAR – Shift Arithmetic Right
+ *  register by 1 1101 000w : 11 111 reg
+ *  memory by 1 1101 000w : mod 111 r/m
+ *  register by CL 1101 001w : 11 111 reg
+ *  memory by CL 1101 001w : mod 111 r/m
+ *  register by immediate count 1100 000w : 11 111 reg : imm8 data
+ *  memory by immediate count 1100 000w : mod 111 r/m : imm8 data
+ * 
+ * SBB – Integer Subtraction with Borrow
+ *  register1 to register2 0001 100w : 11 reg1 reg2
+ *  register2 to register1 0001 101w : 11 reg1 reg2
+ *  memory to register 0001 101w : mod reg r/m
+ *  register to memory 0001 100w : mod reg r/m
+ *  immediate to register 1000 00sw : 11 011 reg : immediate data
+ *  immediate to AL, AX, or EAX 0001 110w : immediate data
+ *  immediate to memory 1000 00sw : mod 011 r/m : immediate data
+ * 
+ * SCAS/SCASB/SCASW/SCASD – Scan String 1010 111w
+ * 
+ * SETcc – Byte Set on Condition
+ *  register 0000 1111 : 1001 tttn : 11 000 reg
+ *  memory 0000 1111 : 1001 tttn : mod 000 r/m
+ * 
+ * SGDT – Store Global Descriptor Table Register 0000 1111 : 0000 0001 : modA 000 r/m
+ * 
+ * 
+ * SHL – Shift Left
+ *  register by 1 1101 000w : 11 100 reg
+ *  memory by 1 1101 000w : mod 100 r/m
+ *  register by CL 1101 001w : 11 100 reg
+ *  memory by CL 1101 001w : mod 100 r/m
+ *  register by immediate count 1100 000w : 11 100 reg : imm8 data
+ *  memory by immediate count 1100 000w : mod 100 r/m : imm8 data
+ * 
+ * SHLD – Double Precision Shift Left
+ *  register by immediate count 0000 1111 : 1010 0100 : 11 reg2 reg1 : imm8
+ *  memory by immediate count 0000 1111 : 1010 0100 : mod reg r/m : imm8
+ *  register by CL 0000 1111 : 1010 0101 : 11 reg2 reg1
+ *  memory by CL 0000 1111 : 1010 0101 : mod reg r/m
+ * 
+ * SHR – Shift Right
+ *  register by 1 1101 000w : 11 101 reg
+ *  memory by 1 1101 000w : mod 101 r/m
+ *  register by CL 1101 001w : 11 101 reg
+ *  memory by CL 1101 001w : mod 101 r/m
+ *  register by immediate count 1100 000w : 11 101 reg : imm8 data
+ *  memory by immediate count 1100 000w : mod 101 r/m : imm8 data
+ * 
+ * SHRD – Double Precision Shift Right
+ *  register by immediate count 0000 1111 : 1010 1100 : 11 reg2 reg1 : imm8
+ *  memory by immediate count 0000 1111 : 1010 1100 : mod reg r/m : imm8
+ *  register by CL 0000 1111 : 1010 1101 : 11 reg2 reg1
+ *  memory by CL 0000 1111 : 1010 1101 : mod reg r/m
+ * 
+ * SIDT – Store Interrupt Descriptor Table Register 0000 1111 : 0000 0001 : modA 001 r/m
+ * 
+ * SLDT – Store Local Descriptor Table Register
+ *  to register 0000 1111 : 0000 0000 : 11 000 reg
+ *  to memory 0000 1111 : 0000 0000 : mod 000 r/m
+ * 
+ * SMSW – Store Machine Status Word
+ *  to register 0000 1111 : 0000 0001 : 11 100 reg
+ *  to memory 0000 1111 : 0000 0001 : mod 100 r/m
+ * 
+ * STC – Set Carry Flag 1111 1001
+ * 
+ * STD – Set Direction Flag 1111 1101
+ * 
+ * STI – Set Interrupt Flag 1111 1011
+ * 
+ * STOS/STOSB/STOSW/STOSD – Store String Data 1010 101w
+ * 
+ * STR – Store Task Register
+ *  to register 0000 1111 : 0000 0000 : 11 001 reg
+ *  to memory 0000 1111 : 0000 0000 : mod 001 r/m
+ * 
+ * SUB – Integer Subtraction
+ *  register1 to register2 0010 100w : 11 reg1 reg2
+ *  register2 to register1 0010 101w : 11 reg1 reg2
+ *  memory to register 0010 101w : mod reg r/m
+ *  register to memory 0010 100w : mod reg r/m
+ *  immediate to register 1000 00sw : 11 101 reg : immediate data
+ *  immediate to AL, AX, or EAX 0010 110w : immediate data
+ *  immediate to memory 1000 00sw : mod 101 r/m : immediate data
+ * 
+ * TEST – Logical Compare
+ *  register1 and register2 1000 010w : 11 reg1 reg2
+ *  memory and register 1000 010w : mod reg r/m
+ *  immediate and register 1111 011w : 11 000 reg : immediate data
+ *  immediate and AL, AX, or EAX 1010 100w : immediate data
+ *  immediate and memory 1111 011w : mod 000 r/m : immediate dat
+ * 
+ * Estas instrucciones no definidas son para futuro uso(algunos compiladores las usan para crear trampas/excepciones)
+ *  UD0 – Undefined instruction 0000 1111 : 1111 1111 
+ *  UD1 – Undefined instruction 0000 1111 : 0000 1011
+ *  UD2 – Undefined instruction 0000 FFFF : 0000 1011
+ * 
+ * VERR – Verify a Segment for Reading
+ *  register 0000 1111 : 0000 0000 : 11 100 reg
+ *  memory 0000 1111 : 0000 0000 : mod 100 r/m
+ * 
+ * VERW – Verify a Segment for Writing
+ *  register 0000 1111 : 0000 0000 : 11 101 reg
+ *  memory 0000 1111 : 0000 0000 : mod 101 r/m
+ * 
+ * WAIT – Wait 1001 1011
+ * 
+ * WBINVD – Writeback and Invalidate Data Cache 0000 1111 : 0000 1001
+ * 
+ * WRMSR – Write to Model-Specific Register 0000 1111 : 0011 0000
+ * 
+ * XADD – Exchange and Add
+ *  register1, register2 0000 1111 : 1100 000w : 11 reg2 reg1
+ *  memory, reg 0000 1111 : 1100 000w : mod reg r/m
+ * 
+ * XCHG – Exchange Register/Memory with Register
+ *  register1 with register2 1000 011w : 11 reg1 reg2
+ *  AX or EAX with reg 1001 0 reg
+ *  memory with reg 1000 011w : mod reg r/m
+ * 
+ * XLAT/XLATB – Table Look-up Translation 1101 0111
+ * 
+ * XOR – Logical Exclusive OR
+ *  register1 to register2 0011 000w : 11 reg1 reg2
+ *  register2 to register1 0011 001w : 11 reg1 reg2
+ *  memory to register 0011 001w : mod reg r/m
+ *  register to memory 0011 000w : mod reg r/m
+ *  immediate to register 1000 00sw : 11 110 reg : immediate data
+ *  immediate to AL, AX, or EAX 0011 010w : immediate data
+ *  immediate to memory 1000 00sw : mod 110 r/m : immediate data
+ * 
+ * Prefix Bytes
+ *  address size 0110 0111
+ *  LOCK 1111 0000
+ *  operand size 0110 0110
+ *  CS segment override 0010 1110
+ *  DS segment override 0011 1110
+ *  ES segment override 0010 0110
+ *  FS segment override 0110 0100
+ *  GS segment override 0110 0101
+ *  SS segment override 0011 0110
+ * 
+ * 
+ * Instrucciones y formatos de proposito general para 64bits (pagina 2886):
+ * 
+ * Símbolo Aplicación
+ *  S -> Si el valor de REX.W es 1, anula la presencia de 66H.
+ *  w -> El valor del bit W en REX no tiene efecto.
+ * 
+ * ADC – ADD with Carry
+ *  register1 to register2 0100 0R0B : 0001 000w : 11 reg1 reg2
+ *  qwordregister1 to qwordregister2 0100 1R0B : 0001 0001 : 11 qwordreg1 qwordreg2
+ *  register2 to register1 0100 0R0B : 0001 001w : 11 reg1 reg2
+ *  qwordregister1 to qwordregister2 0100 1R0B : 0001 0011 : 11 qwordreg1 qwordreg2
+ *  memory to register 0100 0RXB : 0001 001w : mod reg r/m
+ *  memory to qwordregister 0100 1RXB : 0001 0011 : mod qwordreg r/m
+ *  register to memory 0100 0RXB : 0001 000w : mod reg r/m
+ *  qwordregister to memory 0100 1RXB : 0001 0001 : mod qwordreg r/m
+ *  immediate to register 0100 000B : 1000 00sw : 11 010 reg : immediate
+ *  immediate to qwordregister 0100 100B : 1000 0001 : 11 010 qwordreg : imm32
+ *  immediate to qwordregister 0100 1R0B : 1000 0011 : 11 010 qwordreg : imm8
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
  * Ejemplo de codificacion de  instruccion:
- * 
- * 
  *  add ecx, eax (ejemplo medio bien, ver mas abajo otros ejemplos):
  * 
  *      |------|--------------------------|------|---------|---------|
@@ -551,6 +1339,140 @@
  *          - El campo "mod" en este caso al poner 11 indica que se usara el mododo de direccionamiento de registro.
  *          - El campo "reg", en este caso indica que el registro fuente es el registro al.
  *          - El campo "r/m", en este caso junto al campo "mod" indica que el registro destino es cl.
+ * 
+ * Tabla A6 de manual de intel (pagina 2856)
+ * Algunas instrucciones de 1 o 2 bytes de opcode usan extensiones de opcode, donde el byte modR/M codifica la instruccion extendida.
+ * por ejemplo, un opcode que usa 0xFE, puede ser INC o DEC dependiendo del campo reg, si el campo reg es 001, es DEC, si es 000, es INC:
+ * 
+ * inc byte ptr [eax]
+ *      |------|--------------------------|------|---------|---------|
+ *      | bits | 1  1  1  1  1  1 | 1 | 0 | 0  0 | 0  0  0 | 0  0  0 | == 0xFE 0x00 == inc byte ptr [eax] (en 32bits)
+ *      |  uso | opcode( dec/inc )| d | s |  mod |   reg   |   R/M   |
+ *      |------|--------------------------|------|---------|---------|
+ * 
+ * inc byte ptr [ecx]
+ *      |------|--------------------------|------|---------|---------|
+ *      | bits | 1  1  1  1  1  1 | 1 | 0 | 0  0 | 0  0  0 | 0  0  1 | == 0xFE 0x01 == inc byte ptr [ecx] (en 32bits)
+ *      |  uso | opcode( dec/inc )| d | s |  mod |   reg   |   R/M   |
+ *      |------|--------------------------|------|---------|---------|
+ * 
+ * inc byte ptr [edx]
+ *      |------|--------------------------|------|---------|---------|
+ *      | bits | 1  1  1  1  1  1 | 1 | 0 | 0  0 | 0  0  0 | 0  1  0 | == 0xFE 0x02 == inc byte ptr [edx] (en 32bits)
+ *      |  uso | opcode( dec/inc )| d | s |  mod |   reg   |   R/M   |
+ *      |------|--------------------------|------|---------|---------|
+ * 
+ * inc byte ptr [ebx]
+ *      |------|--------------------------|------|---------|---------|
+ *      | bits | 1  1  1  1  1  1 | 1 | 0 | 0  0 | 0  0  0 | 0  1  1 | == 0xFE 0x03 == inc byte ptr [ebx] (en 32bits)
+ *      |  uso | opcode( dec/inc )| d | s |  mod |   reg   |   R/M   |
+ *      |------|--------------------------|------|---------|---------|
+ * 
+ * inc byte ptr [esi + edi*8]
+ *      |------|--------------------------|------|---------|---------|
+ *      | bits | 1  1  1  1  1  1 | 1 | 0 | 0  0 | 0  0  0 | 1  0  0 | == 0xFE 0x04 0xFE == inc byte ptr [esi + edi*8] (en 32bits)
+ *      |  uso | opcode( dec/inc )| d | s |  mod |   reg   |   R/M   | (Escribir SIB)
+ *      |------|--------------------------|------|---------|---------|
+ * 
+ * inc byte ptr [0x7fe06fe]
+ *      |------|--------------------------|------|---------|---------|
+ *      | bits | 1  1  1  1  1  1 | 1 | 0 | 0  0 | 0  0  0 | 1  0  1 | == 0xFE 0x05 0xFE 0x06 0xFE 0x07 == inc byte ptr [0x7fe06fe] (en 32bits)
+ *      |  uso | opcode( dec/inc )| d | s |  mod |   reg   |   R/M   | (Escribir desplazamiento 32bits)
+ *      |------|--------------------------|------|---------|---------|
+ * 
+ * inc byte ptr [esi]
+ *      |------|--------------------------|------|---------|---------|
+ *      | bits | 1  1  1  1  1  1 | 1 | 0 | 0  0 | 0  0  0 | 1  1  0 | == 0xFE 0x06 == inc byte ptr [edi] (en 32bits)
+ *      |  uso | opcode( dec/inc )| d | s |  mod |   reg   |   R/M   |
+ *      |------|--------------------------|------|---------|---------|
+ * 
+ * inc byte ptr [edi]
+ *      |------|--------------------------|------|---------|---------|
+ *      | bits | 1  1  1  1  1  1 | 1 | 0 | 0  0 | 0  0  0 | 1  1  1 | == 0xFE 0x07 == inc byte ptr [edi] (en 32bits)
+ *      |  uso | opcode( dec/inc )| d | s |  mod |   reg   |   R/M   |
+ *      |------|--------------------------|------|---------|---------|
+ * 
+ * dec byte ptr [eax]
+ *      |------|--------------------------|------|---------|---------|
+ *      | bits | 1  1  1  1  1  1 | 1 | 0 | 0  0 | 0  0  1 | 0  0  0 | == 0xFE 0x08 == dec byte ptr [eax] (en 32bits)
+ *      |  uso | opcode( dec/inc )| d | s |  mod |   reg   |   R/M   |
+ *      |------|--------------------------|------|---------|---------|
+ * 
+ * dec byte ptr [ecx]
+ *      |------|--------------------------|------|---------|---------|
+ *      | bits | 1  1  1  1  1  1 | 1 | 0 | 0  0 | 0  0  1 | 0  0  1 | == 0xFE 0x09 == dec byte ptr [ecx] (en 32bits)
+ *      |  uso | opcode( dec/inc )| d | s |  mod |   reg   |   R/M   |
+ *      |------|--------------------------|------|---------|---------|
+ * 
+ * dec byte ptr [bx + di]
+ *      |------|--------------------------|------|---------|---------|
+ *      | bits | 1  1  1  1  1  1 | 1 | 0 | 0  0 | 0  0  1 | 0  0  1 | == 0xFE 0x09 == dec byte ptr [bx + di] (en 16bits)
+ *      |  uso | opcode( dec/inc )| d | s |  mod |   reg   |   R/M   |
+ *      |------|--------------------------|------|---------|---------|
+ * 
+ * inc byte ptr [bx]
+ *      |------|--------------------------|------|---------|---------|
+ *      | bits | 1  1  1  1  1  1 | 1 | 0 | 0  0 | 0  0  0 | 1  1  1 | == 0xFE 0x07 == inc byte ptr [bx] (en 16bits)
+ *      |  uso | opcode( dec/inc )| d | s |  mod |   reg   |   R/M   |
+ *      |------|--------------------------|------|---------|---------|
+ * 
+ * las INC y DEC que hacen uso del opcode 0xFF, usan el tamaño palabra de la cpu para 32 y 16bits, por ejemplo FF 01 es inc word ptr [bx + di] para 16bits, word == 16bits
+ * mientras en 32bits es inc dword ptr [ecx], donde se usa dword(32bits). Como excepcion en 64bits se usara dword inc dword ptr [rcx] == FF 01
+ * Ejemplo usando el opcode 0xFF, mirar tabla A-6 para ver las extensiones. INC(000), DEC(000), near CALL(010), far CALL(011), near JMP(100), far JMP(101) PUSH(110)
+ * 
+ * inc dword ptr [ecx]
+ *      |------|--------------------------|------|---------|---------|
+ *      | bits | 1  1  1  1  1  1 | 1 | 0 | 0  0 | 0  0  0 | 0  0  1 | == 0xFF 0x01 == inc dword ptr [ecx] (en 32bits)
+ *      |  uso | opcode           | d | s |  mod |   reg   |   R/M   |
+ *      |------|--------------------------|------|---------|---------|
+ * 
+ * dec dword ptr [ecx]
+ *      |------|--------------------------|------|---------|---------|
+ *      | bits | 1  1  1  1  1  1 | 1 | 0 | 0  0 | 0  0  1 | 0  0  1 | == 0xFF 0x09 == dec dword ptr [ecx] (en 32bits)
+ *      |  uso | opcode           | d | s |  mod |   reg   |   R/M   |
+ *      |------|--------------------------|------|---------|---------|
+ * 
+ * call dword ptr [ecx]
+ *      |------|--------------------------|------|---------|---------|
+ *      | bits | 1  1  1  1  1  1 | 1 | 0 | 0  0 | 0  1  0 | 0  0  1 | == 0xFF 0x11 == call dword ptr [ecx] (en 32bits)
+ *      |  uso | opcode           | d | s |  mod |   reg   |   R/M   |
+ *      |------|--------------------------|------|---------|---------|
+ * 
+ * lcall [ecx] o tmb llamado en algunos ensambladores como call far [ecx]
+ *      |------|--------------------------|------|---------|---------|
+ *      | bits | 1  1  1  1  1  1 | 1 | 0 | 0  0 | 0  1  1 | 0  0  1 | == 0xFF 0x19 == lcall [ecx] (en 32bits)
+ *      |  uso | opcode           | d | s |  mod |   reg   |   R/M   |
+ *      |------|--------------------------|------|---------|---------|
+ * 
+ * jmp dword ptr [ecx]
+ *      |------|--------------------------|------|---------|---------|
+ *      | bits | 1  1  1  1  1  1 | 1 | 0 | 0  0 | 1  0  0 | 0  0  1 | == 0xFF 0x21 == jmp dword ptr [ecx] (en 32bits)
+ *      |  uso | opcode           | d | s |  mod |   reg   |   R/M   |
+ *      |------|--------------------------|------|---------|---------|
+ * 
+ * ljmp [ecx] o tmb llamado en algunos ensambladores como jmp far [ecx]
+ *      |------|--------------------------|------|---------|---------|
+ *      | bits | 1  1  1  1  1  1 | 1 | 0 | 0  0 | 1  0  1 | 0  0  1 | == 0xFF 0x29 == ljmp [ecx] (en 32bits)
+ *      |  uso | opcode           | d | s |  mod |   reg   |   R/M   |
+ *      |------|--------------------------|------|---------|---------|
+ * 
+ * push dword ptr [ecx]
+ *      |------|--------------------------|------|---------|---------|
+ *      | bits | 1  1  1  1  1  1 | 1 | 0 | 0  0 | 1  1  0 | 0  0  1 | == 0xFF 0x31 == push dword ptr [ecx] (en 32bits)
+ *      |  uso | opcode           | d | s |  mod |   reg   |   R/M   |
+ *      |------|--------------------------|------|---------|---------|
+ *
+ *  Tablas "A" de la documentacion intel:
+ *      - A02       = opcodes de 1byte de opcode
+ *      - A03       = opcodes de 2byte de opcode (pagina: 2847) 
+ *      - A04 a A05 = opcodes de 3byte de opcode (pagina: 2851)
+ *      - A06       = extensiones para instrucciones de A2(de 1byte de opcode) y A3(2byte's de opcode)
+ *      - A07       = opcode de instrucciones de punto flotante x87
+ *      - A07 y A08 = contienen mapas para los opcodes de las instrucciones de escape que empiezan por 0xD8 (pagina: 2858)
+ *      - A09       = ¿tabla de instrucciones FLD (double-real)?
+ *      - A09 y A10 = contienen mapas para los opcodes de las instrucciones de escape que empiezan por 0xD9 (pagina: 2859)
+ *      - A11 y A12 = contienen mapas para los opcodes de las instrucciones de escape que comienzan por 0xDA (pagina: 2860)
+ * 
  * 
  * 
  */

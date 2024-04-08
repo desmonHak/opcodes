@@ -16,8 +16,8 @@ int main(){
                 .d      = 0b0,
                 .s      = 0b0
             },
-            (opcode){
-                .opcode = 0b000000, // add cl, al
+            (opcode){ // opcode primario
+                .opcode = 0b000000, // add cl, al == 0x00 0xC1 
                 .d      = 0b0,
                 .s      = 0b0
             }
@@ -38,6 +38,7 @@ int main(){
 
     print_instruccion_binary(&my_instruccion);
     print_instruccion(&my_instruccion);
+    get_asm_opcode(&my_instruccion);
 
     my_instruccion = (Instruction){
         .prefix = { 0b00000000, 0b00000000, 0b00000000, Prefix_addr_size},
@@ -52,7 +53,7 @@ int main(){
                 .d      = 0b0,
                 .s      = 0b0
             },
-            (opcode){
+            (opcode){ // opcode primario
                 .opcode = 0b111111, // jmp [eax*2 + ebx]
                 .d      = 0b1,
                 .s      = 0b1
@@ -73,6 +74,7 @@ int main(){
     };
     print_instruccion_binary(&my_instruccion);
     print_instruccion(&my_instruccion);
+    get_asm_opcode(&my_instruccion);
 
     return 0;
 }

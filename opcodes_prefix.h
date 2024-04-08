@@ -157,31 +157,54 @@ typedef enum Prefix_x86_others {
                                                   // 0xF3 Prefijo REPE/REPZ   (sólo se utiliza con instrucciones de string)     
 } Prefix_x86_Segment_others;
 
-uint8_t Opcodes_x86_array[][2] = {
-    {
-        // instrucciones de un byte de opcode
-        /*                          0x0     0x1                  0x2                0x3         0x4        0x5                  0x6                0x7       0x8    0x9    0xa      0xb          0xc      0xd        0xe                    0xf         */
-                                    ADD,                                                                                       PUSH_ES,           POP_ES,      OR,                                                    PUSH_CS,             TWO_BYTE,    // 0x0
-                                    ADC,                                                                                       PUSH_SS,           POP_SS,     SBB,                                                    PUSH_DS,               POP_DS,    // 0x1
-                                    AND,                                                                                     Prefix_ES,              DAA,     SUB,                                                  Prefix_CS,                  DAS,    // 0x2
-                                    XOR,                                                                                     Prefix_SS,              AAA,     CMP,                                                  Prefix_DS,                  ASS,    // 0x3
-                                    INC,                                                                                                                      DEC,                                                                                      // 0x4
-                                   PUSH,                                                                                                                    POP_1,                                                                                      // 0x5
-                                 PUSHAD,  POPAD,               BOUND,                 APRL, Prefix_FS, Prefix_GS,  Prefix_operand_size, Prefix_addr_size,  PUSH_1, IMUL_1, PUSH_2,    IMUL_2,        INS,                                      OUTS,    // 0x6
-                                     JO,    JNO,                  JB,                  JNB,        JE,       JNE,                  JBE,               JA,      JS,    JNS,    JPE,       JPO,         JL,     JGE,        JLE,                   JG,    // 0x7
-         ADD_ADC_AND_XOR_OR_SBB_SUB_CMP,                                                       TEST_1,                            XCHG,                   MOV_REG,                            MOV_SREG_1,     LEA, MOV_SREG_2,                POP_2,    // 0x8
-                        XCHG_EAX_OR_NOP,                                                                                                                      CWD,    CDQ,  CALLF,      WAIT,     PUSHFD,   POPFD,       SAHF,                 LAHF,    // 0x9
-                                MOV_EAX,                                                         MOVS,                            CMPS,                    TEST_2,           STOS,                  LODS,                SCAS,                          // 0xa
-                                    MOV,                                                                                                                                                                                                                // 0xb
-                              SHIFT_IMM,                        RETN,                             LES,       LDS,              MOV_IMM,                     ENTER,  LEAVE,   RETF,                  INT3, INT_IMM,       INTO,                IRETD,    // 0xc
-                                SHIFT_1,                    SHIFT_CL,                             AAM,       AAD,                 SALS,             XLAT,     FPU,                                                                                      // 0xd
-                                 LOOPNZ,  LOOPZ,                LOOP,                JECXZ,    IN_IMM,                         OUT_IMM,                      CALL,    JMP,   JMPF, JMP_SHORT,      IN_DX,              OUT_DX,                          // 0xe
-                            Prefix_lock, ICR_BP, Prefix_repne_repnez, Prefix_repe_rep_repz,       HLT,       CMC, TEST_NOT_NEG_MUL_DIV,                       CLC,    STC,    CLI,       STI,        CLD,     STD,    INC_DEC, INC_DEC_CALL_JMP_PUSH    // 0xf
-    },
-    {
-        // instrucciones de dos bytes de opcode
-        1
-    }
+/*
+ *
+ *  Tablas "A" de la documentacion intel:
+ *      - A02       = opcodes de 1byte de opcode
+ *      - A03       = opcodes de 2byte de opcode (pagina: 2847) 
+ *      - A04 a A05 = opcodes de 3byte de opcode (pagina: 2851)
+ *      - A06       = extensiones para instrucciones de A2(de 1byte de opcode) y A3(2byte's de opcode)
+ *      - A07       = opcode de instrucciones de punto flotante x87
+ *      - A07 y A08 = contienen mapas para los opcodes de las instrucciones de escape que empiezan por 0xD8 (pagina: 2858)
+ *      - A09       = ¿tabla de instrucciones FLD (double-real)?
+ *      - A09 y A10 = contienen mapas para los opcodes de las instrucciones de escape que empiezan por 0xD9 (pagina: 2859)
+ *      - A11 y A12 = contienen mapas para los opcodes de las instrucciones de escape que comienzan por 0xDA (pagina: 2860)
+ * 
+ */
+
+static uint8_t Opcodes_x86_array_1[] = {
+    // instrucciones de un byte de opcode (Tabla A-2)
+    /*                          0x0     0x1                  0x2                0x3         0x4        0x5                  0x6                0x7       0x8    0x9    0xa      0xb          0xc      0xd        0xe                    0xf         */
+                                ADD,                                                                                       PUSH_ES,           POP_ES,      OR,                                                    PUSH_CS,             TWO_BYTE,    // 0x0
+                                ADC,                                                                                       PUSH_SS,           POP_SS,     SBB,                                                    PUSH_DS,               POP_DS,    // 0x1
+                                AND,                                                                                     Prefix_ES,              DAA,     SUB,                                                  Prefix_CS,                  DAS,    // 0x2
+                                XOR,                                                                                     Prefix_SS,              AAA,     CMP,                                                  Prefix_DS,                  ASS,    // 0x3
+                                INC,                                                                                                                      DEC,                                                                                      // 0x4
+                               PUSH,                                                                                                                    POP_1,                                                                                      // 0x5
+                             PUSHAD,  POPAD,               BOUND,                 APRL, Prefix_FS, Prefix_GS,  Prefix_operand_size, Prefix_addr_size,  PUSH_1, IMUL_1, PUSH_2,    IMUL_2,        INS,                                      OUTS,    // 0x6
+                                 JO,    JNO,                  JB,                  JNB,        JE,       JNE,                  JBE,               JA,      JS,    JNS,    JPE,       JPO,         JL,     JGE,        JLE,                   JG,    // 0x7
+     ADD_ADC_AND_XOR_OR_SBB_SUB_CMP,                                                       TEST_1,                            XCHG,                   MOV_REG,                            MOV_SREG_1,     LEA, MOV_SREG_2,                POP_2,    // 0x8
+                    XCHG_EAX_OR_NOP,                                                                                                                      CWD,    CDQ,  CALLF,      WAIT,     PUSHFD,   POPFD,       SAHF,                 LAHF,    // 0x9
+                            MOV_EAX,                                                         MOVS,                            CMPS,                    TEST_2,           STOS,                  LODS,                SCAS,                          // 0xa
+                                MOV,                                                                                                                                                                                                                // 0xb
+                          SHIFT_IMM,                        RETN,                             LES,       LDS,              MOV_IMM,                     ENTER,  LEAVE,   RETF,                  INT3, INT_IMM,       INTO,                IRETD,    // 0xc
+                            SHIFT_1,                    SHIFT_CL,                             AAM,       AAD,                 SALS,             XLAT,     FPU,                                                                                      // 0xd
+                             LOOPNZ,  LOOPZ,                LOOP,                JECXZ,    IN_IMM,                         OUT_IMM,                      CALL,    JMP,   JMPF, JMP_SHORT,      IN_DX,              OUT_DX,                          // 0xe
+                        Prefix_lock, ICR_BP, Prefix_repne_repnez, Prefix_repe_rep_repz,       HLT,       CMC, TEST_NOT_NEG_MUL_DIV,                       CLC,    STC,    CLI,       STI,        CLD,     STD,    INC_DEC, INC_DEC_CALL_JMP_PUSH,   // 0xf
 };
+static uint8_t Opcodes_x86_array_2[] = {
+    // instrucciones de dos bytes de opcode, solo si se da TWO_OPCODE, (Tabla A-3) (pagina: 2847)
+    1,
+};
+static uint8_t Opcodes_x86_array_3[] = {
+    // instrucciones de dos tres de opcode, solo si se da THREE_OPCODE, (Tabla A-4 a Tabla A-5) (pagina: 2851)
+    1,
+};
+static uint8_t *Opcodes_x86_array[3] = {
+    Opcodes_x86_array_1,
+    Opcodes_x86_array_2,
+    Opcodes_x86_array_3
+};
+
 
 #endif 
