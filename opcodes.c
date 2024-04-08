@@ -352,7 +352,7 @@
  * | 000 | [bx+si] | [eax]  | [bx+si] + disp8 | [eax] + disp8 | [bx+si] + disp16 | [eax] + disp32 | al / ax / eax |
  * | 001 | [bx+di] | [ecx]  | [bx+di] + disp8 | [ecx] + disp8 | [bx+di] + disp16 | [ecx] + disp32 | cl / cx / ecx |
  * | 010 | [bp+si] | [edx]  | [bp+si] + disp8 | [edx] + disp8 | [bp+si] + disp16 | [edx] + disp32 | dl / dx / edx |
- * | 011 | [bp+si] | [ebx]  | [bp+di] + disp8 | [ebx] + disp8 | [bp+di] + disp16 | [ebx] + disp32 | bl / bx / ebx |
+ * | 011 | [bp+di] | [ebx]  | [bp+di] + disp8 | [ebx] + disp8 | [bp+di] + disp16 | [ebx] + disp32 | bl / bx / ebx |
  * | 100 |  [si]   |  sib   |    [si] + disp8 |  sib  + disp8 |    [si] + disp16 |  sib  + disp32 | ah / sp / esp |
  * | 101 |  [di]   | disp32 |    [di] + disp8 | [ebp] + disp8 |    [di] + disp16 | [ebp] + disp32 | ch / bp / ebp |
  * | 110 | disp16  | [esi]  |    [bp] + disp8 | [esi] + disp8 |    [bp] + disp16 | [esi] + disp32 | dh / si / esi |
@@ -1418,7 +1418,7 @@
  * 
  * las INC y DEC que hacen uso del opcode 0xFF, usan el tamaño palabra de la cpu para 32 y 16bits, por ejemplo FF 01 es inc word ptr [bx + di] para 16bits, word == 16bits
  * mientras en 32bits es inc dword ptr [ecx], donde se usa dword(32bits). Como excepcion en 64bits se usara dword inc dword ptr [rcx] == FF 01
- * Ejemplo usando el opcode 0xFF, mirar tabla A-6 para ver las extensiones. INC(000), DEC(000), near CALL(010), far CALL(011), near JMP(100), far JMP(101) PUSH(110)
+ * Ejemplo usando el opcode 0xFF, mirar tabla A-6 para ver las extensiones. INC(000), DEC(001), near CALL(010), far CALL(011), near JMP(100), far JMP(101) PUSH(110)
  * 
  * inc dword ptr [ecx]
  *      |------|--------------------------|------|---------|---------|

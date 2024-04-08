@@ -3,6 +3,10 @@
 #include "opcodes_prefix.h"
 #include <stdio.h>
 
+static const char *instructions_asm[] = {
+    "ADD", 
+};
+
 void print_opcode(opcode opcode, uint8_t number_opcode);
 void print_instruccion_binary(Instruction *my_instruccion);
 void print_instruccion(Instruction *my_instruccion);
