@@ -157,4 +157,31 @@ typedef enum Prefix_x86_others {
                                                   // 0xF3 Prefijo REPE/REPZ   (sólo se utiliza con instrucciones de string)     
 } Prefix_x86_Segment_others;
 
+uint8_t Opcodes_x86_array[][2] = {
+    {
+        // instrucciones de un byte de opcode
+        /*                          0x0     0x1                  0x2                0x3         0x4        0x5                  0x6                0x7       0x8    0x9    0xa      0xb          0xc      0xd        0xe                    0xf         */
+                                    ADD,                                                                                       PUSH_ES,           POP_ES,      OR,                                                    PUSH_CS,             TWO_BYTE,    // 0x0
+                                    ADC,                                                                                       PUSH_SS,           POP_SS,     SBB,                                                    PUSH_DS,               POP_DS,    // 0x1
+                                    AND,                                                                                     Prefix_ES,              DAA,     SUB,                                                  Prefix_CS,                  DAS,    // 0x2
+                                    XOR,                                                                                     Prefix_SS,              AAA,     CMP,                                                  Prefix_DS,                  ASS,    // 0x3
+                                    INC,                                                                                                                      DEC,                                                                                      // 0x4
+                                   PUSH,                                                                                                                    POP_1,                                                                                      // 0x5
+                                 PUSHAD,  POPAD,               BOUND,                 APRL, Prefix_FS, Prefix_GS,  Prefix_operand_size, Prefix_addr_size,  PUSH_1, IMUL_1, PUSH_2,    IMUL_2,        INS,                                      OUTS,    // 0x6
+                                     JO,    JNO,                  JB,                  JNB,        JE,       JNE,                  JBE,               JA,      JS,    JNS,    JPE,       JPO,         JL,     JGE,        JLE,                   JG,    // 0x7
+         ADD_ADC_AND_XOR_OR_SBB_SUB_CMP,                                                       TEST_1,                            XCHG,                   MOV_REG,                            MOV_SREG_1,     LEA, MOV_SREG_2,                POP_2,    // 0x8
+                        XCHG_EAX_OR_NOP,                                                                                                                      CWD,    CDQ,  CALLF,      WAIT,     PUSHFD,   POPFD,       SAHF,                 LAHF,    // 0x9
+                                MOV_EAX,                                                         MOVS,                            CMPS,                    TEST_2,           STOS,                  LODS,                SCAS,                          // 0xa
+                                    MOV,                                                                                                                                                                                                                // 0xb
+                              SHIFT_IMM,                        RETN,                             LES,       LDS,              MOV_IMM,                     ENTER,  LEAVE,   RETF,                  INT3, INT_IMM,       INTO,                IRETD,    // 0xc
+                                SHIFT_1,                    SHIFT_CL,                             AAM,       AAD,                 SALS,             XLAT,     FPU,                                                                                      // 0xd
+                                 LOOPNZ,  LOOPZ,                LOOP,                JECXZ,    IN_IMM,                         OUT_IMM,                      CALL,    JMP,   JMPF, JMP_SHORT,      IN_DX,              OUT_DX,                          // 0xe
+                            Prefix_lock, ICR_BP, Prefix_repne_repnez, Prefix_repe_rep_repz,       HLT,       CMC, TEST_NOT_NEG_MUL_DIV,                       CLC,    STC,    CLI,       STI,        CLD,     STD,    INC_DEC, INC_DEC_CALL_JMP_PUSH    // 0xf
+    },
+    {
+        // instrucciones de dos bytes de opcode
+        1
+    }
+};
+
 #endif 
