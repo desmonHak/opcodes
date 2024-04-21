@@ -20,18 +20,28 @@
 
 #pragma pack(push, 1)
 
-typedef struct opcode {
-    uint8_t      s:1; /* 
-                       * Longitud del operando(size?):
-                       * Si s = 0, los operandos son registros de 8 bits y posiciones de memoria.
-                       * Si s = 1, los operandos son de 16 bits o de 32 bits:
-                       */
-    uint8_t      d:1; /* 
-                       * direcion:
-                       * Si d=0, REG es la fuente, MOD R/M <- REG.
-                       * Si d=1, REG es el destino, REG <- MOD R/M.
-                       */
-    uint8_t opcode:6; // opcode de 1 byte
+typedef union opcode
+{
+    struct opcode_bits_final {
+        uint8_t      s:1; /* 
+                        * Longitud del operando(size?):
+                        * Si s = 0, los operandos son registros de 8 bits y posiciones de memoria.
+                        * Si s = 1, los operandos son de 16 bits o de 32 bits:
+                        */
+        uint8_t      d:1; /* 
+                        * direcion:
+                        * Si d=0, REG es la fuente, MOD R/M <- REG.
+                        * Si d=1, REG es el destino, REG <- MOD R/M.
+                        */
+        uint8_t opcode:6; // opcode de 1 byte
+    } opcode_bits_final; // no siempre se da este formato en las instrucciones
+    struct opcode_bits {
+        uint8_t b1:1; uint8_t b2:1; uint8_t b3:1; uint8_t b4:1; 
+        uint8_t b5:1; uint8_t b6:1; uint8_t b7:1; uint8_t b8:1; 
+    } opcode_bits; // acceso a los campos de bit a bit (para los casos en los que el campo "w", "d", "s", puedan estar en diferentes ubicaciones)
+    struct opcode_byte {
+        uint8_t byte; 
+    } opcode_byte; // acceso a todos los campos en forma de byte
 } opcode;
 
 typedef struct Mod_rm {
@@ -74,87 +84,174 @@ typedef struct SIB {
  * de registros disponibles en el procesador de ocho a dieciséis.
  */
 typedef struct Instruction {
-    uint8_t prefix[4]; // ? // 4
-    opcode opcode[3];       // 7
-    Mod_rm Mod_rm;          // 8
-    SIB    SIB;             // 9
+    uint8_t prefix[4];  // ? // 4
+    opcode  opcode[3];       // 7
+    Mod_rm  Mod_rm;          // 8
+    SIB     SIB;             // 9
     uint8_t displacement[4]; // desplazamiento de 0, 1, 2, 4 bytes
     uint8_t immediate[4];    // immediato de 0, 1, 2, 4 bytes
 } Instruction;
 
+/*
+ *
+ * El campo TTTN definen la condicion de la instruccion, en el caso de las instrucciones JCC (instrucciones de salto)
+ * La instruccion JZ constiene como bit's tttn el valor 0100. siendo la codificacin del salto el  0111 tttn : 8-bit displacement
+ * donde 0111 indica que se trata de las instruciones de salto y tttn siendo la condicion, 8-bit displacement siendo una cantidad
+ * de bytes (un desplazamiento de 8bits) a saltar (maximos 0-255)
+ * 
+ * |-----------------------------------------------------------|
+ * | tttn | Mnemonic |  Condition                              |  
+ * |-----------------------------------------------------------|       
+ * | 0000 | O        | Overflow                                |     
+ * | 0001 | NO       | No overflow                             |         
+ * | 0010 | B, NAE   | Below, Not above or equal               |                         
+ * | 0011 | NB, AE   | Not below, Above or equal               |                         
+ * | 0100 | E, Z     | Equal, Zero                             |         
+ * | 0101 | NE, NZ   | Not equal, Not zero                     |                 
+ * | 0110 | BE, NA   | Below or equal, Not above               |                         
+ * | 0111 | NBE, A   | Not below or equal, Above               |                         
+ * | 1000 | S        | Sign                                    | 
+ * | 1001 | NS       | Not sign                                |     
+ * | 1010 | P, PE    | Parity, Parity Even                     |                 
+ * | 1011 | NP, PO   | Not parity, Parity Odd                  |                     
+ * | 1100 | L, NGE   | Less than, Not greater than or equal to |                                     
+ * | 1101 | NL, GE   | Not less than, Greater than or equal to |                                     
+ * | 1110 | LE, NG   | Less than or equal to, Not greater than |                                     
+ * | 1111 | NLE, G   | Not less than or equal to, Greater than |
+ * |-----------------------------------------------------------|  
+ */
+
+typedef struct Instruction_info
+{
+    Instruction instruction; // estructura con informacion del opcode y la instruccion
+
+    // 8 bits
+    uint8_t position_rm:2;    // lugar donde se encuentra los bits "rm"  del opcode  -> 00(primer byte), 01(segundo byte). 10(tercer byte), 4 (no hay campo rm)
+    uint8_t position_reg:2;   // lugar donde se encuentra los bits "reg"  del opcode -> 00(primer byte), 01(segundo byte). 10(tercer byte), 4 (no hay campo reg)
+    uint8_t position_mod:2;   // lugar donde se encuentra los bits "mod"  del opcode -> 00(primer byte), 01(segundo byte). 10(tercer byte), 4 (no hay campo mod)
+    uint8_t position_tttn:2;  // lugar donde se encuentra los bits "tttn" del opcode -> 00(primer byte), 01(segundo byte). 10(tercer byte), 4 (no hay campo tttn)
+
+    uint8_t posicion_w:4;     /* Este campo indica la posicion del bit "w" es los 4bits posterioes de los primeros 4bits, posibles valores: 1000 (bit w en el bit 4), 
+                                                                                                                                            0100 (bit w en el bit 3), 
+                                                                                                                                            0010 (bit w en el bit 2), 
+                                                                                                                                            0001 (bit w en el bit 1), 
+                                                                                                                                            0000 (no hay bit w)
+                                                                                                                                            Los demas estados no se definen */
+
+    // 8 bits
+    
+    uint8_t posicion_s:4;     /* Este campo indica la posicion del bit "s" es los 4bits posterioes de los primeros 4bits, posibles valores: 1000 (bit s en el bit 4), 
+                                                                                                                                            0100 (bit s en el bit 3), 
+                                                                                                                                            0010 (bit s en el bit 2), 
+                                                                                                                                            0001 (bit s en el bit 1), 
+                                                                                                                                            0000 (no hay bit s)
+                                                                                                                                            Los demas estados no se definen */
+ 
+    uint8_t opcode_size:2;    // tamaño del opcode de 1 a 3 bytes -> 00(1byte), 01(2byte). 10(3byte), 4(sin definir)
+    uint8_t immediate_data:1; // datos inmediatos, 1 para si, 0 para no
+    uint8_t immediate_instrution:1; // instruccion inmediata, 1 para si, 0 para no
+
+} Instruction_info;
+
 #pragma pack(pop)
 
-// (page: 2845) Intel® 64 and IA-32 Architectures Software Developer’s Manual, Combined Volumes: 1, 2A, 2B, 2C, 2D, 3A, 3B,
-typedef enum Opcodes_x86 {
-    /*                               0x00                  |        0x01  |                0x02 |                0x03 |            0x04    |            0x05      |                  0x06 |                    0x07 |          0x08 |          0x09 |        0x0a|           0x0b|           0x0c  |      0x0d |           0x0e|             0x0f       |        */
-    //                                                     |              |                     |                     |                    |                      |                       |                         |               |               |            |               |                 |           |               |                        |                                                                                             
-    ADD                            = 0x00,                                                                                                                              PUSH_ES    = 0x06,            POP_ES = 0x07,     OR,                                                                                    PUSH_CS = 0x0E, TWO_BYTE = 0x0f,        // 0x00
-    //                                                     |              |                     |                     |                    |                      |                       |                         |               |               |            |               |                 |           |               |                        |                                                                                                                                                                       
-    ADC                            = 0x10,                                                                                                                              PUSH_SS    = 0x16,            POP_SS = 0x17,    SBB,                                                                                    PUSH_DS = 0x1E, POP_DS,                 // 0x10
-    //                                                     |              |                     |                     |                    |                      |                       |                         |               |               |            |               |                 |           |               |                        |                                                     
-    AND                            = 0x20,                                                                                                                              _Prefix_ES = 0x26,                      DAA,    SUB,                                                                                        _Prefix_CS, DAS,                    // 0x20
-    //                                                     |              |                     |                     |                    |                      |                       |                         |               |               |            |               |                 |           |               |                        |                                                                                 
-    XOR                            = 0x30,                                                                                                                              _Prefix_SS = 0x36,                      AAA,    CMP,                                                                                        _Prefix_DS, ASS,                    // 0x30
-    //                                                     |              |                     |                     |                    |                      |                       |                         |               |               |            |               |                 |           |               |                        |                                                                                             
-    INC                            = 0x40,                                                                                                                                                                              DEC = 0x48,                                                                                                                     // 0x40
-    //                                                     |              |                     |                     |                    |                      |                       |                         |               |               |            |               |                 |           |               |                        |                                                                                                         
-    PUSH                           = 0x50,                                                                                                                                                                            POP_1 = 0x58,                                                                                                                     // 0x50
-    //                                                     |              |                     |                     |                    |                      |                       |                         |               |               |            |               |                 |           |               |                        |                                                                                             
-    PUSHAD                         = 0x60,                   POPAD = 0x61,         BOUND = 0x62,          APRL = 0x63, _Prefix_FS = 0x64,  _Prefix_GS = 0x65, _Prefix_operand_size = 0x66, _Prefix_addr_size = 0x67, PUSH_1 = 0x68, IMUL_1 = 0x69, PUSH_2 = 0x6a, IMUL_2 = 0x6b,        INS = 0x6c,                OUTS = 0x6e,                         // 0x60
-    //                                                     |              |                     |                     |                                                                                                                                                                                                                                                                                                                    
-    JO                             = 0x70,                            JNO,                   JB,                  JNB,                  JE,              JNE,                         JBE,                       JA,            JS,           JNS,           JPE,           JPO,                JL, JGE = 0x7d,            JLE, JG,                     // 0x70
-    //                                                     |              |                     |                     |                    |                      |                       |                         |               |               |            |               |                 |           |               |                        |                                                                                                                     
-    // las instrucciones que llevan los bi ts 1001 0000 y so|n ADD, ADC, A|ND, XOR, OR, SBB, SUB|, CMP, pertenezen al |grupo de instruccion|s  inmediatas         |                       |                         |               |               |            |               |                 |           |               |                        |                                                                                                                 
-    //                                                     |              |                     |                     |                    |                      |                       |                         |               |               |            |               |                 |           |               |                        |                                                                                               
-    ADD_ADC_AND_XOR_OR_SBB_SUB_CMP = 0b10010000,                                                                             TEST_1 = 0x84,                                   XCHG = 0x86,                          MOV_REG = 0x88,                                              MOV_SREG_1 = 0x8c,        LEA,     MOV_SREG_2, POP_2,                    // 0x80
-    //                                                     |              |                     |                     |                    |                      |                       |                         |               |               |            |               |                 |           |               |                        |                                                             
-    // XCHG_EAX_OR_NOP puede ser la instru ccion XCHG EAX o| un NOP       |                     |                     |                    |                      |                       |                         |               |               |            |               |                 |           |               |                        |                                                                                       
-    //                                                     |              |                     |                     |                    |                      |                       |                         |               |               |            |               |                 |           |               |                        |                                                             
-    XCHG_EAX_OR_NOP                = 0x90, XCHG_EAX = 0x90,                                                                                                                                                             CWD = 0x98,           CDQ,         CALLF,          WAIT,            PUSHFD,      POPFD,           SAHF, LAHF,                   // 0x90
-    //                                                     |              |                     |                     |                    |                      |                       |                         |               |               |            |               |                 |           |               |                        |                                                                                 
-            MOV_EAX                = 0xa0,                                                                                     MOVS = 0xa4,                                   CMPS = 0xa6,                           TEST_2 = 0xa8,                  STOS = 0xaa,                      LODS = 0xac,                SCAS = 0xae,                         // 0xa0
-    //                                                     |              |                     |                     |                    |                      |                       |                         |               |               |            |               |                 |           |               |                        |                                                                             
-    // MOV byte inmediato en registro byte                 |              |                     |                     |                    |                      |                       |                         |               |               |            |               |                 |           |               |                        |                                                 
-                                MOV = 0xb0,                                                                                                                                                                                                                                                                                                             // 0xb0
-    //                      Shift Grp 21A                  |                                    |                     |                    |                      |      Grp 111A - MOV   |                         |               |               |            |               |                 |           |               |                        |    
-                          SHIFT_IMM = 0xc0,                                         RETN = 0xc2,                                LES = 0xc4,               LDS,                    MOV_IMM,                            ENTER = 0xc8,          LEAVE,         RETF,                      INT3 = 0xcc,     INT_IMM,           INTO, IRETD,                 // 0xc0
-    //                                      Shift Grp 21A                                                             |                    |                      |                       |                         |               |               |            |               |                 |           |               |                        |                                                                                                                                                   
-    ROL_ROR_RCL_RCR_SHL_SHR_SAL_SAR = 0xd0, SHIFT_1 = 0xd0,                     SHIFT_CL = 0xd2,                                AAM = 0xd4,               AAD,                       SALS,                      XLAT,          FPU,                                                                                                                     // 0xd0
-    //                  <                L OOPS CONDICIONAL|ES            |                     |>                    |                    |                      |                       |                         |               |               |            |               |                 |           |               |                        |                                                                                                    
-                             LOOPNZ = 0xe0,                  LOOPZ = 0xe1,                 LOOP,                 JECXZ,             IN_IMM,                                OUT_IMM = 0xe6,                             CALL = 0xe8,            JMP,         JMPF,      JMP_SHORT,            IN_DX,               OUT_DX = 0xee,                        // 0xe0
-    //                                                     |              |                     |                     |                    |                      |                       |                         |               |               |            |               |                 |           |               |                        |       
-                       _Prefix_lock = 0xf0,                 ICR_BP = 0xf1, _Prefix_repne_repnez, _Prefix_repe_rep_repz,                HLT,                CMC,       TEST_NOT_NEG_MUL_DIV,                              CLC = 0xf8,            STC,          CLI,            STI,              CLD,          STD,       INC_DEC, INC_DEC_CALL_JMP_PUSH  // 0xf0
-    //                                                     |              |                     |                     |                    |                      |                       |                         |               |               |            |               |                 |           |               |                        |                           
-} Opcodes_x86;
+// (Instrucciones en page: 2845/2875) Intel® 64 and IA-32 Architectures Software Developer’s Manual, Combined Volumes: 1, 2A, 2B, 2C, 2D, 3A, 3B,
+
+__attribute__((__section__(".instruccion"))) static Instruction_info my_instruccion[] = {
+    {
+        .immediate_instrution = 0b1,  // es una instruccion inmediata
+        .opcode_size          = 0b00, // un byte de opcode
+        .instruction = { // AAA – ASCII Adjust after Addition
+            .prefix = { 0b00000000, 0b00000000, 0b00000000, 0b00000000 },
+            .opcode = {
+                (opcode){ .opcode_byte.byte = 0b00000000 }, 
+                (opcode){ .opcode_byte.byte = 0b00000000 },
+                (opcode){ .opcode_byte.byte = 0b00110111 }, // opcode primario
+            },
+            .Mod_rm = (Mod_rm){   .mod = 0b00,   .reg = 0b000,  .R_M = 0b000 },
+            .SIB    =    (SIB){ .scale = 0b00, .index = 0b000, .base = 0b000 },
+            .displacement = { 0b00000000, 0b00000000, 0b00000000, 0b00000000},
+            .immediate    = { 0b00000000, 0b00000000, 0b00000000, 0b00000000}
+        }
+    },
+    {
+        .immediate_instrution = 0b1,  // es una instruccion inmediata
+        .opcode_size          = 0b01, // dos byte's de opcode
+        .instruction = { // AAD – ASCII Adjust AX before Division
+            .prefix = { 0b00000000, 0b00000000, 0b00000000, 0b00000000 },
+            .opcode = {
+                (opcode){ .opcode_byte.byte = 0b00000000 },
+                (opcode){ .opcode_byte.byte = 0b00001010 }, // opcode secundario
+                (opcode){ .opcode_byte.byte = 0b11010101 }, // opcode primario
+            },
+            .Mod_rm = (Mod_rm){   .mod = 0b11,   .reg = 0b000,  .R_M = 0b001 },
+            .SIB    =    (SIB){ .scale = 0b10, .index = 0b101, .base = 0b010 },
+            .displacement = { 0b00000000, 0b00000000, 0b00000000, 0b00000000},
+            .immediate    = { 0b00000000, 0b00000000, 0b00000000, 0b00000000}
+        }
+    },
+    {
+        .immediate_instrution = 0b1,  // es una instruccion inmediata
+        .opcode_size          = 0b01, // dos byte's de opcode
+        .instruction = { // AAM – ASCII Adjust AX after Multiply
+            .prefix = { 0b00000000, 0b00000000, 0b00000000, 0b00000000 },
+            .opcode = {
+                (opcode){ .opcode_byte.byte = 0b00000000 },
+                (opcode){ .opcode_byte.byte = 0b00001010 }, // opcode secundario
+                (opcode){ .opcode_byte.byte = 0b11000101 }, // opcode primario
+            },
+            .Mod_rm = (Mod_rm){   .mod = 0b11,   .reg = 0b000,  .R_M = 0b001 },
+            .SIB    =    (SIB){ .scale = 0b10, .index = 0b101, .base = 0b010 },
+            .displacement = { 0b00000000, 0b00000000, 0b00000000, 0b00000000},
+            .immediate    = { 0b00000000, 0b00000000, 0b00000000, 0b00000000}
+        }
+    },
+    {
+        .immediate_instrution = 0b1,  // es una instruccion inmediata
+        .opcode_size          = 0b00, // un byte de opcode
+        .instruction = { // AAS – ASCII Adjust AL after Subtraction
+            .prefix = { 0b00000000, 0b00000000, 0b00000000, 0b00000000 },
+            .opcode = {
+                (opcode){ .opcode_byte.byte = 0b00000000 },
+                (opcode){ .opcode_byte.byte = 0b00000000 }, // opcode secundario
+                (opcode){ .opcode_byte.byte = 0b00111111 }, // opcode primario
+            },
+            .Mod_rm = (Mod_rm){   .mod = 0b11,   .reg = 0b000,  .R_M = 0b001 },
+            .SIB    =    (SIB){ .scale = 0b10, .index = 0b101, .base = 0b010 },
+            .displacement = { 0b00000000, 0b00000000, 0b00000000, 0b00000000},
+            .immediate    = { 0b00000000, 0b00000000, 0b00000000, 0b00000000}
+        }
+    }
+};
 
 typedef enum Prefix_x86_Segment_Register {
-    Prefix_SS = _Prefix_SS, // 0x36 Prefijo de anulación del segmento SS (segmento de pila)
-    Prefix_CS = _Prefix_CS, // 0x2E Prefijo de anulación del segmento CS (segmento de codigo)
-    Prefix_ES = _Prefix_ES, // 0x26 Prefijo de anulación del segmento ES
-    Prefix_DS = _Prefix_DS, // 0x3E Prefijo de anulación del segmento DS (segmento de datos)
-    Prefix_FS = _Prefix_FS, // 0x64 Prefijo de anulación del segmento FS
-    Prefix_GS = _Prefix_GS, // 0x65 Prefijo de anulación del segmento GS
+    Prefix_SS = 0x36, // 0x36 Prefijo de anulación del segmento SS (segmento de pila)
+    Prefix_CS = 0x2E, // 0x2E Prefijo de anulación del segmento CS (segmento de codigo)
+    Prefix_ES = 0x26, // 0x26 Prefijo de anulación del segmento ES
+    Prefix_DS = 0x3E, // 0x3E Prefijo de anulación del segmento DS (segmento de datos)
+    Prefix_FS = 0x64, // 0x64 Prefijo de anulación del segmento FS
+    Prefix_GS = 0x65, // 0x65 Prefijo de anulación del segmento GS
 } Prefix_x86_Segment_Register;
 
 typedef enum Prefix_x86_others {
-    Prefix_operand_size  = _Prefix_operand_size, /* 0x66
+    Prefix_operand_size  = 0x66,                 /* 0x66
                                                   * Segun el manual de intel vol1, El prefijo de "anulación de tamaño de operando"(operand-size override) permite a un programa 
                                                   * cambiar entre tamaños de operando de 16 y 32 bits. Cualquiera de los dos tamaños puede ser el 
                                                   * predeterminado; el uso del prefijo selecciona el tamaño no predeterminado. en este caso el modo 
                                                   * no predeterminado seria 32bits, es por eso que decimos que sea este. No se puede cambiar de 16 o de 32 a 64 ni al reves 
                                                   * mediante este prefijo, se a de usar la correspondiente instruccion para esta tarea
                                                   */
-    Prefix_addr_size     = _Prefix_addr_size,     /* 0x67
+    Prefix_addr_size     = 0x67,                  /* 0x67
                                                    * predefinido para el prefijo de "anulación de tamaño de dirección". Su significado es que si una instrucción ejecuta un tamaño 
                                                    * de dirección predeterminado, por ejemplo, 16 bits, el uso del prefijo permite que
                                                    * la instrucción utilice un tamaño de dirección distinto al predeterminado, por 
                                                    * ejemplo, 32 bits en modo de 16. Como se supone que el binario es de 16 bits, 0x67 
                                                    * cambia la instrucción al modo de 32 bits.
                                                    */
-    Prefix_lock          = _Prefix_lock,          // 0xF0 Prefijo LOCK
-    Prefix_repne_repnez  = _Prefix_repne_repnez,  // 0xF2 Prefijo REPNE/REPNZ (utilizado sólo con instrucciones de cadena)
-    Prefix_repe_rep_repz = _Prefix_repe_rep_repz, // 0xF3 Prefijo REP         (utilizado sólo con instrucciones de string)
-                                                  // 0xF3 Prefijo REPE/REPZ   (sólo se utiliza con instrucciones de string)     
+    Prefix_lock          = 0xF0,                   // 0xF0 Prefijo LOCK
+    Prefix_repne_repnez  = 0xF2,                   // 0xF2 Prefijo REPNE/REPNZ (utilizado sólo con instrucciones de cadena)
+    Prefix_repe_rep_repz = 0xF3,                   // 0xF3 Prefijo REP         (utilizado sólo con instrucciones de string)
+                                                   // 0xF3 Prefijo REPE/REPZ   (sólo se utiliza con instrucciones de string)     
 } Prefix_x86_Segment_others;
 
 /*
@@ -172,39 +269,6 @@ typedef enum Prefix_x86_others {
  * 
  */
 
-static uint8_t Opcodes_x86_array_1[] = {
-    // instrucciones de un byte de opcode (Tabla A-2)
-    /*                          0x0     0x1                  0x2                0x3         0x4        0x5                  0x6                0x7       0x8    0x9    0xa      0xb          0xc      0xd        0xe                    0xf         */
-                                ADD,                                                                                       PUSH_ES,           POP_ES,      OR,                                                    PUSH_CS,             TWO_BYTE,    // 0x0
-                                ADC,                                                                                       PUSH_SS,           POP_SS,     SBB,                                                    PUSH_DS,               POP_DS,    // 0x1
-                                AND,                                                                                     Prefix_ES,              DAA,     SUB,                                                  Prefix_CS,                  DAS,    // 0x2
-                                XOR,                                                                                     Prefix_SS,              AAA,     CMP,                                                  Prefix_DS,                  ASS,    // 0x3
-                                INC,                                                                                                                      DEC,                                                                                      // 0x4
-                               PUSH,                                                                                                                    POP_1,                                                                                      // 0x5
-                             PUSHAD,  POPAD,               BOUND,                 APRL, Prefix_FS, Prefix_GS,  Prefix_operand_size, Prefix_addr_size,  PUSH_1, IMUL_1, PUSH_2,    IMUL_2,        INS,                                      OUTS,    // 0x6
-                                 JO,    JNO,                  JB,                  JNB,        JE,       JNE,                  JBE,               JA,      JS,    JNS,    JPE,       JPO,         JL,     JGE,        JLE,                   JG,    // 0x7
-     ADD_ADC_AND_XOR_OR_SBB_SUB_CMP,                                                       TEST_1,                            XCHG,                   MOV_REG,                            MOV_SREG_1,     LEA, MOV_SREG_2,                POP_2,    // 0x8
-                    XCHG_EAX_OR_NOP,                                                                                                                      CWD,    CDQ,  CALLF,      WAIT,     PUSHFD,   POPFD,       SAHF,                 LAHF,    // 0x9
-                            MOV_EAX,                                                         MOVS,                            CMPS,                    TEST_2,           STOS,                  LODS,                SCAS,                          // 0xa
-                                MOV,                                                                                                                                                                                                                // 0xb
-                          SHIFT_IMM,                        RETN,                             LES,       LDS,              MOV_IMM,                     ENTER,  LEAVE,   RETF,                  INT3, INT_IMM,       INTO,                IRETD,    // 0xc
-                            SHIFT_1,                    SHIFT_CL,                             AAM,       AAD,                 SALS,             XLAT,     FPU,                                                                                      // 0xd
-                             LOOPNZ,  LOOPZ,                LOOP,                JECXZ,    IN_IMM,                         OUT_IMM,                      CALL,    JMP,   JMPF, JMP_SHORT,      IN_DX,              OUT_DX,                          // 0xe
-                        Prefix_lock, ICR_BP, Prefix_repne_repnez, Prefix_repe_rep_repz,       HLT,       CMC, TEST_NOT_NEG_MUL_DIV,                       CLC,    STC,    CLI,       STI,        CLD,     STD,    INC_DEC, INC_DEC_CALL_JMP_PUSH,   // 0xf
-};
-static uint8_t Opcodes_x86_array_2[] = {
-    // instrucciones de dos bytes de opcode, solo si se da TWO_OPCODE, (Tabla A-3) (pagina: 2847)
-    1,
-};
-static uint8_t Opcodes_x86_array_3[] = {
-    // instrucciones de dos tres de opcode, solo si se da THREE_OPCODE, (Tabla A-4 a Tabla A-5) (pagina: 2851)
-    1,
-};
-static uint8_t *Opcodes_x86_array[3] = {
-    Opcodes_x86_array_1,
-    Opcodes_x86_array_2,
-    Opcodes_x86_array_3
-};
 
 
 #endif 
