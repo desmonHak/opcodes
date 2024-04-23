@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #include "opcodes_prefix.h"
+#include "colors-C-C-plus-plus\colors.h"
 
 void print_binary(unsigned int num, int num_bits);
 void print_opcode(opcode opcode, uint8_t number_opcode);

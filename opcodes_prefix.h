@@ -17,6 +17,14 @@
  */
 #include <stdint.h>
 
+typedef enum string_instrution_id {
+    STRING_AAA,
+    STRING_AAD,
+    STRING_AAM,
+    STRING_AAS,
+    STRING_ADC,
+} string_instrution_id;
+
 
 #pragma pack(push, 1)
 
@@ -123,14 +131,18 @@ typedef struct Instruction {
 
 typedef struct Instruction_info
 {
+    string_instrution_id string;      // string a obtener
     Instruction instruction; // estructura con informacion del opcode y la instruccion
 
     // 8 bits
-    uint8_t position_rm:2;    // lugar donde se encuentra los bits "rm"  del opcode  -> 00(primer byte), 01(segundo byte). 10(tercer byte), 4 (no hay campo rm)
-    uint8_t position_reg:2;   // lugar donde se encuentra los bits "reg"  del opcode -> 00(primer byte), 01(segundo byte). 10(tercer byte), 4 (no hay campo reg)
-    uint8_t position_mod:2;   // lugar donde se encuentra los bits "mod"  del opcode -> 00(primer byte), 01(segundo byte). 10(tercer byte), 4 (no hay campo mod)
-    uint8_t position_tttn:2;  // lugar donde se encuentra los bits "tttn" del opcode -> 00(primer byte), 01(segundo byte). 10(tercer byte), 4 (no hay campo tttn)
-
+    uint8_t position_rm:2;    // lugar donde se encuentra los bits "rm"  del opcode  -> 00(primer byte), 
+                              //    01(segundo byte). 10(tercer byte), 4 (no hay campo rm)
+    uint8_t position_reg:2;   // lugar donde se encuentra los bits "reg"  del opcode -> 00(primer byte), 
+                              //    01(segundo byte). 10(tercer byte), 4 (no hay campo reg)
+    uint8_t position_mod:2;   // lugar donde se encuentra los bits "mod"  del opcode -> 00(primer byte), 
+                              //    01(segundo byte). 10(tercer byte), 4 (no hay campo mod)
+    uint8_t position_tttn:2;  // lugar donde se encuentra los bits "tttn" del opcode -> 00(primer byte), 
+                              //    01(segundo byte). 10(tercer byte), 4 (no hay campo tttn)
     uint8_t posicion_w:4;     /* Este campo indica la posicion del bit "w" es los 4bits posterioes de los primeros 4bits, posibles valores: 1000 (bit w en el bit 4), 
                                                                                                                                             0100 (bit w en el bit 3), 
                                                                                                                                             0010 (bit w en el bit 2), 
@@ -138,8 +150,18 @@ typedef struct Instruction_info
                                                                                                                                             0000 (no hay bit w)
                                                                                                                                             Los demas estados no se definen */
 
-    // 8 bits
-    
+    uint8_t mask_rm;   // 8bits (16 bits)
+    uint8_t mask_reg;  // 8bits (24 bits)
+    uint8_t mask_mod;  // 8bits (32 bits)
+    // 8bits (40 bits)
+    uint8_t mask_tttn:6;  // 6bits para mascara tttn
+    uint8_t number_reg:2; // algunas instrucciones no usan Mod/rm y usan este campo(R_m) directamente para almacenar el registro
+                          // 0b00 - no usa campo reg
+                          // 0b01 - usa un campo reg
+                          // 0b10 - usa dos campos reg (rm se convierte en un campo registro)
+                          // 0b11 - no se define
+
+    // 8 bits (48 bits)
     uint8_t posicion_s:4;     /* Este campo indica la posicion del bit "s" es los 4bits posterioes de los primeros 4bits, posibles valores: 1000 (bit s en el bit 4), 
                                                                                                                                             0100 (bit s en el bit 3), 
                                                                                                                                             0010 (bit s en el bit 2), 
@@ -155,12 +177,28 @@ typedef struct Instruction_info
 
 #pragma pack(pop)
 
+
+static const char *get_string_instrution(string_instrution_id id);
+
 // (Instrucciones en page: 2845/2875) Intel® 64 and IA-32 Architectures Software Developer’s Manual, Combined Volumes: 1, 2A, 2B, 2C, 2D, 3A, 3B,
 
 __attribute__((__section__(".instruccion"))) static Instruction_info my_instruccion[] = {
     {
-        .immediate_instrution = 0b1,  // es una instruccion inmediata
-        .opcode_size          = 0b00, // un byte de opcode
+        .string               = STRING_AAA,
+        .immediate_instrution = 0b1,         // es una instruccion inmediata
+        .opcode_size          = 0b00,        // un byte de opcode
+        .posicion_w           = 0b0000,      // no hay bit "w"
+        .posicion_s           = 0b0000,      // no hay bit "s"
+        .position_rm          = 0b11,        // no hay r/m
+        .position_reg         = 0b11,        // no hay reg
+        .position_mod         = 0b11,        // no hay mod
+        .position_tttn        = 0b11,        // no hay tttn
+        .mask_mod             = 0b00000000,
+        .mask_reg             = 0b00000000,
+        .mask_rm              = 0b00000000,
+        .mask_tttn            = 0b000000,
+        .number_reg           = 0b00,         // 0b00 - no usa campo reg
+        .immediate_data       = 0b0,          // no tiene datos inmediatos
         .instruction = { // AAA – ASCII Adjust after Addition
             .prefix = { 0b00000000, 0b00000000, 0b00000000, 0b00000000 },
             .opcode = {
@@ -175,8 +213,21 @@ __attribute__((__section__(".instruccion"))) static Instruction_info my_instrucc
         }
     },
     {
-        .immediate_instrution = 0b1,  // es una instruccion inmediata
-        .opcode_size          = 0b01, // dos byte's de opcode
+        .string               = STRING_AAD,
+        .immediate_instrution = 0b1,         // es una instruccion inmediata
+        .opcode_size          = 0b01,        // dos byte's de opcode
+        .posicion_w           = 0b0000,      // no hay bit "w"
+        .posicion_s           = 0b0000,      // no hay bit "s"
+        .position_rm          = 0b11,        // no hay r/m
+        .position_reg         = 0b11,        // no hay reg
+        .position_mod         = 0b11,        // no hay mod
+        .position_tttn        = 0b11,        // no hay tttn
+        .mask_mod             = 0b00000000,
+        .mask_reg             = 0b00000000,
+        .mask_rm              = 0b00000000,
+        .mask_tttn            = 0b000000,
+        .number_reg           = 0b00,         // 0b00 - no usa campo reg
+        .immediate_data       = 0b0,          // no tiene datos inmediatos
         .instruction = { // AAD – ASCII Adjust AX before Division
             .prefix = { 0b00000000, 0b00000000, 0b00000000, 0b00000000 },
             .opcode = {
@@ -184,31 +235,57 @@ __attribute__((__section__(".instruccion"))) static Instruction_info my_instrucc
                 (opcode){ .opcode_byte.byte = 0b00001010 }, // opcode secundario
                 (opcode){ .opcode_byte.byte = 0b11010101 }, // opcode primario
             },
-            .Mod_rm = (Mod_rm){   .mod = 0b11,   .reg = 0b000,  .R_M = 0b001 },
-            .SIB    =    (SIB){ .scale = 0b10, .index = 0b101, .base = 0b010 },
+            .Mod_rm = (Mod_rm){   .mod = 0b00,   .reg = 0b000,  .R_M = 0b000 },
+            .SIB    =    (SIB){ .scale = 0b00, .index = 0b000, .base = 0b000 },
             .displacement = { 0b00000000, 0b00000000, 0b00000000, 0b00000000},
             .immediate    = { 0b00000000, 0b00000000, 0b00000000, 0b00000000}
         }
     },
     {
-        .immediate_instrution = 0b1,  // es una instruccion inmediata
-        .opcode_size          = 0b01, // dos byte's de opcode
+        .string               = STRING_AAM,
+        .immediate_instrution = 0b1,         // es una instruccion inmediata
+        .opcode_size          = 0b01,        // dos byte's de opcode
+        .posicion_w           = 0b0000,      // no hay bit "w"
+        .posicion_s           = 0b0000,      // no hay bit "s"
+        .position_rm          = 0b11,        // no hay r/m
+        .position_reg         = 0b11,        // no hay reg
+        .position_mod         = 0b11,        // no hay mod
+        .position_tttn        = 0b11,        // no hay tttn
+        .mask_mod             = 0b00000000,
+        .mask_reg             = 0b00000000,
+        .mask_rm              = 0b00000000,
+        .mask_tttn            = 0b000000,
+        .number_reg           = 0b00,         // 0b00 - no usa campo reg
+        .immediate_data       = 0b0,          // no tiene datos inmediatos
         .instruction = { // AAM – ASCII Adjust AX after Multiply
             .prefix = { 0b00000000, 0b00000000, 0b00000000, 0b00000000 },
             .opcode = {
                 (opcode){ .opcode_byte.byte = 0b00000000 },
                 (opcode){ .opcode_byte.byte = 0b00001010 }, // opcode secundario
-                (opcode){ .opcode_byte.byte = 0b11000101 }, // opcode primario
+                (opcode){ .opcode_byte.byte = 0b11010100 }, // opcode primario
             },
-            .Mod_rm = (Mod_rm){   .mod = 0b11,   .reg = 0b000,  .R_M = 0b001 },
-            .SIB    =    (SIB){ .scale = 0b10, .index = 0b101, .base = 0b010 },
+            .Mod_rm = (Mod_rm){   .mod = 0b00,   .reg = 0b000,  .R_M = 0b000 },
+            .SIB    =    (SIB){ .scale = 0b00, .index = 0b000, .base = 0b000 },
             .displacement = { 0b00000000, 0b00000000, 0b00000000, 0b00000000},
             .immediate    = { 0b00000000, 0b00000000, 0b00000000, 0b00000000}
         }
     },
     {
-        .immediate_instrution = 0b1,  // es una instruccion inmediata
-        .opcode_size          = 0b00, // un byte de opcode
+        .string               = STRING_AAS,
+        .immediate_instrution = 0b1,         // es una instruccion inmediata
+        .opcode_size          = 0b00,        // un byte de opcode
+        .posicion_w           = 0b0000,      // no hay bit "w"
+        .posicion_s           = 0b0000,      // no hay bit "s"
+        .position_rm          = 0b11,        // no hay r/m
+        .position_reg         = 0b11,        // no hay reg
+        .position_mod         = 0b11,        // no hay mod
+        .position_tttn        = 0b11,        // no hay tttn
+        .mask_mod             = 0b00000000,
+        .mask_reg             = 0b00000000,
+        .mask_rm              = 0b00000000,
+        .mask_tttn            = 0b000000,
+        .number_reg           = 0b00,         // 0b00 - no usa campo reg
+        .immediate_data       = 0b0,          // no tiene datos inmediatos
         .instruction = { // AAS – ASCII Adjust AL after Subtraction
             .prefix = { 0b00000000, 0b00000000, 0b00000000, 0b00000000 },
             .opcode = {
@@ -216,8 +293,37 @@ __attribute__((__section__(".instruccion"))) static Instruction_info my_instrucc
                 (opcode){ .opcode_byte.byte = 0b00000000 }, // opcode secundario
                 (opcode){ .opcode_byte.byte = 0b00111111 }, // opcode primario
             },
-            .Mod_rm = (Mod_rm){   .mod = 0b11,   .reg = 0b000,  .R_M = 0b001 },
-            .SIB    =    (SIB){ .scale = 0b10, .index = 0b101, .base = 0b010 },
+            .Mod_rm = (Mod_rm){   .mod = 0b00,   .reg = 0b000,  .R_M = 0b000 },
+            .SIB    =    (SIB){ .scale = 0b00, .index = 0b000, .base = 0b000 },
+            .displacement = { 0b00000000, 0b00000000, 0b00000000, 0b00000000},
+            .immediate    = { 0b00000000, 0b00000000, 0b00000000, 0b00000000}
+        }
+    },
+    {
+        .string               = STRING_ADC,
+        .immediate_instrution = 0b0,          // es una instruccion inmediata
+        .opcode_size          = 0b01,         // dos byte's de opcode
+        .posicion_w           = 0b0001,       // hay bit "w" en el bit 1
+        .posicion_s           = 0b0000,       // no hay bit "s"
+        .position_rm          = 0b01,         // hay r/m en el segundo byte (se convierte en reg2 si number_reg == 0b10)
+        .position_reg         = 0b01,         // hay reg en el segundo byte
+        .position_mod         = 0b11,         // no hay mod
+        .position_tttn        = 0b11,         // no hay tttn
+        .mask_mod             = 0b00000000,   // -
+        .mask_reg             = 0b00111000,   // con esta mascara se obtiene los bits 5, 4 y 3 de 7,6,5,4,3,2,1,0
+        .mask_rm              = 0b00000111,   // con esta mascara se obtiene los bits 2, 1 y 0 de 7,6,5,4,3,2,1,0
+        .mask_tttn            = 0b000000,
+        .number_reg           = 0b10,         // 0b10 - usa dos campos reg (rm se convierte en un campo registro)
+        .immediate_data       = 0b0,          // no tiene datos inmediatos
+        .instruction = { // ADC – ADD with Carry
+            .prefix = { 0b00000000, 0b00000000, 0b00000000, 0b00000000 },
+            .opcode = {
+                (opcode){ .opcode_byte.byte = 0b00000000 },
+                (opcode){ .opcode_byte.byte = 0b11000000 }, // opcode secundario
+                (opcode){ .opcode_byte.byte = 0b00010000 }, // opcode primario
+            },
+            .Mod_rm = (Mod_rm){   .mod = 0b11,   .reg = 0b000,  .R_M = 0b000 },
+            .SIB    =    (SIB){ .scale = 0b00, .index = 0b000, .base = 0b000 },
             .displacement = { 0b00000000, 0b00000000, 0b00000000, 0b00000000},
             .immediate    = { 0b00000000, 0b00000000, 0b00000000, 0b00000000}
         }
@@ -270,5 +376,5 @@ typedef enum Prefix_x86_others {
  */
 
 
-
+#include "opcodes_prefix.c"
 #endif 

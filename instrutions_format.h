@@ -5,6 +5,7 @@
 #include "print_structs_format.h"
 
 #include <stdlib.h>
+#include <stdint.h>
 
 typedef struct List_instrution {
     struct List_instrution *next_list_instrution;

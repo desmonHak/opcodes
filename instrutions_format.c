@@ -66,33 +66,118 @@ List_instrution *push_List_instrution(List_instrution *list_instrution) {
 void print_List_instrution(List_instrution *list_instrution) {
     if (list_instrution == NULL) printf("finall list or invalid...");
 
-    List_instrution *i = list_instrution;
-    while (i->next_list_instrution != NULL) {
+    for (List_instrution *i = list_instrution; i->next_list_instrution != NULL; i = i->next_list_instrution) {
         printf("list_instrution[%d] = %p\n", i->id, i);
         print_instruccion_binary(&(i->Instruction.instruction));
         print_instruccion(&(i->Instruction.instruction));
         printf("list_instrution->next_list_instrution = %p\n\n", i->next_list_instrution);
-        i = i->next_list_instrution;
-        
     }
-
 }
 
 List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes) {
     List_instrution *list_instrution_resb = init_List_instrution();
-    push_List_instrution(list_instrution_resb);
     
     for (size_t i = 0; i < size_in_bytes; i++) {
+        List_instrution *actual_node = push_List_instrution(list_instrution_resb);
+        uint8_t prefix_actual; // si es distinto de 0x00 hay prefijo
+        uint8_t prefix_actual_n = 0; // cantidad de prefijos encontrados para una instruccion (maximo se soporta 4 en esta implementacion para cada  instruccion)
+
         restart_for:
+        prefix_actual = 0x00;
         switch (instrutions[i]) // buscar prefijos
         {
-        case Prefix_SS:
-            
-            break;
-        
-        default:
-            break;
+            case Prefix_SS: prefix_actual = Prefix_SS; break;
+            case Prefix_CS: prefix_actual = Prefix_CS; break;
+            case Prefix_ES: prefix_actual = Prefix_ES; break;
+            case Prefix_DS: prefix_actual = Prefix_DS; break;
+            case Prefix_FS: prefix_actual = Prefix_FS; break;
+            case Prefix_GS: prefix_actual = Prefix_GS; break;
+
+            case Prefix_operand_size:  prefix_actual = Prefix_operand_size; break;
+            case Prefix_addr_size:     prefix_actual = Prefix_addr_size; break;
+            case Prefix_lock:          prefix_actual = Prefix_lock; break;
+            case Prefix_repne_repnez:  prefix_actual = Prefix_repne_repnez; break;
+            case Prefix_repe_rep_repz: prefix_actual = Prefix_repe_rep_repz; break;
         }
+        
+        // si se encontro un prefijo se agrega a la instruccion
+        if (prefix_actual) {
+            actual_node->Instruction.instruction.prefix[prefix_actual_n] = prefix_actual; 
+            i++; // pasar al siguiente byte si se encontro un prefijo
+            prefix_actual_n++; // aumentar la cantidad de prefijos encontrados para la instruccion actual en 1. 
+            // if (prefix_actual > 0b11) // error
+            goto restart_for; // volver al inicio del for en busca de otro prefijo, conservando los datos de las variables
+        }
+
+        // si no se encontro mas prefijos, se analiza el opcode
+        for (size_t j = 0; j < sizeof(my_instruccion)/sizeof(Instruction_info); j++){
+            /*for (uint8_t k = 0; k < my_instruccion[i].opcode_size; k++){ // recorrer cada opcode de la instruccion en busca de coincidencias (max 3 opcodes por instruccion)
+                
+                if (my_instruccion[i].instruction.opcode[k] & instrutions[i])
+            }*/
+            unsigned int Avalue1, Avalue2, Avalue3; // generar un par de 3 colores para imprimir cada instruccion con un color diferente usando rgb
+            int values[] = {
+                my_instruccion[j].instruction.opcode[0].opcode_byte.byte + 0x0f00, 
+                my_instruccion[j].instruction.opcode[1].opcode_byte.byte + 0xf0010a0, 
+                my_instruccion[j].instruction.opcode[2].opcode_byte.byte, 
+                0xa0, 0xf1, 
+                my_instruccion[j].instruction.opcode[2].opcode_byte.byte + 1 +
+                my_instruccion[j].instruction.opcode[1].opcode_byte.byte +
+                my_instruccion[j].instruction.opcode[0].opcode_byte.byte + 20
+            };
+            //shuffle_array(values, sizeof(values)/sizeof(int));
+            unsigned int seed = my_instruccion[j].instruction.opcode[2].opcode_byte.byte * 
+                                my_instruccion[j].instruction.opcode[1].opcode_byte.byte * 
+                                my_instruccion[j].instruction.opcode[0].opcode_byte.byte ;
+            Avalue1 = jenkins_hash(seed,    values[0], values[1], values[3], values[4], values[5], values[6]);
+            Avalue2 = jenkins_hash(Avalue1, values[0], values[1], values[3], values[4], values[5], values[6]);
+            Avalue3 = jenkins_hash(Avalue2, values[0], values[1], values[3], values[4], values[5], values[6]);
+
+            printf(">>> buscando.... %02x\n ", instrutions[i]);
+            //printf("2bytes; i = %d, j = %d\n", i, j);
+            switch (my_instruccion[j].opcode_size)
+            {
+                case 0b00: // un byte de opcode
+                    //puts("1bytes");
+                    
+                    if (my_instruccion[j].instruction.opcode[2].opcode_byte.byte & instrutions[i] == my_instruccion[j].instruction.opcode[2].opcode_byte.byte) {
+                        actual_node->Instruction.instruction.opcode[2].opcode_byte = my_instruccion[i].instruction.opcode[2].opcode_byte;
+                        actual_node->Instruction.immediate_instrution = my_instruccion[j].immediate_instrution;
+                        actual_node->Instruction.opcode_size = my_instruccion[j].opcode_size;
+                        actual_node->Instruction.string = my_instruccion[j].string;
+                        printf_color("instruccion actual -> #{FG:lcyan}%s#{FG:reset} -> ", get_string_instrution(actual_node->Instruction.string));
+                        printf_color("#{BG:%d;%d;%d} %s#{FG:reset} (color: %u %u %u)\n", (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3,  get_string_instrution(actual_node->Instruction.string), (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3);
+                        if (actual_node->Instruction.immediate_instrution) goto the_end_for; // si se trata de una instruccion inmediata no hay nada mas que analizar
+                    } break;
+                case 0b01: // dos bytes de opcode
+                    /*printf("( %x & %x = %x ) && ( %x & %x = %x )\n", 
+                    my_instruccion[j].instruction.opcode[2].opcode_byte.byte, instrutions[i], my_instruccion[j].instruction.opcode[2].opcode_byte.byte & instrutions[i],
+                    my_instruccion[j].instruction.opcode[1].opcode_byte.byte, instrutions[i+1], my_instruccion[j].instruction.opcode[1].opcode_byte.byte & instrutions[i+1]);*/
+                    if (
+                        ((my_instruccion[j].instruction.opcode[2].opcode_byte.byte & instrutions[i]) == my_instruccion[j].instruction.opcode[2].opcode_byte.byte) &&
+                        ((my_instruccion[j].instruction.opcode[1].opcode_byte.byte & instrutions[i+1]) == my_instruccion[j].instruction.opcode[1].opcode_byte.byte)
+                       ) {
+                        actual_node->Instruction.instruction.opcode[2].opcode_byte = my_instruccion[i].instruction.opcode[2].opcode_byte;
+                        actual_node->Instruction.instruction.opcode[1].opcode_byte = my_instruccion[i+1].instruction.opcode[1].opcode_byte;
+                        actual_node->Instruction.immediate_instrution = my_instruccion[j].immediate_instrution;
+                        actual_node->Instruction.opcode_size = my_instruccion[j].opcode_size; 
+                        actual_node->Instruction.string = my_instruccion[j].string; i+=1;
+                        printf_color("instruccion actual -> #{FG:lpurple}%s#{FG:reset} -> ", get_string_instrution(actual_node->Instruction.string));
+                        printf_color("#{BG:%d;%d;%d} %s#{FG:reset} (color: %u %u %u)\n", (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3,  get_string_instrution(actual_node->Instruction.string), (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3);
+                        if (actual_node->Instruction.immediate_instrution) goto the_end_for; // si se trata de una instruccion inmediata no hay nada mas que analizar
+                    } 
+                    break;
+                case 0b10: // tres byte de opcode
+                    if (my_instruccion[j].instruction.opcode[2].opcode_byte.byte & instrutions[i] == my_instruccion[j].instruction.opcode[2].opcode_byte.byte) {
+                        actual_node->Instruction.instruction.opcode[2].opcode_byte = my_instruccion[i].instruction.opcode[2].opcode_byte;
+                        actual_node->Instruction.immediate_instrution = my_instruccion[j].immediate_instrution;
+                        actual_node->Instruction.opcode_size = my_instruccion[j].opcode_size;
+                        if (actual_node->Instruction.immediate_instrution) goto the_end_for; // si se trata de una instruccion inmediata no hay nada mas que analizar
+                    } break;
+                default: break; // error 0b11 se define como no existe
+            }
+        }
+        the_end_for: {} // el compilador me obliga a poner algun codigo por ser el final del estamento, sino da error :'v
     }
     print_List_instrution(list_instrution_resb);
     return list_instrution_resb;
