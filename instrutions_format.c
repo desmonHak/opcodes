@@ -4,6 +4,11 @@
 #include "instrutions_format.h"
 
 List_instrution* init_List_instrution() {
+    #ifdef DEBUG_ENABLE
+        DEBUG_PRINT(DEBUG_LEVEL_INFO,
+            INIT_TYPE_FUNC_DBG(List_instrution*, init_List_instrution)
+            END_TYPE_FUNC_DBG);
+    #endif
     List_instrution *list_instrution_resb = (List_instrution *)malloc(sizeof(List_instrution));
     *list_instrution_resb = (List_instrution) {
         .id = 0,
@@ -42,6 +47,13 @@ void pop_List_instrution(List_instrution *list_instrution){
 }
 
 List_instrution *push_List_instrution(List_instrution *list_instrution) {
+    #ifdef DEBUG_ENABLE
+        DEBUG_PRINT(DEBUG_LEVEL_INFO,
+            INIT_TYPE_FUNC_DBG(List_instrution *, push_List_instrution)
+                TYPE_DATA_DBG(List_instrution *, "list_instrution = %p")
+            END_TYPE_FUNC_DBG,
+            list_instrution);
+    #endif
     /*
      *
      * Se recibe un list_instrution el cual es la lista enlazada, y se retorna un
@@ -64,6 +76,13 @@ List_instrution *push_List_instrution(List_instrution *list_instrution) {
 }
 
 void print_List_instrution(List_instrution *list_instrution) {
+    #ifdef DEBUG_ENABLE
+        DEBUG_PRINT(DEBUG_LEVEL_INFO,
+            INIT_TYPE_FUNC_DBG(void, print_List_instrution)
+                TYPE_DATA_DBG(List_instrution *, "list_instrution = %p")
+            END_TYPE_FUNC_DBG,
+            list_instrution);
+    #endif
     if (list_instrution == NULL) printf("finall list or invalid...");
 
     for (List_instrution *i = list_instrution; i->next_list_instrution != NULL; i = i->next_list_instrution) {
@@ -75,6 +94,15 @@ void print_List_instrution(List_instrution *list_instrution) {
 }
 
 List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes) {
+
+    #ifdef DEBUG_ENABLE
+        DEBUG_PRINT(DEBUG_LEVEL_INFO,
+            INIT_TYPE_FUNC_DBG(List_instrution *, format_instruccion)
+                TYPE_DATA_DBG(uint8_t *, "instrutions = %hhu")
+                TYPE_DATA_DBG(size_t, "size_in_bytes = %zu")
+            END_TYPE_FUNC_DBG,
+            instrutions, size_in_bytes);
+    #endif
     List_instrution *list_instrution_resb = init_List_instrution();
     
     for (size_t i = 0; i < size_in_bytes; i++) {
@@ -132,8 +160,9 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes) 
             Avalue1 = jenkins_hash(seed,    values[0], values[1], values[3], values[4], values[5], values[6]);
             Avalue2 = jenkins_hash(Avalue1, values[0], values[1], values[3], values[4], values[5], values[6]);
             Avalue3 = jenkins_hash(Avalue2, values[0], values[1], values[3], values[4], values[5], values[6]);
-
+            #ifdef DEBUG_ENABLE
             printf(">>> buscando.... %02x\n ", instrutions[i]);
+            #endif
             //printf("2bytes; i = %d, j = %d\n", i, j);
             switch (my_instruccion[j].opcode_size)
             {
@@ -145,8 +174,10 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes) 
                         actual_node->Instruction.immediate_instrution = my_instruccion[j].immediate_instrution;
                         actual_node->Instruction.opcode_size = my_instruccion[j].opcode_size;
                         actual_node->Instruction.string = my_instruccion[j].string;
+                        #ifdef DEBUG_ENABLE
                         printf_color("instruccion actual -> #{FG:lcyan}%s#{FG:reset} -> ", get_string_instrution(actual_node->Instruction.string));
                         printf_color("#{BG:%d;%d;%d} %s#{FG:reset} (color: %u %u %u)\n", (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3,  get_string_instrution(actual_node->Instruction.string), (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3);
+                        #endif
                         if (actual_node->Instruction.immediate_instrution) goto the_end_for; // si se trata de una instruccion inmediata no hay nada mas que analizar
                     } break;
                 case 0b01: // dos bytes de opcode
@@ -162,8 +193,10 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes) 
                         actual_node->Instruction.immediate_instrution = my_instruccion[j].immediate_instrution;
                         actual_node->Instruction.opcode_size = my_instruccion[j].opcode_size; 
                         actual_node->Instruction.string = my_instruccion[j].string; i+=1;
+                        #ifdef DEBUG_ENABLE
                         printf_color("instruccion actual -> #{FG:lpurple}%s#{FG:reset} -> ", get_string_instrution(actual_node->Instruction.string));
                         printf_color("#{BG:%d;%d;%d} %s#{FG:reset} (color: %u %u %u)\n", (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3,  get_string_instrution(actual_node->Instruction.string), (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3);
+                        #endif
                         if (actual_node->Instruction.immediate_instrution) goto the_end_for; // si se trata de una instruccion inmediata no hay nada mas que analizar
                     } 
                     break;

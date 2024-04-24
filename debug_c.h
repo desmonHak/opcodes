@@ -49,6 +49,11 @@
 #define DEBUG_PRINT(level, fmt, ...)
 #endif
 
+
+#define INIT_TYPE_FUNC_DBG(type_return, name_func) "#{FG:lred} "#type_return" #{FG:cyan}"#name_func"#{FG:white}("
+#define TYPE_DATA_DBG(type_data, name_arg) " #{FG:lyellow}"#type_data" #{FG:white} "name_arg", "
+#define END_TYPE_FUNC_DBG "#{FG:white}); #{FG:reset}"
+
 typedef enum
 {
     DEBUG_LEVEL_INFO,

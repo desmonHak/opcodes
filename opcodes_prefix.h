@@ -17,6 +17,10 @@
  */
 #include <stdint.h>
 
+#define DEBUG_ENABLE // debug activado
+
+#include "debug_c.h"
+
 typedef enum string_instrution_id {
     STRING_AAA,
     STRING_AAD,
