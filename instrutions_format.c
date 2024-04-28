@@ -75,6 +75,25 @@ List_instrution *push_List_instrution(List_instrution *list_instrution) {
     return list_instrution_resb;
 }
 
+uint64_t popcnt_software(uint64_t x)
+{
+    uint64_t one_count = 0;
+    while(x) {
+        if(x % 2) ++one_count;
+        x >>= 1;
+    }
+    return one_count;
+}
+uint64_t count_get_mask(uint64_t x)
+{
+    /*
+     *
+     * Cuenta 0's desde la derecha a izquierda hasta obtener algun 1
+     *
+     */
+    for(uint64_t one_count = 0; x; ++one_count, x >>= 1) if(x & 1) return one_count; 
+}
+
 void print_List_instrution(List_instrution *list_instrution) {
     #ifdef DEBUG_ENABLE
         DEBUG_PRINT(DEBUG_LEVEL_INFO,
@@ -87,8 +106,8 @@ void print_List_instrution(List_instrution *list_instrution) {
 
     for (List_instrution *i = list_instrution; i->next_list_instrution != NULL; i = i->next_list_instrution) {
         printf("list_instrution[%d] = %p\n", i->id, i);
+        print_instruccion(&(i->Instruction));
         print_instruccion_binary(&(i->Instruction.instruction));
-        print_instruccion(&(i->Instruction.instruction));
         printf("list_instrution->next_list_instrution = %p\n\n", i->next_list_instrution);
     }
 }
@@ -105,7 +124,7 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes) 
     #endif
     List_instrution *list_instrution_resb = init_List_instrution();
     
-    for (size_t i = 0; i < size_in_bytes; i++) {
+    for (size_t i = 0; i <= size_in_bytes; i++) {
         List_instrution *actual_node = push_List_instrution(list_instrution_resb);
         uint8_t prefix_actual; // si es distinto de 0x00 hay prefijo
         uint8_t prefix_actual_n = 0; // cantidad de prefijos encontrados para una instruccion (maximo se soporta 4 en esta implementacion para cada  instruccion)
@@ -128,6 +147,8 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes) 
             case Prefix_repe_rep_repz: prefix_actual = Prefix_repe_rep_repz; break;
         }
         
+
+
         // si se encontro un prefijo se agrega a la instruccion
         if (prefix_actual) {
             actual_node->Instruction.instruction.prefix[prefix_actual_n] = prefix_actual; 
@@ -170,7 +191,7 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes) 
                     //puts("1bytes");
                     
                     if (my_instruccion[j].instruction.opcode[2].opcode_byte.byte & instrutions[i] == my_instruccion[j].instruction.opcode[2].opcode_byte.byte) {
-                        actual_node->Instruction.instruction.opcode[2].opcode_byte = my_instruccion[i].instruction.opcode[2].opcode_byte;
+                        actual_node->Instruction.instruction.opcode[2].opcode_byte.byte = my_instruccion[j].instruction.opcode[2].opcode_byte.byte;
                         actual_node->Instruction.immediate_instrution = my_instruccion[j].immediate_instrution;
                         actual_node->Instruction.opcode_size = my_instruccion[j].opcode_size;
                         actual_node->Instruction.string = my_instruccion[j].string;
@@ -188,16 +209,31 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes) 
                         ((my_instruccion[j].instruction.opcode[2].opcode_byte.byte & instrutions[i]) == my_instruccion[j].instruction.opcode[2].opcode_byte.byte) &&
                         ((my_instruccion[j].instruction.opcode[1].opcode_byte.byte & instrutions[i+1]) == my_instruccion[j].instruction.opcode[1].opcode_byte.byte)
                        ) {
-                        actual_node->Instruction.instruction.opcode[2].opcode_byte = my_instruccion[i].instruction.opcode[2].opcode_byte;
-                        actual_node->Instruction.instruction.opcode[1].opcode_byte = my_instruccion[i+1].instruction.opcode[1].opcode_byte;
+                        actual_node->Instruction.instruction.opcode[2].opcode_byte.byte = my_instruccion[j].instruction.opcode[2].opcode_byte.byte;
+                        actual_node->Instruction.instruction.opcode[1].opcode_byte.byte = my_instruccion[j].instruction.opcode[1].opcode_byte.byte;
                         actual_node->Instruction.immediate_instrution = my_instruccion[j].immediate_instrution;
                         actual_node->Instruction.opcode_size = my_instruccion[j].opcode_size; 
                         actual_node->Instruction.string = my_instruccion[j].string; i+=1;
+                        actual_node->Instruction.number_reg = my_instruccion[j].number_reg;
+                        actual_node->Instruction.mask_reg = my_instruccion[j].mask_reg;
+                        actual_node->Instruction.mask_rm = my_instruccion[j].mask_rm;
                         #ifdef DEBUG_ENABLE
                         printf_color("instruccion actual -> #{FG:lpurple}%s#{FG:reset} -> ", get_string_instrution(actual_node->Instruction.string));
                         printf_color("#{BG:%d;%d;%d} %s#{FG:reset} (color: %u %u %u)\n", (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3,  get_string_instrution(actual_node->Instruction.string), (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3);
                         #endif
                         if (actual_node->Instruction.immediate_instrution) goto the_end_for; // si se trata de una instruccion inmediata no hay nada mas que analizar
+                        printf("actual_node->Instruction.number_reg %d, %02x & %02x = %02x", actual_node->Instruction.number_reg, instrutions[i], actual_node->Instruction.mask_reg, instrutions[i] & actual_node->Instruction.mask_reg);
+                        switch (actual_node->Instruction.number_reg)
+                        {
+                        case 0b00: break; // 0b00 - no usa campo reg
+                        case 0b01: break; // 0b01 - usa un campo reg
+                        case 0b10:  // 0b10 - usa dos campos reg (rm se convierte en un campo registro)
+                            // obetenemos
+                            actual_node->Instruction.instruction.Mod_rm.reg = (instrutions[i] & actual_node->Instruction.mask_reg) >> count_get_mask(actual_node->Instruction.mask_reg);
+                            actual_node->Instruction.instruction.Mod_rm.R_M =  (instrutions[i] & actual_node->Instruction.mask_rm) >> count_get_mask(actual_node->Instruction.mask_rm); 
+                            break; // 0b10 - usa dos campos reg (rm se convierte en un campo registro)
+                        default:   break; // 0b11 - no se define(error)
+                        }
                     } 
                     break;
                 case 0b10: // tres byte de opcode
