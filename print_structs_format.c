@@ -28,17 +28,27 @@ void print_binary(unsigned int num, uint16_t num_bits, uint16_t init_count) {
     } printf("\n");
 }*/
 
-void print_opcode(opcode opcode, uint8_t number_opcode) {
-    printf_color("opcode#{FG:lpurple}{#{FG:lred}%d#{FG:lpurple}}#{FG:reset}:    #{FG:lgreen}%02X#{FG:reset} = #{FG:lyellow}", number_opcode, *((uint8_t*)(&opcode)));
+void print_opcode(Instruction_info *my_instruccion_, opcode opcode, uint8_t number_opcode) {
+    printf_color("opcode#{FG:lpurple}{#{FG:lred}%d#{FG:lpurple}}#{FG:reset} (#{FG:lblue}8bits#{FG:reset}): #{FG:lgreen}%02X#{FG:reset} = #{FG:lyellow}", number_opcode, *((uint8_t*)(&opcode)));
     print_binary( *((uint8_t*)(&opcode)), 8, 0);
-    printf_color("#{FG:reset}opcode[#{FG:lred}%d#{FG:reset}]:    #{FG:lgreen}%02X#{FG:reset} = #{FG:lyellow}", number_opcode, opcode.opcode_bits_final.opcode);
+    printf_color("#{FG:reset}opcode[#{FG:lred}%d#{FG:reset}] (#{FG:lblue}6bits#{FG:reset}): #{FG:lgreen}%02X#{FG:reset} = #{FG:lyellow}", number_opcode, opcode.opcode_bits_final.opcode);
     print_binary(opcode.opcode_bits_final.opcode<< 2, 8, 0);
     //printf_color("#{FG:reset}opcode[#{FG:lred}%d#{FG:reset}].d:  #{FG:lgreen}%02X#{FG:reset} =        #{FG:lyellow}%d#{FG:reset}\n", number_opcode, opcode.opcode_bits_final.d, opcode.opcode_bits_final.d);
     //printf_color("opcode[#{FG:lred}%d#{FG:reset}].s:  #{FG:lgreen}%02X#{FG:reset} =         #{FG:lyellow}%d#{FG:reset}\n\n", number_opcode, opcode.opcode_bits_final.s, opcode.opcode_bits_final.s);
-    printf_color("#{FG:reset}opcode[#{FG:lred}%d#{FG:reset}].d:  #{FG:lgreen}%02X#{FG:reset} = #{FG:reset}", number_opcode, opcode.opcode_bits_final.d);
-    print_binary(opcode.opcode_bits_final.d, 1, 6);
-    printf_color("opcode[#{FG:lred}%d#{FG:reset}].s:  #{FG:lgreen}%02X#{FG:reset} = #{FG:reset}", number_opcode, opcode.opcode_bits_final.s);
-    print_binary(opcode.opcode_bits_final.d, 1, 7);
+    if (number_opcode == 2) {
+        if (my_instruccion_->posicion_d != 0) {
+            printf_color("#{FG:reset}opcode[#{FG:lred}%d#{FG:reset}].d(#{FG:lblue}1bit#{FG:reset}): #{FG:lgreen}%02X#{FG:reset} = #{FG:reset}", number_opcode, opcode.opcode_bits_final.d);
+            print_binary(opcode.opcode_bits_final.d, 1, 6);
+        } else printf_color("#{FG:reset}opcode[#{FG:lred}%d#{FG:reset}].d(#{FG:lblue}1bit#{FG:reset}): #{FG:lred}%02X#{FG:reset} = #{FG:lred}not exists field D#{FG:reset}\n", number_opcode, opcode.opcode_bits_final.d);
+        if (my_instruccion_->posicion_s != 0) {
+            printf_color("opcode[#{FG:lred}%d#{FG:reset}].s(#{FG:lblue}1bit#{FG:reset}): #{FG:lgreen}%02X#{FG:reset} = #{FG:reset}", number_opcode, opcode.opcode_bits_final.s);
+            print_binary(opcode.opcode_bits_final.d, 1, 7);
+        } else printf_color("#{FG:reset}opcode[#{FG:lred}%d#{FG:reset}].s(#{FG:lblue}1bit#{FG:reset}): #{FG:lred}%02X#{FG:reset} = #{FG:lred}not exists field S#{FG:reset}\n", number_opcode, opcode.opcode_bits_final.s);
+        if (my_instruccion_->posicion_w != 0) {
+            printf_color("opcode[#{FG:lred}%d#{FG:reset}].w(#{FG:lblue}1bit#{FG:reset}): #{FG:lgreen}%02X#{FG:reset}   -> #{FG:lred}(#{FG:reset}mask#{FG:lred})#{FG:reset} #{FG:reset}", number_opcode, get_bit_w(my_instruccion_));
+            print_binary(my_instruccion_->posicion_w, 4, 4);
+        } else printf_color("#{FG:reset}opcode[#{FG:lred}%d#{FG:reset}].w(#{FG:lblue}1bit#{FG:reset}): #{FG:lred}%02X#{FG:reset} = #{FG:lred}not exists field W#{FG:reset}\n", number_opcode, get_bit_w(my_instruccion_));
+    }
     putchar('\n');
 }
 
@@ -51,7 +61,7 @@ void print_instruccion_binary(Instruction *my_instruccion) {
     }printf("\n");
 }
 
-void print_instruccion(Instruction_info *my_instruccion_) {
+void print_instruccion(Instruction_info *my_instruccion_, encoder_x86 encoder_val) {
 
     unsigned int Avalue1, Avalue2, Avalue3; // generar un par de 3 colores para imprimir cada instruccion con un color diferente usando rgb
     int values[] = {
@@ -78,16 +88,19 @@ void print_instruccion(Instruction_info *my_instruccion_) {
 
     } printf("\n");
 
-    print_opcode(my_instruccion->opcode[0], 0);
-    print_opcode(my_instruccion->opcode[1], 1);
-    print_opcode(my_instruccion->opcode[2], 2);
+    print_opcode(my_instruccion_, my_instruccion->opcode[0], 0);
+    print_opcode(my_instruccion_, my_instruccion->opcode[1], 1);
+    print_opcode(my_instruccion_, my_instruccion->opcode[2], 2);
 
-
-    printf_color("Mod_rm:       #{FG:lgreen}%02X#{FG:reset} = ", *((uint8_t*)&(my_instruccion->Mod_rm)));
+    
+    printf_color("Mod_rm:       #{FG:lgreen}%02X#{FG:reset} =       ", *((uint8_t*)&(my_instruccion->Mod_rm)));
     print_binary( *((uint8_t*)&(my_instruccion->Mod_rm)), 8, 0);
-    printf_color("mod:          #{FG:lgreen}%02X#{FG:reset} = ", my_instruccion->Mod_rm.mod); print_binary(my_instruccion->Mod_rm.mod, 2, 0);
-    printf_color("reg:          #{FG:lgreen}%02X#{FG:reset} = ", my_instruccion->Mod_rm.reg); print_binary(my_instruccion->Mod_rm.reg, 3, 2);
-    printf_color("R_M:          #{FG:lgreen}%02X#{FG:reset} = ", my_instruccion->Mod_rm.R_M); print_binary(my_instruccion->Mod_rm.R_M, 3, 5);
+    printf_color("mod:          #{FG:lgreen}%02X#{FG:reset} =       ", my_instruccion->Mod_rm.mod); print_binary(my_instruccion->Mod_rm.mod, 2, 0);
+    printf_color("reg:          #{FG:lgreen}%02X#{FG:reset} = %03s = ", my_instruccion->Mod_rm.reg, get_string_register(encoder_val, get_bit_w(my_instruccion_), my_instruccion->Mod_rm.reg)); 
+    //(instrutions[i] & my_instruccion_->mask_reg) >> count_get_mask(actual_node->Instruction.mask_reg)
+    print_binary(my_instruccion->Mod_rm.reg, 3, 2);
+    printf_color("R_M:          #{FG:lgreen}%02X#{FG:reset} = %03s = ", my_instruccion->Mod_rm.R_M, get_string_register(encoder_val, get_bit_w(my_instruccion_), my_instruccion->Mod_rm.R_M));
+    print_binary(my_instruccion->Mod_rm.R_M, 3, 5);
 
     /*
      * "mod" con valor 00 junto al campo "r/m" 100 indica que se trata del modo SIB

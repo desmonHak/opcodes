@@ -75,26 +75,8 @@ List_instrution *push_List_instrution(List_instrution *list_instrution) {
     return list_instrution_resb;
 }
 
-uint64_t popcnt_software(uint64_t x)
-{
-    uint64_t one_count = 0;
-    while(x) {
-        if(x % 2) ++one_count;
-        x >>= 1;
-    }
-    return one_count;
-}
-uint64_t count_get_mask(uint64_t x)
-{
-    /*
-     *
-     * Cuenta 0's desde la derecha a izquierda hasta obtener algun 1
-     *
-     */
-    for(uint64_t one_count = 0; x; ++one_count, x >>= 1) if(x & 1) return one_count; 
-}
 
-void print_List_instrution(List_instrution *list_instrution) {
+void print_List_instrution(List_instrution *list_instrution, encoder_x86 encoder_val) {
     #ifdef DEBUG_ENABLE
         DEBUG_PRINT(DEBUG_LEVEL_INFO,
             INIT_TYPE_FUNC_DBG(void, print_List_instrution)
@@ -106,13 +88,38 @@ void print_List_instrution(List_instrution *list_instrution) {
 
     for (List_instrution *i = list_instrution; i->next_list_instrution != NULL; i = i->next_list_instrution) {
         printf("list_instrution[%d] = %p\n", i->id, i);
-        print_instruccion(&(i->Instruction));
+        print_instruccion(&(i->Instruction), encoder_val);
         print_instruccion_binary(&(i->Instruction.instruction));
         printf("list_instrution->next_list_instrution = %p\n\n", i->next_list_instrution);
     }
 }
 
-List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes) {
+void copy_info_instruction(Instruction_info *instrutions, Instruction_info *my_instruccion, encoder_x86 encoder_val){
+    #ifdef DEBUG_ENABLE
+        DEBUG_PRINT(DEBUG_LEVEL_INFO,
+            INIT_TYPE_FUNC_DBG(List_instrution *, format_instruccion)
+                TYPE_DATA_DBG(Instruction_info *, "instrutions = %p")
+                TYPE_DATA_DBG(Instruction_info *, "my_instruccion = %p")
+                TYPE_DATA_DBG(encoder_x86, "encoder_val = %u")
+            END_TYPE_FUNC_DBG,
+            instrutions, my_instruccion, encoder_val);
+    #endif
+    instrutions->instruction.opcode[2].opcode_byte.byte = my_instruccion->instruction.opcode[2].opcode_byte.byte; // opcode priamrio
+    instrutions->instruction.opcode[1].opcode_byte.byte = my_instruccion->instruction.opcode[1].opcode_byte.byte;
+    instrutions->instruction.opcode[0].opcode_byte.byte = my_instruccion->instruction.opcode[0].opcode_byte.byte;
+    
+    instrutions->immediate_instrution = my_instruccion->immediate_instrution;
+    instrutions->opcode_size          = my_instruccion->opcode_size; 
+    instrutions->string               = my_instruccion->string;
+    instrutions->number_reg           = my_instruccion->number_reg;
+    instrutions->mask_reg             = my_instruccion->mask_reg;
+    instrutions->mask_rm              = my_instruccion->mask_rm;
+    instrutions->posicion_w           = my_instruccion->posicion_w;
+    instrutions->posicion_d           = my_instruccion->posicion_d;
+    instrutions->posicion_s           = my_instruccion->posicion_s;
+}
+
+List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, encoder_x86 encoder_val) {
 
     #ifdef DEBUG_ENABLE
         DEBUG_PRINT(DEBUG_LEVEL_INFO,
@@ -188,13 +195,9 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes) 
             switch (my_instruccion[j].opcode_size)
             {
                 case 0b00: // un byte de opcode
-                    //puts("1bytes");
-                    
                     if (my_instruccion[j].instruction.opcode[2].opcode_byte.byte & instrutions[i] == my_instruccion[j].instruction.opcode[2].opcode_byte.byte) {
-                        actual_node->Instruction.instruction.opcode[2].opcode_byte.byte = my_instruccion[j].instruction.opcode[2].opcode_byte.byte;
-                        actual_node->Instruction.immediate_instrution = my_instruccion[j].immediate_instrution;
-                        actual_node->Instruction.opcode_size = my_instruccion[j].opcode_size;
-                        actual_node->Instruction.string = my_instruccion[j].string;
+                        copy_info_instruction(&(actual_node->Instruction), &(my_instruccion[j]), encoder_val);
+                        actual_node->Instruction.instruction.opcode[2].opcode_byte.byte = instrutions[i];
                         #ifdef DEBUG_ENABLE
                         printf_color("instruccion actual -> #{FG:lcyan}%s#{FG:reset} -> ", get_string_instrution(actual_node->Instruction.string));
                         printf_color("#{BG:%d;%d;%d} %s#{FG:reset} (color: %u %u %u)\n", (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3,  get_string_instrution(actual_node->Instruction.string), (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3);
@@ -202,27 +205,21 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes) 
                         if (actual_node->Instruction.immediate_instrution) goto the_end_for; // si se trata de una instruccion inmediata no hay nada mas que analizar
                     } break;
                 case 0b01: // dos bytes de opcode
-                    /*printf("( %x & %x = %x ) && ( %x & %x = %x )\n", 
-                    my_instruccion[j].instruction.opcode[2].opcode_byte.byte, instrutions[i], my_instruccion[j].instruction.opcode[2].opcode_byte.byte & instrutions[i],
-                    my_instruccion[j].instruction.opcode[1].opcode_byte.byte, instrutions[i+1], my_instruccion[j].instruction.opcode[1].opcode_byte.byte & instrutions[i+1]);*/
                     if (
                         ((my_instruccion[j].instruction.opcode[2].opcode_byte.byte & instrutions[i]) == my_instruccion[j].instruction.opcode[2].opcode_byte.byte) &&
                         ((my_instruccion[j].instruction.opcode[1].opcode_byte.byte & instrutions[i+1]) == my_instruccion[j].instruction.opcode[1].opcode_byte.byte)
                        ) {
-                        actual_node->Instruction.instruction.opcode[2].opcode_byte.byte = my_instruccion[j].instruction.opcode[2].opcode_byte.byte;
-                        actual_node->Instruction.instruction.opcode[1].opcode_byte.byte = my_instruccion[j].instruction.opcode[1].opcode_byte.byte;
-                        actual_node->Instruction.immediate_instrution = my_instruccion[j].immediate_instrution;
-                        actual_node->Instruction.opcode_size = my_instruccion[j].opcode_size; 
-                        actual_node->Instruction.string = my_instruccion[j].string; i+=1;
-                        actual_node->Instruction.number_reg = my_instruccion[j].number_reg;
-                        actual_node->Instruction.mask_reg = my_instruccion[j].mask_reg;
-                        actual_node->Instruction.mask_rm = my_instruccion[j].mask_rm;
+                        //actual_node->Instruction.instruction.opcode[2].opcode_byte.byte = my_instruccion[j].instruction.opcode[2].opcode_byte.byte;
+                        copy_info_instruction(&(actual_node->Instruction), &(my_instruccion[j]), encoder_val);
+                        actual_node->Instruction.instruction.opcode[2].opcode_byte.byte = instrutions[i];
+                        actual_node->Instruction.instruction.opcode[1].opcode_byte.byte = instrutions[i+1];
+                        i+=1;
                         #ifdef DEBUG_ENABLE
                         printf_color("instruccion actual -> #{FG:lpurple}%s#{FG:reset} -> ", get_string_instrution(actual_node->Instruction.string));
                         printf_color("#{BG:%d;%d;%d} %s#{FG:reset} (color: %u %u %u)\n", (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3,  get_string_instrution(actual_node->Instruction.string), (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3);
                         #endif
                         if (actual_node->Instruction.immediate_instrution) goto the_end_for; // si se trata de una instruccion inmediata no hay nada mas que analizar
-                        printf("actual_node->Instruction.number_reg %d, %02x & %02x = %02x", actual_node->Instruction.number_reg, instrutions[i], actual_node->Instruction.mask_reg, instrutions[i] & actual_node->Instruction.mask_reg);
+                        //printf("actual_node->Instruction.number_reg %d, %02x & %02x = %02x", actual_node->Instruction.number_reg, instrutions[i], actual_node->Instruction.mask_reg, instrutions[i] & actual_node->Instruction.mask_reg);
                         switch (actual_node->Instruction.number_reg)
                         {
                         case 0b00: break; // 0b00 - no usa campo reg
@@ -238,9 +235,10 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes) 
                     break;
                 case 0b10: // tres byte de opcode
                     if (my_instruccion[j].instruction.opcode[2].opcode_byte.byte & instrutions[i] == my_instruccion[j].instruction.opcode[2].opcode_byte.byte) {
-                        actual_node->Instruction.instruction.opcode[2].opcode_byte = my_instruccion[i].instruction.opcode[2].opcode_byte;
-                        actual_node->Instruction.immediate_instrution = my_instruccion[j].immediate_instrution;
-                        actual_node->Instruction.opcode_size = my_instruccion[j].opcode_size;
+                        copy_info_instruction(&(actual_node->Instruction), &(my_instruccion[j]), encoder_val);
+                        actual_node->Instruction.instruction.opcode[2].opcode_byte.byte = instrutions[i];
+                        actual_node->Instruction.instruction.opcode[1].opcode_byte.byte = instrutions[i+1];
+                        actual_node->Instruction.instruction.opcode[0].opcode_byte.byte = instrutions[i+2];
                         if (actual_node->Instruction.immediate_instrution) goto the_end_for; // si se trata de una instruccion inmediata no hay nada mas que analizar
                     } break;
                 default: break; // error 0b11 se define como no existe
@@ -248,7 +246,7 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes) 
         }
         the_end_for: {} // el compilador me obliga a poner algun codigo por ser el final del estamento, sino da error :'v
     }
-    print_List_instrution(list_instrution_resb);
+    print_List_instrution(list_instrution_resb, encoder_val);
     return list_instrution_resb;
 }
 

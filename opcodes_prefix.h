@@ -29,6 +29,22 @@ typedef enum string_instrution_id {
     STRING_ADC,
 } string_instrution_id;
 
+typedef enum encoder_x86 { // se especifica el formato a encodificar / descodificar las instrucciones
+    ENCODER_IN_16bits,
+    ENCODER_IN_32bits,
+    ENCODER_IN_64bits
+} encoder_x86;
+
+typedef enum register_id { // se especifica los registros
+    REGISTER_A = 0b000, // AL, AX, EAX = 000
+    REGISTER_C = 0b001, // CL, CX, ECX = 001
+    REGISTER_B = 0b010, // BL, BX, EBX = 010
+    REGISTER_D = 0b011, // DL, DX, EDX = 011
+    REGISTER_S = 0b100, // AH, SP, ESX = 100
+    REGISTER_BP = 0b101, // CH, BP, EBX = 101
+    REGISTER_SP = 0b110, // DH, SI, ESX = 110
+    REGISTER_DI = 0b111, // BH, DI, EDX = 111
+} register_id;
 
 #pragma pack(push, 1)
 
@@ -133,6 +149,7 @@ typedef struct Instruction {
  * |-----------------------------------------------------------|  
  */
 
+
 typedef struct Instruction_info
 {
     string_instrution_id string;      // string a obtener
@@ -153,6 +170,12 @@ typedef struct Instruction_info
                                                                                                                                             0001 (bit w en el bit 1), 
                                                                                                                                             0000 (no hay bit w)
                                                                                                                                             Los demas estados no se definen */
+    uint8_t posicion_d:4;     /* Este campo indica la posicion del bit "d" en los 4bits posterioes de los primeros 4bits, posibles valores: 1000 (bit d en el bit 4), 
+                                                                                                                                                0100 (bit d en el bit 3), 
+                                                                                                                                                0010 (bit d en el bit 2), 
+                                                                                                                                                0001 (bit d en el bit 1), 
+                                                                                                                                                0000 (no hay bit d)
+                                                                                                                                                Los demas estados no se definen */
 
     uint8_t mask_rm;   // 8bits (16 bits)
     uint8_t mask_reg;  // 8bits (24 bits)
@@ -182,7 +205,13 @@ typedef struct Instruction_info
 #pragma pack(pop)
 
 
+inline uint8_t get_bit_w(Instruction_info *instrucion);
+uint64_t popcnt_software(uint64_t x);
+inline uint64_t count_get_mask(uint64_t x);
 static const char *get_string_instrution(string_instrution_id id);
+static const char *get_string_register(encoder_x86 size_word, uint8_t bit_w, register_id id);
+
+
 
 // (Instrucciones en page: 2845/2875) Intel® 64 and IA-32 Architectures Software Developer’s Manual, Combined Volumes: 1, 2A, 2B, 2C, 2D, 3A, 3B,
 
@@ -308,6 +337,7 @@ __attribute__((__section__(".instruccion"))) static Instruction_info my_instrucc
         .immediate_instrution = 0b0,          // es una instruccion inmediata
         .opcode_size          = 0b01,         // dos byte's de opcode
         .posicion_w           = 0b0001,       // hay bit "w" en el bit 1
+        .posicion_d           = 0b0010,       // hay bit "d" el bit 2 del opcode primario
         .posicion_s           = 0b0000,       // no hay bit "s"
         .position_rm          = 0b01,         // hay r/m en el segundo byte (se convierte en reg2 si number_reg == 0b10)
         .position_reg         = 0b01,         // hay reg en el segundo byte
