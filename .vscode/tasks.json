@@ -3,20 +3,39 @@
         {
             "type": "cppbuild",
             "label": "C/C++: gcc.exe compilar archivo activo",
-            "command": "D:\\Mingw32\\bin\\gcc.exe",
+            "command": "C:\\TDM-GCC-64\\bin\\gcc.exe",
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
                 "${file}",
                 "-o",
                 "${fileDirname}\\${fileBasenameNoExtension}.exe",
-                "-Wall"
             ],
             "options": {
                 "cwd": "${fileDirname}"
             },
             "problemMatcher": [
                 "$gcc"
+            ],
+            "group": "build",
+            "detail": "Tarea generada por el depurador."
+        },
+        {
+            "type": "cppbuild",
+            "label": "C/C++: cl.exe compilar archivo activo",
+            "command": "cl.exe",
+            "args": [
+                "/Zi",
+                "/EHsc",
+                "/nologo",
+                "/Fe${fileDirname}\\${fileBasenameNoExtension}.exe",
+                "${file}"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$msCompile"
             ],
             "group": {
                 "kind": "build",
