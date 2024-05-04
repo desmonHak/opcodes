@@ -68,7 +68,7 @@ void print_String_list_link(String_list_link *list) {
     }
 }
 
-String_list_link* free_String_list_link(String_list_link* list){
+String_list_link* free_String_list_link(String_list_link* list) {
     #ifdef DEBUG_ENABLE
         DEBUG_PRINT(DEBUG_LEVEL_INFO,
             INIT_TYPE_FUNC_DBG(String_list_link*, free_String_list_link)
