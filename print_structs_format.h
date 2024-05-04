@@ -7,6 +7,14 @@
 #include "opcodes_prefix.h"
 #include "colors-C-C-plus-plus\colors.h"
 
+#define CALC_SIZE_STRING_FLAG 0
+
+typedef struct String_list_link {
+    size_t size_string;    // tamaño del string contenido
+    char   *actual_string; // punteo del string actual
+    struct String_list_link *next_string; // puntero al siguiente string
+} String_list_link;
+
 #define WORD_SIZE 256
 #define BLOCK_SLICES (256*4)/8
 #define COLOR_WITH_NUMBER(strig_color, num) "#{FG:"#strig_color"}"#num"#{FG:reset}"

@@ -46,7 +46,7 @@ typedef enum register_id { // se especifica los registros
     REGISTER_DI = 0b111, // BH, DI, EDX = 111
 } register_id;
 
-//#pragma pack(push, 4)
+#pragma pack(push, 1)
 
 typedef union opcode
 {
@@ -202,15 +202,15 @@ typedef struct Instruction_info
 
 } Instruction_info;
 
-//#pragma pack(pop)
+#pragma pack(pop)
 
 
 inline uint8_t get_bit_w(Instruction_info *instrucion);
-uint64_t popcnt_software(uint64_t x);
+inline uint8_t get_bit_d(Instruction_info *instrucion);
 inline uint64_t count_get_mask(uint64_t x);
-static const char *get_string_instrution(string_instrution_id id);
-static const char *get_string_register(encoder_x86 size_word, uint8_t bit_w, register_id id);
-
+static char *get_string_instrution(string_instrution_id id);
+static char *get_string_register(encoder_x86 size_word, uint8_t bit_w, register_id id);
+uint64_t popcnt_software(uint64_t x);
 
 
 // (Instrucciones en page: 2845/2875) Intel® 64 and IA-32 Architectures Software Developer’s Manual, Combined Volumes: 1, 2A, 2B, 2C, 2D, 3A, 3B,

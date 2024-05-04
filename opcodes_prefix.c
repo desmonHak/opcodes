@@ -3,8 +3,12 @@
 
 #include "opcodes_prefix.h"
 
-uint8_t get_bit_w(Instruction_info *instrucion){
-    return instrucion->instruction.opcode[2].opcode_byte.byte & instrucion->posicion_w;
+uint8_t get_bit_w(Instruction_info *instrucion) {
+    return ((uint8_t)instrucion->instruction.opcode[2].opcode_byte.byte & (uint8_t)instrucion->posicion_w);
+}
+
+uint8_t get_bit_d(Instruction_info *instrucion) {
+    return instrucion->instruction.opcode[2].opcode_byte.byte & instrucion->posicion_d;
 }
 
 uint64_t popcnt_software(uint64_t x)
@@ -26,7 +30,7 @@ uint64_t count_get_mask(uint64_t x)
     for(uint64_t one_count = 0; x; ++one_count, x >>= 1) if(x & 1) return one_count; 
 }
 
-static const char *get_string_instrution(string_instrution_id id) {
+static char *get_string_instrution(string_instrution_id id) {
     switch (id)
     {
         case STRING_AAA: return "aaa";
@@ -39,7 +43,7 @@ static const char *get_string_instrution(string_instrution_id id) {
     }
 }
 
-static const char *get_string_register(encoder_x86 size_word, uint8_t bit_w, register_id id) {
+static char *get_string_register(encoder_x86 size_word, uint8_t bit_w, register_id id) {
     /*
      *
      *  Se recibe un register_id el cual especifica un registro. Se espera recibir un bit "w"

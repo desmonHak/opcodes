@@ -97,30 +97,31 @@ void print_List_instrution(List_instrution *list_instrution, encoder_x86 encoder
     }
 }
 
-void copy_info_instruction(Instruction_info *instrutions, Instruction_info *my_instruccion, encoder_x86 encoder_val){
-    #ifdef DEBUG_ENABLE
-        DEBUG_PRINT(DEBUG_LEVEL_INFO,
-            INIT_TYPE_FUNC_DBG(List_instrution *, copy_info_instruction)
-                TYPE_DATA_DBG(Instruction_info *, "instrutions = %p")
-                TYPE_DATA_DBG(Instruction_info *, "my_instruccion = %p")
-                TYPE_DATA_DBG(encoder_x86, "encoder_val = %u")
-            END_TYPE_FUNC_DBG,
-            instrutions, my_instruccion, encoder_val);
-    #endif
-    instrutions->instruction.opcode[2].opcode_byte.byte = my_instruccion->instruction.opcode[2].opcode_byte.byte; // opcode priamrio
-    instrutions->instruction.opcode[1].opcode_byte.byte = my_instruccion->instruction.opcode[1].opcode_byte.byte;
-    instrutions->instruction.opcode[0].opcode_byte.byte = my_instruccion->instruction.opcode[0].opcode_byte.byte;
-    
-    instrutions->immediate_instrution = my_instruccion->immediate_instrution;
-    instrutions->opcode_size          = my_instruccion->opcode_size; 
-    instrutions->string               = my_instruccion->string;
-    instrutions->number_reg           = my_instruccion->number_reg;
-    instrutions->mask_reg             = my_instruccion->mask_reg;
-    instrutions->mask_rm              = my_instruccion->mask_rm;
-    instrutions->posicion_w           = my_instruccion->posicion_w;
-    instrutions->posicion_d           = my_instruccion->posicion_d;
-    instrutions->posicion_s           = my_instruccion->posicion_s;
-}
+// Se sustituyo por memcpy
+// void copy_info_instruction(Instruction_info *instrutions, Instruction_info *my_instruccion, encoder_x86 encoder_val){
+//     #ifdef DEBUG_ENABLE
+//         DEBUG_PRINT(DEBUG_LEVEL_INFO,
+//             INIT_TYPE_FUNC_DBG(List_instrution *, copy_info_instruction)
+//                 TYPE_DATA_DBG(Instruction_info *, "instrutions = %p")
+//                 TYPE_DATA_DBG(Instruction_info *, "my_instruccion = %p")
+//                 TYPE_DATA_DBG(encoder_x86, "encoder_val = %u")
+//             END_TYPE_FUNC_DBG,
+//             instrutions, my_instruccion, encoder_val);
+//     #endif
+//     instrutions->instruction.opcode[2].opcode_byte.byte = my_instruccion->instruction.opcode[2].opcode_byte.byte; // opcode priamrio
+//     instrutions->instruction.opcode[1].opcode_byte.byte = my_instruccion->instruction.opcode[1].opcode_byte.byte;
+//     instrutions->instruction.opcode[0].opcode_byte.byte = my_instruccion->instruction.opcode[0].opcode_byte.byte;
+//     
+//     instrutions->immediate_instrution = my_instruccion->immediate_instrution;
+//     instrutions->opcode_size          = my_instruccion->opcode_size; 
+//     instrutions->string               = my_instruccion->string;
+//     instrutions->number_reg           = my_instruccion->number_reg;
+//     instrutions->mask_reg             = my_instruccion->mask_reg;
+//     instrutions->mask_rm              = my_instruccion->mask_rm;
+//     instrutions->posicion_w           = my_instruccion->posicion_w;
+//     instrutions->posicion_d           = my_instruccion->posicion_d;
+//     instrutions->posicion_s           = my_instruccion->posicion_s;
+// }
 
 uint8_t get_registers_form_byte(Instruction_info *Instruction, uint8_t byte) {
     #ifdef DEBUG_ENABLE
@@ -231,7 +232,7 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
             {
                 case 0b00: // un byte de opcode
                     if (my_instruccion[j].instruction.opcode[2].opcode_byte.byte & instrutions[i] == my_instruccion[j].instruction.opcode[2].opcode_byte.byte) {
-                        copy_info_instruction(&(actual_node->Instruction), &(my_instruccion[j]), encoder_val);
+                        memcpy(&(actual_node->Instruction), &(my_instruccion[j]), sizeof(Instruction_info));
                         actual_node->Instruction.instruction.opcode[2].opcode_byte.byte = instrutions[i];
                         #ifdef DEBUG_ENABLE
                         DEBUG_PRINT(DEBUG_LEVEL_INFO, "#{FG:reset}instruccion actual -> #{FG:lpurple}%s#{FG:reset} -> ", get_string_instrution(actual_node->Instruction.string));
@@ -246,7 +247,8 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
                         ((my_instruccion[j].instruction.opcode[1].opcode_byte.byte & instrutions[i+1]) == my_instruccion[j].instruction.opcode[1].opcode_byte.byte)
                        ) {
                         //actual_node->Instruction.instruction.opcode[2].opcode_byte.byte = my_instruccion[j].instruction.opcode[2].opcode_byte.byte;
-                        copy_info_instruction(&(actual_node->Instruction), &(my_instruccion[j]), encoder_val);
+                        //copy_info_instruction(&(actual_node->Instruction), &(my_instruccion[j]), encoder_val);
+                        memcpy(&(actual_node->Instruction), &(my_instruccion[j]), sizeof(Instruction_info));
                         actual_node->Instruction.instruction.opcode[2].opcode_byte.byte = instrutions[i];
                         actual_node->Instruction.instruction.opcode[1].opcode_byte.byte = instrutions[i+1];
                         i+=1;
@@ -271,10 +273,11 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
                     } break;
                 case 0b10: // tres byte de opcode
                     if (my_instruccion[j].instruction.opcode[2].opcode_byte.byte & instrutions[i] == my_instruccion[j].instruction.opcode[2].opcode_byte.byte) {
-                        copy_info_instruction(&(actual_node->Instruction), &(my_instruccion[j]), encoder_val);
-                        actual_node->Instruction.instruction.opcode[2].opcode_byte.byte = instrutions[i];
-                        actual_node->Instruction.instruction.opcode[1].opcode_byte.byte = instrutions[i+1];
+                        //copy_info_instruction(&(actual_node->Instruction), &(my_instruccion[j]), encoder_val);
+                        memcpy(&(actual_node->Instruction), &(my_instruccion[j]), sizeof(Instruction_info));
                         actual_node->Instruction.instruction.opcode[0].opcode_byte.byte = instrutions[i+2];
+                        actual_node->Instruction.instruction.opcode[1].opcode_byte.byte = instrutions[i+1];
+                        actual_node->Instruction.instruction.opcode[2].opcode_byte.byte = instrutions[i];
                         if (actual_node->Instruction.immediate_instrution) goto the_end_for; // si se trata de una instruccion inmediata no hay nada mas que analizar
                         get_registers_form_byte(&(actual_node->Instruction), instrutions[i]);
                     } break;

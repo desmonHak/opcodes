@@ -3,23 +3,168 @@
 
 #include "print_structs_format.h"
 
+String_list_link* Init_String(char *string, size_t size_string) {
+    #ifdef DEBUG_ENABLE
+        DEBUG_PRINT(DEBUG_LEVEL_INFO,
+            INIT_TYPE_FUNC_DBG(String_list_link*, Init_String)
+                TYPE_DATA_DBG(char *, "string = %s")
+                TYPE_DATA_DBG(size_t, "size_string = %zu")
+            END_TYPE_FUNC_DBG,
+            string, size_string);
+    #endif
+    /*
+     *  
+     * Init_String(char *string, size_t size_string):
+     * Esta funcion inicializa una lista enlazada haciendo uso de la estructura String_list_link
+     * 
+     * Se espera recibir string el cual seria un puntero a una secuencia de caracteres almacenados,
+     * se espera recibir size_string, en el caso de que se recibiera un puntero valido string y un
+     * (size_string == 0) la funcion determinara el tamaño del string de entrada.
+     * 
+     * En caso de que string no sea un puntero valido o NULL, size_string sera definido en 0,
+     * independientemente de la entrada de size_string.
+     * En caso de que malloc falle al reservar memoria para la estructrua de lista enlazada, o 
+     * size_string sea -1(no debe ingresarse este valor, se reserva para indicar errores),
+     * El puntero devuelto por la estructura es NULL.
+     *  
+     */
+    if (size_string == -1) return NULL;
+    String_list_link *ptr = (String_list_link *)malloc(sizeof(String_list_link));
+    if (ptr == NULL) return ptr; // en caso de que malloc falle se retorna
+
+    // vulnerabilidad si string no contiene \0 al final, se a de asegurar la existencia de este caracter
+    // al final de string.
+    if ((size_string == CALC_SIZE_STRING_FLAG) && (string != NULL)) size_string = strlen(string);
+    else if (string == NULL) size_string = 0;
+
+    *ptr = (String_list_link) {
+        .actual_string = string,     // string a almacenar
+        .next_string   = NULL,
+        .size_string   = size_string // tamaño del string almacenado
+    };
+    return ptr;
+}
+
+void print_String_list_link(String_list_link *list) {
+    //#ifdef DEBUG_ENABLE
+    //    DEBUG_PRINT(DEBUG_LEVEL_INFO,
+    //        INIT_TYPE_FUNC_DBG(void, print_String_list_link)
+    //            TYPE_DATA_DBG(String_list_link *, "list = %p")
+    //        END_TYPE_FUNC_DBG,
+    //        list);
+    //#endif
+    /*
+     *  
+     * print_String_list_link(String_list_link *list):
+     * Esta funcion imprime una lista enlazada del tipo String_list_link
+     * 
+     * Se espera recibir un String_list_link a imprimir
+     *  
+     */
+    if (list == NULL) printf("In String_list_link final list or invalid...");
+
+    for (String_list_link *i = list; i != NULL; i = i->next_string) {
+        printf("%s ", i->actual_string);
+    }
+}
+
+String_list_link* get_string_instruction(Instruction_info *my_instruccion_, encoder_x86 encoder_val) {
+    #ifdef DEBUG_ENABLE
+        DEBUG_PRINT(DEBUG_LEVEL_INFO,
+            INIT_TYPE_FUNC_DBG(String_list_link*, get_string_instruction)
+                TYPE_DATA_DBG(Instruction_info *, "my_instruccion_ = %p")
+                TYPE_DATA_DBG(encoder_x86, "encoder_val = %d")
+            END_TYPE_FUNC_DBG,
+            my_instruccion_, encoder_val);
+    #endif
+    /*
+     *  
+     * get_string_instruction(Instruction_info *my_instruccion_, encoder_x86 encoder_val):
+     * Esta funcion genera una lista enlazada haciendo uso de la estructura String_list_link
+     * donde se almacenara como resultado el string de la descodificacion de una instruccion.
+     * 
+     * Se espera recibir my_instruccion_ donde deberia estar contenido la informacion de la instruccion
+     * a descodificar y se espera recibir un valor encoder_x86 que dfina el si sera descorficada para
+     * 16, 32 o 64bits.
+     * 
+     * Se espera retornar una lista enlazada con los string's descodificados, en caso de que malloc
+     * falle, el valor devuelto es NULL. En caso de que los strings a contener no puedan ser reservador correctamente
+     * se emitira la estrcutura con los cambios miemrbros en NULL. En el cado de que my_instruccion_ no pueda
+     * ser descodificada de forma correcta por falta de errores o algun otro caso, el campo miembro size_string
+     * de la estructura sera -1.
+     *  
+     */
+    char *string = get_string_instrution(my_instruccion_->string); // string de la instruccion ya descodificada
+    String_list_link *ptr_org = Init_String(string, CALC_SIZE_STRING_FLAG); // el tamaño del string se calcula dentro de la funcion
+    if (ptr_org == NULL) goto exit_get_string_instruction; // error ocurrio
+
+    // d = 0 -> <instruccion> <registro R/M>, <registro reg>
+    // d = 1 -> <instruccion> <registro reg>, <registro R/M>
+    uint8_t destino = my_instruccion_->instruction.Mod_rm.R_M, fuente = my_instruccion_->instruction.Mod_rm.reg, auxiliar; // se mantiene asi si d == 0
+    if (get_bit_d(my_instruccion_)) { // si d == 1 se cambia para que reg sea fuente y rm destino
+        auxiliar = destino;  // c = a
+        destino  = fuente;   // a = b
+        fuente   = auxiliar; // b = c
+    }
+    
+    String_list_link *ptr = ptr_org; // copia del puntero que usar para añadir elementos
+    switch (my_instruccion_->number_reg) { // si hay algun registro, se obtiene
+        case 0b00: break; // - no usa campo reg
+        case 0b10: // uso dos campos como registros, "reg" y "r/m"
+            // obtener registro del campo RM
+            string = get_string_register(encoder_val, get_bit_w(my_instruccion_), destino);
+            ptr->next_string = Init_String(string, CALC_SIZE_STRING_FLAG);
+            ptr = ptr->next_string;
+        case 0b01: // solo tiene un campo de registro, "reg"
+        // obtener registro del campo reg
+            string = get_string_register(encoder_val, get_bit_w(my_instruccion_), fuente);
+            ptr->next_string = Init_String(string, CALC_SIZE_STRING_FLAG);
+            ptr = ptr->next_string;
+            break;
+        default: // error al descodificar la instruccion
+            ptr->size_string = -1;
+            goto exit_get_string_instruction;
+    }
+    
+    exit_get_string_instruction:
+    return ptr_org;
+}
+
 char *get_addr_to_encoder_x86(uint64_t addr, encoder_x86 encoder_val) {
+    /*
+     *  
+     * get_addr_to_encoder_x86(uint64_t addr, encoder_x86 encoder_val):
+     * Esta funcion devuelve un string con la direccion de memoria formateada en 16, 32 o 64bits
+     * 
+     * Se espera recibir addr el cual es la direccion de memoria a formatear,
+     * se espera recibir encoder_val, el cual indica si formatear la direcion a 16, 32 o 64bits.
+     *      Posibles valores para encoder_x86 encoder_val:
+     *          - ENCODER_IN_16bits = 0 : para 16bits
+     *          - ENCODER_IN_32bits = 1 : para 32bits
+     *          - ENCODER_IN_64bits = 2 : para 64bits
+     * 
+     * En caso de que malloc devuelva error, la funcion devuelve NULL
+     *  
+     */
     size_t size;
     char *buffer_Position_memory, *buffer_spaces = NULL;
     switch (encoder_val) {
         case ENCODER_IN_16bits:
             size = (snprintf(NULL, 0, "%004x", addr) + 1) * sizeof(char);
             buffer_Position_memory = (char *)malloc(size);
+            if (buffer_Position_memory == NULL) return NULL;
             sprintf(buffer_Position_memory, "%004x", addr);
             break;
         case ENCODER_IN_32bits:
             size = (snprintf(NULL, 0, "%008x", addr) + 1) * sizeof(char);
             buffer_Position_memory = (char *)malloc(size);
+            if (buffer_Position_memory == NULL) return NULL;
             sprintf(buffer_Position_memory, "%008x", addr);
             break;
         case ENCODER_IN_64bits:
             size = (snprintf(NULL, 0, "%016x", addr) + 1) * sizeof(char);
             buffer_Position_memory = (char *)malloc(size);
+            if (buffer_Position_memory == NULL) return NULL;
             sprintf(buffer_Position_memory, "%016x", addr);
             break;
         default: return NULL; // error
@@ -103,21 +248,21 @@ void print_binary(unsigned int num, uint16_t num_bits, uint16_t init_count) {
 void print_opcode(Instruction_info *my_instruccion_, opcode opcode, uint8_t number_opcode) {
     printf_color("opcode#{FG:lpurple}{#{FG:lred}%d#{FG:lpurple}}#{FG:reset} (#{FG:lblue}8bits#{FG:reset}): #{FG:lgreen}%02X#{FG:reset} = #{FG:lyellow}", number_opcode, *((uint8_t*)(&opcode)));
     print_binary( *((uint8_t*)(&opcode)), 8, 0);
-    printf_color("#{FG:reset}opcode[#{FG:lred}%d#{FG:reset}] (#{FG:lblue}6bits#{FG:reset}): #{FG:lgreen}%02X#{FG:reset} = #{FG:lyellow}", number_opcode, opcode.opcode_bits_final.opcode);
+    printf_color("#{FG:reset}opcode[#{FG:lred}%d#{FG:reset}] (#{FG:lblue}6bits#{FG:reset}): (value) #{FG:lgreen}%02X#{FG:reset} = #{FG:lyellow}", number_opcode, opcode.opcode_bits_final.opcode);
     print_binary(opcode.opcode_bits_final.opcode<< 2, 8, 0);
     //printf_color("#{FG:reset}opcode[#{FG:lred}%d#{FG:reset}].d:  #{FG:lgreen}%02X#{FG:reset} =        #{FG:lyellow}%d#{FG:reset}\n", number_opcode, opcode.opcode_bits_final.d, opcode.opcode_bits_final.d);
     //printf_color("opcode[#{FG:lred}%d#{FG:reset}].s:  #{FG:lgreen}%02X#{FG:reset} =         #{FG:lyellow}%d#{FG:reset}\n\n", number_opcode, opcode.opcode_bits_final.s, opcode.opcode_bits_final.s);
     if (number_opcode == 2) {
         if (my_instruccion_->posicion_d != 0) {
-            printf_color("#{FG:reset}opcode[#{FG:lred}%d#{FG:reset}].d(#{FG:lblue}1bit#{FG:reset}): #{FG:lgreen}%02X#{FG:reset} = #{FG:reset}", number_opcode, opcode.opcode_bits_final.d);
+            printf_color("#{FG:reset}opcode[#{FG:lred}%d#{FG:reset}].d(#{FG:lblue}1bit#{FG:reset}): (value) #{FG:lgreen}%02X#{FG:reset} = #{FG:reset}", number_opcode, opcode.opcode_bits_final.d);
             print_binary(opcode.opcode_bits_final.d, 1, 6);
         } else printf_color("#{FG:reset}opcode[#{FG:lred}%d#{FG:reset}].d(#{FG:lblue}1bit#{FG:reset}): #{FG:lred}%02X#{FG:reset} = #{FG:lred}not exists field D#{FG:reset}\n", number_opcode, opcode.opcode_bits_final.d);
         if (my_instruccion_->posicion_s != 0) {
-            printf_color("opcode[#{FG:lred}%d#{FG:reset}].s(#{FG:lblue}1bit#{FG:reset}): #{FG:lgreen}%02X#{FG:reset} = #{FG:reset}", number_opcode, opcode.opcode_bits_final.s);
+            printf_color("opcode[#{FG:lred}%d#{FG:reset}].s(#{FG:lblue}1bit#{FG:reset}): (value) #{FG:lgreen}%02X#{FG:reset} = #{FG:reset}", number_opcode, opcode.opcode_bits_final.s);
             print_binary(opcode.opcode_bits_final.d, 1, 7);
         } else printf_color("#{FG:reset}opcode[#{FG:lred}%d#{FG:reset}].s(#{FG:lblue}1bit#{FG:reset}): #{FG:lred}%02X#{FG:reset} = #{FG:lred}not exists field S#{FG:reset}\n", number_opcode, opcode.opcode_bits_final.s);
         if (my_instruccion_->posicion_w != 0) {
-            printf_color("opcode[#{FG:lred}%d#{FG:reset}].w(#{FG:lblue}1bit#{FG:reset}): #{FG:lgreen}%02X#{FG:reset}   -> #{FG:lred}(#{FG:reset}mask#{FG:lred})#{FG:reset} #{FG:reset}", number_opcode, get_bit_w(my_instruccion_));
+            printf_color("opcode[#{FG:lred}%d#{FG:reset}].w(#{FG:lblue}1bit#{FG:reset}): (value) #{FG:lgreen}%02X#{FG:reset}   -> #{FG:lred}(#{FG:reset}mask#{FG:lred})#{FG:reset} #{FG:reset}", number_opcode, get_bit_w(my_instruccion_));
             print_binary(my_instruccion_->posicion_w, 4, 4);
         } else printf_color("#{FG:reset}opcode[#{FG:lred}%d#{FG:reset}].w(#{FG:lblue}1bit#{FG:reset}): #{FG:lred}%02X#{FG:reset} = #{FG:lred}not exists field W#{FG:reset}\n", number_opcode, get_bit_w(my_instruccion_));
     }
@@ -166,7 +311,12 @@ void print_instruccion(Instruction_info *my_instruccion_, encoder_x86 encoder_va
                     values[4] ^= values[3];  values[5] ^= values[4];
                     goto regenerate_keys;
         }
+    
     printf_color("string instruccion: #{BG:%d;%d;%d} %s#{FG:reset} (color: %u %u %u)\n", (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3,  get_string_instrution(my_instruccion_->string), (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3);
+    String_list_link *string_list = get_string_instruction(my_instruccion_, encoder_val);
+    printf_color("total string instruccion: #{BG:%d;%d;%d} ", (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3);
+    print_String_list_link(string_list);
+    printf_color("#{FG:reset}\n");
     Instruction *my_instruccion = &(my_instruccion_->instruction);
     printf_color("prefix:       #{FG:lgreen}%02X %02X %02X %02X#{FG:reset} = \n", my_instruccion->prefix[0], my_instruccion->prefix[1], my_instruccion->prefix[2], my_instruccion->prefix[3]);
     for (int i = 0; i < sizeof(uint8_t) *4; i++) {
@@ -188,11 +338,17 @@ void print_instruccion(Instruction_info *my_instruccion_, encoder_x86 encoder_va
     printf_color("Mod_rm:       #{FG:lgreen}%02X#{FG:reset} =       ", *((uint8_t*)&(my_instruccion->Mod_rm)));
     print_binary( *((uint8_t*)&(my_instruccion->Mod_rm)), 8, 0);
     printf_color("mod:          #{FG:lgreen}%02X#{FG:reset} =       ", my_instruccion->Mod_rm.mod); print_binary(my_instruccion->Mod_rm.mod, 2, 0);
-    printf_color("reg:          #{FG:lgreen}%02X#{FG:reset} = %03s = ", my_instruccion->Mod_rm.reg, get_string_register(encoder_val, get_bit_w(my_instruccion_), my_instruccion->Mod_rm.reg)); 
-    //(instrutions[i] & my_instruccion_->mask_reg) >> count_get_mask(actual_node->Instruction.mask_reg)
-    print_binary(my_instruccion->Mod_rm.reg, 3, 2);
-    printf_color("R_M:          #{FG:lgreen}%02X#{FG:reset} = %03s = ", my_instruccion->Mod_rm.R_M, get_string_register(encoder_val, get_bit_w(my_instruccion_), my_instruccion->Mod_rm.R_M));
-    print_binary(my_instruccion->Mod_rm.R_M, 3, 5);
+    if ( my_instruccion_->number_reg != 0b00 ) {
+        printf_color("reg:          #{FG:lgreen}%02X#{FG:reset} = %03s = ", my_instruccion->Mod_rm.reg, get_string_register(encoder_val, get_bit_w(my_instruccion_), my_instruccion->Mod_rm.reg)); 
+        //(instrutions[i] & my_instruccion_->mask_reg) >> count_get_mask(actual_node->Instruction.mask_reg)
+        print_binary(my_instruccion->Mod_rm.reg, 3, 2);
+        printf_color("R_M:          #{FG:lgreen}%02X#{FG:reset} = %03s = ", my_instruccion->Mod_rm.R_M, get_string_register(encoder_val, get_bit_w(my_instruccion_), my_instruccion->Mod_rm.R_M));
+        print_binary(my_instruccion->Mod_rm.R_M, 3, 5);
+    } else {
+        printf_color("reg:          #{FG:lred}%02X#{FG:reset} = #{FG:lred}---#{FG:reset} = #{FG:lred}not exists field REG#{FG:reset}\n", 0); 
+        printf_color("R_M:          #{FG:lred}%02X#{FG:reset} = #{FG:lred}---#{FG:reset} = #{FG:lred}not exists field R/M#{FG:reset}\n", 0);
+    }
+    
 
     /*
      * "mod" con valor 00 junto al campo "r/m" 100 indica que se trata del modo SIB
