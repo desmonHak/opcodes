@@ -87,13 +87,14 @@ void print_List_instrution(List_instrution *list_instrution, encoder_x86 encoder
     if (list_instrution == NULL) printf("finall list or invalid...");
 
     for (List_instrution *i = list_instrution; i->next_list_instrution != NULL; i = i->next_list_instrution) {
+        printf("\n\nlist_instrution->next_list_instrution = %p\n", i->next_list_instrution);
         printf("list_instrution[%d] = %p\n", i->id, i);
         print_instruccion(&(i->Instruction), encoder_val);
         //print_instruccion_binary(&(i->Instruction.instruction));
         print_instruccion_hex(&(i->Instruction.instruction), encoder_val);
         char text[] = " ";
         print_table_hex(text, (char*)&(i->Instruction), sizeof(Instruction_info), encoder_val);
-        printf("list_instrution->next_list_instrution = %p\n\n", i->next_list_instrution);
+        
     }
 }
 
@@ -286,7 +287,6 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
         }
         the_end_for: {} // el compilador me obliga a poner algun codigo por ser el final del estamento, sino da error :'v
     }
-    print_List_instrution(list_instrution_resb, encoder_val);
     return list_instrution_resb;
 }
 

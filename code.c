@@ -1,3 +1,4 @@
+//#define DEBUG_ENABLE // debug activado
 #include "opcodes_prefix.h"
 #include "instrutions_format.h"
 
@@ -22,6 +23,7 @@ int main(){
     char text[] = " ";
     print_table_hex(text, instrucciones, sizeof(instrucciones), ENCODER_IN_16bits);
     List_instrution *instrutions_struct = format_instruccion(instrucciones, sizeof(instrucciones), ENCODER_IN_16bits);
+    print_List_instrution(instrutions_struct, ENCODER_IN_16bits);
     //size_t number_of_instrutions = get_number_instrutions(instrucciones, sizeof(instrucciones));
 
 

@@ -17,7 +17,6 @@
  */
 #include <stdint.h>
 
-#define DEBUG_ENABLE // debug activado
 
 #include "debug_c.h"
 
