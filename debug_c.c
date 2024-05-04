@@ -124,7 +124,6 @@ void debug_print(DebugLevel level, const char *fmt, ...)
 
     vprintf_color( fmt, args_copy);
     va_end(args_copy);
-    putchar( '\n');
 
     /*if (logFile != NULL)
     {

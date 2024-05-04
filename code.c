@@ -16,11 +16,21 @@ int main(){
         0x10, 0xc0,       // ADC        al,        al = 0001 0000  11 000 000
         0x10, 0b11010110, // ADC dl/dx/edx, dh/si/esi = 0001 0000  11 010 110
         0x11, 0b11010110, // ADC dl/dx/edx, dh/si/esi = 0001 0001  11 010 110
-        0x13, 0b11110111  // ADC dh/si/esi, bh/di/edi = 0011 0011  11 110 111
-    };
+        0x13, 0b11110111,  // ADC dh/si/esi, bh/di/edi = 0011 0011  11 110 111
 
+    };
+    char text[] = " ";
+    print_table_hex(text, instrucciones, sizeof(instrucciones), ENCODER_IN_16bits);
     List_instrution *instrutions_struct = format_instruccion(instrucciones, sizeof(instrucciones), ENCODER_IN_16bits);
     //size_t number_of_instrutions = get_number_instrutions(instrucciones, sizeof(instrucciones));
+
+    uint8_t *vals = malloc(255);
+    for (int i = 0; i < 255; i++) {
+        vals[i] = i;
+    }
+    print_table_hex(text, vals, 255, ENCODER_IN_16bits);
+    print_table_hex(text, vals, 255, ENCODER_IN_32bits);
+    print_table_hex(text, vals, 255, ENCODER_IN_64bits);
 
     puts("Exit...");
     return 0;

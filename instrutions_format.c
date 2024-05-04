@@ -97,7 +97,7 @@ void print_List_instrution(List_instrution *list_instrution, encoder_x86 encoder
 void copy_info_instruction(Instruction_info *instrutions, Instruction_info *my_instruccion, encoder_x86 encoder_val){
     #ifdef DEBUG_ENABLE
         DEBUG_PRINT(DEBUG_LEVEL_INFO,
-            INIT_TYPE_FUNC_DBG(List_instrution *, format_instruccion)
+            INIT_TYPE_FUNC_DBG(List_instrution *, copy_info_instruction)
                 TYPE_DATA_DBG(Instruction_info *, "instrutions = %p")
                 TYPE_DATA_DBG(Instruction_info *, "my_instruccion = %p")
                 TYPE_DATA_DBG(encoder_x86, "encoder_val = %u")
@@ -119,6 +119,29 @@ void copy_info_instruction(Instruction_info *instrutions, Instruction_info *my_i
     instrutions->posicion_s           = my_instruccion->posicion_s;
 }
 
+uint8_t get_registers_form_byte(Instruction_info *Instruction, uint8_t byte) {
+    #ifdef DEBUG_ENABLE
+        DEBUG_PRINT(DEBUG_LEVEL_INFO,
+            INIT_TYPE_FUNC_DBG(uint8_t, get_registers_form_byte)
+            TYPE_DATA_DBG(Instruction_info *, "Instruction = %p")
+            TYPE_DATA_DBG(uint8_t, "byte = %02x")
+            END_TYPE_FUNC_DBG,
+            Instruction, byte);
+    #endif
+    switch (Instruction->number_reg)
+    {
+        case 0b00: break; // 0b00 - no usa campo reg
+        case 0b01: break; // 0b01 - usa un campo reg
+        case 0b10:  // 0b10 - usa dos campos reg (rm se convierte en un campo registro)
+            // obetenemos
+            Instruction->instruction.Mod_rm.reg = (byte & Instruction->mask_reg) >> count_get_mask(Instruction->mask_reg);
+            Instruction->instruction.Mod_rm.R_M =  (byte & Instruction->mask_rm) >> count_get_mask(Instruction->mask_rm); 
+            break; // 0b10 - usa dos campos reg (rm se convierte en un campo registro)
+        default:   break; // 0b11 - no se define(error)
+    }
+    return Instruction->number_reg;
+}
+
 List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, encoder_x86 encoder_val) {
 
     #ifdef DEBUG_ENABLE
@@ -126,8 +149,9 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
             INIT_TYPE_FUNC_DBG(List_instrution *, format_instruccion)
                 TYPE_DATA_DBG(uint8_t *, "instrutions = %hhu")
                 TYPE_DATA_DBG(size_t, "size_in_bytes = %zu")
+                TYPE_DATA_DBG(encoder_x86, "encoder_x86 = %02x")
             END_TYPE_FUNC_DBG,
-            instrutions, size_in_bytes);
+            instrutions, size_in_bytes, encoder_val);
     #endif
     List_instrution *list_instrution_resb = init_List_instrution();
     
@@ -171,26 +195,34 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
                 
                 if (my_instruccion[i].instruction.opcode[k] & instrutions[i])
             }*/
-            unsigned int Avalue1, Avalue2, Avalue3; // generar un par de 3 colores para imprimir cada instruccion con un color diferente usando rgb
-            int values[] = {
-                my_instruccion[j].instruction.opcode[0].opcode_byte.byte + 0x0f00, 
-                my_instruccion[j].instruction.opcode[1].opcode_byte.byte + 0xf0010a0, 
-                my_instruccion[j].instruction.opcode[2].opcode_byte.byte, 
-                0xa0, 0xf1, 
-                my_instruccion[j].instruction.opcode[2].opcode_byte.byte + 1 +
-                my_instruccion[j].instruction.opcode[1].opcode_byte.byte +
-                my_instruccion[j].instruction.opcode[0].opcode_byte.byte + 20
-            };
-            //shuffle_array(values, sizeof(values)/sizeof(int));
-            unsigned int seed = my_instruccion[j].instruction.opcode[2].opcode_byte.byte * 
-                                my_instruccion[j].instruction.opcode[1].opcode_byte.byte * 
-                                my_instruccion[j].instruction.opcode[0].opcode_byte.byte ;
-            Avalue1 = jenkins_hash(seed,    values[0], values[1], values[3], values[4], values[5], values[6]);
-            Avalue2 = jenkins_hash(Avalue1, values[0], values[1], values[3], values[4], values[5], values[6]);
-            Avalue3 = jenkins_hash(Avalue2, values[0], values[1], values[3], values[4], values[5], values[6]);
             #ifdef DEBUG_ENABLE
-            printf(">>> buscando.... %02x\n ", instrutions[i]);
+            // generar un par de 3 colores para imprimir cada instruccion con un color diferente usando rgb
+            unsigned int Avalue1, Avalue2, Avalue3, seed, values[] = {
+                my_instruccion[i].instruction.opcode[0].opcode_byte.byte + 0x0f01, 
+                my_instruccion[i].instruction.opcode[1].opcode_byte.byte + 0xa00100, 
+                my_instruccion[i].instruction.opcode[2].opcode_byte.byte, 
+                0xa0, 0xf1, 
+                my_instruccion[i].instruction.opcode[2].opcode_byte.byte + 1 +
+                my_instruccion[i].instruction.opcode[1].opcode_byte.byte +
+                my_instruccion[i].instruction.opcode[0].opcode_byte.byte + 20
+            };
+            regenerate_keys:
+                //shuffle_array(values, sizeof(values)/sizeof(int));
+                seed = my_instruccion[i].instruction.opcode[2].opcode_byte.byte * 
+                                    my_instruccion[i].instruction.opcode[1].opcode_byte.byte * 
+                                    my_instruccion[i].instruction.opcode[0].opcode_byte.byte ;
+                Avalue1 = jenkins_hash(seed,    values[0], values[1], values[2], values[3], values[4], values[5]);
+                Avalue2 = jenkins_hash(Avalue1, values[0], values[1], values[2], values[3], values[4], values[5]);
+                Avalue3 = jenkins_hash(Avalue2, values[0], values[1], values[2], values[3], values[4], values[5]);
+                if ((Avalue1 & Avalue2 & Avalue3) == Avalue1) { 
+                    values[0] ^= 0b10101010; values[1] |= values[0];
+                    values[2] ^= values[1];  values[3] &= values[2];
+                    values[4] |= values[3];  values[5] ^= values[4];
+                    goto regenerate_keys;
+                }
+            DEBUG_PRINT(DEBUG_LEVEL_INFO, "#{FG:reset} >>> buscando byte.... #{BG:%d;%d;%d}0x%02x#{FG:reset}\n",(unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3, instrutions[i]);
             #endif
+
             //printf("2bytes; i = %d, j = %d\n", i, j);
             switch (my_instruccion[j].opcode_size)
             {
@@ -199,10 +231,11 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
                         copy_info_instruction(&(actual_node->Instruction), &(my_instruccion[j]), encoder_val);
                         actual_node->Instruction.instruction.opcode[2].opcode_byte.byte = instrutions[i];
                         #ifdef DEBUG_ENABLE
-                        printf_color("instruccion actual -> #{FG:lcyan}%s#{FG:reset} -> ", get_string_instrution(actual_node->Instruction.string));
+                        DEBUG_PRINT(DEBUG_LEVEL_INFO, "#{FG:reset}instruccion actual -> #{FG:lpurple}%s#{FG:reset} -> ", get_string_instrution(actual_node->Instruction.string));
                         printf_color("#{BG:%d;%d;%d} %s#{FG:reset} (color: %u %u %u)\n", (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3,  get_string_instrution(actual_node->Instruction.string), (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3);
                         #endif
                         if (actual_node->Instruction.immediate_instrution) goto the_end_for; // si se trata de una instruccion inmediata no hay nada mas que analizar
+                        get_registers_form_byte(&(actual_node->Instruction), instrutions[i]);
                     } break;
                 case 0b01: // dos bytes de opcode
                     if (
@@ -215,12 +248,12 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
                         actual_node->Instruction.instruction.opcode[1].opcode_byte.byte = instrutions[i+1];
                         i+=1;
                         #ifdef DEBUG_ENABLE
-                        printf_color("instruccion actual -> #{FG:lpurple}%s#{FG:reset} -> ", get_string_instrution(actual_node->Instruction.string));
+                        DEBUG_PRINT(DEBUG_LEVEL_INFO, "#{FG:reset}instruccion actual -> #{FG:lpurple}%s#{FG:reset} -> ", get_string_instrution(actual_node->Instruction.string));
                         printf_color("#{BG:%d;%d;%d} %s#{FG:reset} (color: %u %u %u)\n", (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3,  get_string_instrution(actual_node->Instruction.string), (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3);
                         #endif
                         if (actual_node->Instruction.immediate_instrution) goto the_end_for; // si se trata de una instruccion inmediata no hay nada mas que analizar
                         //printf("actual_node->Instruction.number_reg %d, %02x & %02x = %02x", actual_node->Instruction.number_reg, instrutions[i], actual_node->Instruction.mask_reg, instrutions[i] & actual_node->Instruction.mask_reg);
-                        switch (actual_node->Instruction.number_reg)
+                        /*switch (actual_node->Instruction.number_reg)
                         {
                         case 0b00: break; // 0b00 - no usa campo reg
                         case 0b01: break; // 0b01 - usa un campo reg
@@ -230,9 +263,9 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
                             actual_node->Instruction.instruction.Mod_rm.R_M =  (instrutions[i] & actual_node->Instruction.mask_rm) >> count_get_mask(actual_node->Instruction.mask_rm); 
                             break; // 0b10 - usa dos campos reg (rm se convierte en un campo registro)
                         default:   break; // 0b11 - no se define(error)
-                        }
-                    } 
-                    break;
+                        }*/
+                        get_registers_form_byte(&(actual_node->Instruction), instrutions[i]);
+                    } break;
                 case 0b10: // tres byte de opcode
                     if (my_instruccion[j].instruction.opcode[2].opcode_byte.byte & instrutions[i] == my_instruccion[j].instruction.opcode[2].opcode_byte.byte) {
                         copy_info_instruction(&(actual_node->Instruction), &(my_instruccion[j]), encoder_val);
@@ -240,6 +273,7 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
                         actual_node->Instruction.instruction.opcode[1].opcode_byte.byte = instrutions[i+1];
                         actual_node->Instruction.instruction.opcode[0].opcode_byte.byte = instrutions[i+2];
                         if (actual_node->Instruction.immediate_instrution) goto the_end_for; // si se trata de una instruccion inmediata no hay nada mas que analizar
+                        get_registers_form_byte(&(actual_node->Instruction), instrutions[i]);
                     } break;
                 default: break; // error 0b11 se define como no existe
             }

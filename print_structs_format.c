@@ -3,6 +3,59 @@
 
 #include "print_structs_format.h"
 
+void print_table_hex(char *string_init, char *string_text_for_printing, size_t size_string_text_for_printing, encoder_x86 encoder_val) {
+    size_t size = (snprintf(NULL, 0, "%04x", size_string_text_for_printing) + 1) * sizeof(char);
+    char *buffer_Position_memory = (char *)malloc(size), *buffer_spaces = NULL;
+    sprintf(buffer_Position_memory, "%04x", size_string_text_for_printing);
+
+    uint32_t level_space = strlen(buffer_Position_memory) ;
+    buffer_spaces = (char *)malloc(level_space);
+    for (uint32_t i = 0; i < level_space; i++) buffer_spaces[i] = ' ';
+    buffer_spaces[level_space] = '\0';
+    printf_color("\n%s%s ", string_init, buffer_spaces);
+    for (uint16_t r = 0x23; r < 0x33; r++) { 
+        printf_color("|"FOREGROUND_COLOR_CUSTOM("%d")"%02x#{FG:reset}", r>> 2, ((uint8_t)(r-0x33)) - 0xf0 ); 
+    }
+
+    unsigned int random_color = jenkins_hash(string_text_for_printing[0], level_space, 0, 1, 2, 3, 4);
+    printf_color("|\n%s"FOREGROUND_COLOR_CUSTOM("%d")"0000 #{FG:reset}", string_init, (uint8_t)(random_color >> 2));
+    for (uint32_t i = 0; i < size_string_text_for_printing; i++)
+    {
+    unsigned int Avalue1, Avalue2, Avalue3, seed, values[] = {
+        (unsigned int)size_string_text_for_printing, 
+        size, 
+        level_space, 
+        0xa0, 0xe1, 
+        string_text_for_printing[i]
+    };
+    regenerate_keys:
+        //shuffle_array(values, sizeof(values)/sizeof(int));
+        seed = (unsigned int)string_text_for_printing[i];
+        Avalue1 = jenkins_hash(seed,    values[0], values[1], values[2], values[3], values[4], values[5]);
+        Avalue2 = jenkins_hash(Avalue1, values[0], values[1], values[2], values[3], values[4], values[5]);
+        Avalue3 = jenkins_hash(Avalue2, values[0], values[1], values[2], values[3], values[4], values[5]);
+        if ((Avalue1 & Avalue2 & Avalue3) == Avalue1) { 
+            values[0] ^= 0b00101010; values[1] |= values[0];
+            values[2] ^= values[1];  values[3] &= values[2];
+            values[4] |= values[3];  values[5] ^= values[4];
+            goto regenerate_keys;
+        }
+        printf_color("|"FOREGROUND_COLOR_CUSTOM("%d")"%.2X#{BG:reset}", 
+        ((((uint8_t)string_text_for_printing[i] >> 2)) & 0b1110111) | 0b00000001,
+        (uint8_t)string_text_for_printing[i]);
+
+        //printf_color(" #{FG:red}#{BG:green}|#{BG:reset}");
+        if ((i+1) % (BLOCK_SLICES / 8) == 0){
+            unsigned int random_color = jenkins_hash(string_text_for_printing[0], Avalue1, Avalue2, Avalue3, 2, 3, 4);
+            printf_color("|\n%s"FOREGROUND_COLOR_CUSTOM("%d")"%04x #{FG:reset}", string_init, (uint8_t)(random_color >> 2), i+1);
+        }
+
+    }
+    free(buffer_Position_memory);
+    free(buffer_spaces);
+    printf("|\n");
+}
+
 void print_binary(unsigned int num, uint16_t num_bits, uint16_t init_count) {
     // num_bits = 2
     // init_count = 0
@@ -63,22 +116,29 @@ void print_instruccion_binary(Instruction *my_instruccion) {
 
 void print_instruccion(Instruction_info *my_instruccion_, encoder_x86 encoder_val) {
 
-    unsigned int Avalue1, Avalue2, Avalue3; // generar un par de 3 colores para imprimir cada instruccion con un color diferente usando rgb
-    int values[] = {
-        my_instruccion_->instruction.opcode[0].opcode_byte.byte + my_instruccion_->string * 10, 
-        my_instruccion_->instruction.opcode[1].opcode_byte.byte + my_instruccion_->string * 10, 
+    unsigned int Avalue1, Avalue2, Avalue3, seed, values[] = {
+        my_instruccion_->instruction.opcode[0].opcode_byte.byte + 0x0f01, 
+        my_instruccion_->instruction.opcode[1].opcode_byte.byte + 0xf0010a0, 
         my_instruccion_->instruction.opcode[2].opcode_byte.byte, 
         0xa0, 0xf1, 
-        my_instruccion_->instruction.opcode[2].opcode_byte.byte +
+        my_instruccion_->instruction.opcode[2].opcode_byte.byte + 1 +
         my_instruccion_->instruction.opcode[1].opcode_byte.byte +
-        my_instruccion_->instruction.opcode[0].opcode_byte.byte + my_instruccion_->string * 10
+        my_instruccion_->instruction.opcode[0].opcode_byte.byte + 20
     };
-    unsigned int seed = my_instruccion_->instruction.opcode[2].opcode_byte.byte * 
-                        my_instruccion_->instruction.opcode[1].opcode_byte.byte * 
-                        my_instruccion_->instruction.opcode[0].opcode_byte.byte ;
-    Avalue1 = jenkins_hash(seed,    values[0], values[1], values[3], values[4], values[5], values[6]);
-    Avalue2 = jenkins_hash(Avalue1, values[0], values[1], values[3], values[4], values[5], values[6]);
-    Avalue3 = jenkins_hash(Avalue2, values[0], values[1], values[3], values[4], values[5], values[6]);
+    regenerate_keys:
+        //shuffle_array(values, sizeof(values)/sizeof(int));
+        seed = my_instruccion_->instruction.opcode[2].opcode_byte.byte * 
+                            my_instruccion_->instruction.opcode[1].opcode_byte.byte * 
+                            my_instruccion_->instruction.opcode[0].opcode_byte.byte ;
+        Avalue1 = jenkins_hash(seed,    values[0], values[1], values[2], values[3], values[4], values[5]);
+        Avalue2 = jenkins_hash(Avalue1, values[0], values[1], values[2], values[3], values[4], values[5]);
+        Avalue3 = jenkins_hash(Avalue2, values[0], values[1], values[2], values[3], values[4], values[5]);
+        if ((Avalue1 & Avalue2 & Avalue3) == Avalue1) { 
+                    values[0] ^= 0b10101010; values[1] ^= values[0];
+                    values[2] ^= values[1];  values[3] &= values[2];
+                    values[4] ^= values[3];  values[5] ^= values[4];
+                    goto regenerate_keys;
+        }
     printf_color("string instruccion: #{BG:%d;%d;%d} %s#{FG:reset} (color: %u %u %u)\n", (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3,  get_string_instrution(my_instruccion_->string), (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3);
     Instruction *my_instruccion = &(my_instruccion_->instruction);
     printf_color("prefix:       #{FG:lgreen}%02X %02X %02X %02X#{FG:reset} = \n", my_instruccion->prefix[0], my_instruccion->prefix[1], my_instruccion->prefix[2], my_instruccion->prefix[3]);
@@ -88,9 +148,14 @@ void print_instruccion(Instruction_info *my_instruccion_, encoder_x86 encoder_va
 
     } printf("\n");
 
-    print_opcode(my_instruccion_, my_instruccion->opcode[0], 0);
-    print_opcode(my_instruccion_, my_instruccion->opcode[1], 1);
-    print_opcode(my_instruccion_, my_instruccion->opcode[2], 2);
+    printf_color("SizeOpcode(#{FG:lblue}2bits#{FG:reset}): #{FG:lgreen}%02X#{FG:reset} = ", my_instruccion_->opcode_size+1);
+    print_binary(my_instruccion_->opcode_size, 2, 6);
+
+    // mostart solo x bytes del opcode definidos por el miembro .opcode_size
+    // se recorre el array de 3 posiciones de forma inversa, [2, 1, 0], siendo 2 el opcode primario.
+    for (unsigned char pos = my_instruccion_->opcode_size +1; pos != 0; pos--)
+        print_opcode(my_instruccion_, my_instruccion->opcode[3-pos], pos);
+        // array[limite del array - posicion actual] == recorrer array desde el final
 
     
     printf_color("Mod_rm:       #{FG:lgreen}%02X#{FG:reset} =       ", *((uint8_t*)&(my_instruccion->Mod_rm)));
