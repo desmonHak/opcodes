@@ -46,7 +46,7 @@ typedef enum register_id { // se especifica los registros
     REGISTER_DI = 0b111, // BH, DI, EDX = 111
 } register_id;
 
-#pragma pack(push, 1)
+//#pragma pack(push, 4)
 
 typedef union opcode
 {
@@ -152,8 +152,8 @@ typedef struct Instruction {
 
 typedef struct Instruction_info
 {
-    string_instrution_id string;      // string a obtener
     Instruction instruction; // estructura con informacion del opcode y la instruccion
+    string_instrution_id string;      // string a obtener
 
     // 8 bits
     uint8_t position_rm:2;    // lugar donde se encuentra los bits "rm"  del opcode  -> 00(primer byte), 
@@ -202,7 +202,7 @@ typedef struct Instruction_info
 
 } Instruction_info;
 
-#pragma pack(pop)
+//#pragma pack(pop)
 
 
 inline uint8_t get_bit_w(Instruction_info *instrucion);

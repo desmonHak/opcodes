@@ -133,6 +133,14 @@ void print_instruccion_binary(Instruction *my_instruccion) {
     }printf("\n");
 }
 
+void print_instruccion_hex(Instruction *my_instruccion, encoder_x86 encoder_val) {
+    printf("Instruccion = \n");
+    char text[] = " ";
+    print_table_hex(text, ((char*)(my_instruccion)), sizeof(Instruction), encoder_val);
+    printf("\n");
+}
+
+
 void print_instruccion(Instruction_info *my_instruccion_, encoder_x86 encoder_val) {
 
     unsigned int Avalue1, Avalue2, Avalue3, seed, values[] = {

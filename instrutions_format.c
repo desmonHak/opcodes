@@ -89,7 +89,10 @@ void print_List_instrution(List_instrution *list_instrution, encoder_x86 encoder
     for (List_instrution *i = list_instrution; i->next_list_instrution != NULL; i = i->next_list_instrution) {
         printf("list_instrution[%d] = %p\n", i->id, i);
         print_instruccion(&(i->Instruction), encoder_val);
-        print_instruccion_binary(&(i->Instruction.instruction));
+        //print_instruccion_binary(&(i->Instruction.instruction));
+        print_instruccion_hex(&(i->Instruction.instruction), encoder_val);
+        char text[] = " ";
+        print_table_hex(text, (char*)&(i->Instruction), sizeof(Instruction_info), encoder_val);
         printf("list_instrution->next_list_instrution = %p\n\n", i->next_list_instrution);
     }
 }

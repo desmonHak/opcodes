@@ -24,13 +24,6 @@ int main(){
     List_instrution *instrutions_struct = format_instruccion(instrucciones, sizeof(instrucciones), ENCODER_IN_16bits);
     //size_t number_of_instrutions = get_number_instrutions(instrucciones, sizeof(instrucciones));
 
-    uint8_t *vals = malloc(255);
-    for (int i = 0; i < 255; i++) {
-        vals[i] = i;
-    }
-    print_table_hex(text, vals, 255, ENCODER_IN_16bits);
-    print_table_hex(text, vals, 255, ENCODER_IN_32bits);
-    print_table_hex(text, vals, 255, ENCODER_IN_64bits);
 
     puts("Exit...");
     return 0;
