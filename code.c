@@ -1,4 +1,4 @@
-//#define DEBUG_ENABLE // debug activado
+#define DEBUG_ENABLE // debug activado
 #include "opcodes_prefix.h"
 #include "instrutions_format.h"
 

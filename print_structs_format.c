@@ -61,11 +61,42 @@ void print_String_list_link(String_list_link *list) {
      * Se espera recibir un String_list_link a imprimir
      *  
      */
-    if (list == NULL) printf("In String_list_link final list or invalid...");
+    if (list == NULL) printf_color("#{FG:lred}In String_list_link final list or invalid...#{FG:reset}");
 
     for (String_list_link *i = list; i != NULL; i = i->next_string) {
         printf("%s ", i->actual_string);
     }
+}
+
+String_list_link* free_String_list_link(String_list_link* list){
+    #ifdef DEBUG_ENABLE
+        DEBUG_PRINT(DEBUG_LEVEL_INFO,
+            INIT_TYPE_FUNC_DBG(String_list_link*, free_String_list_link)
+                TYPE_DATA_DBG(Instruction_info *, "list = %p")
+            END_TYPE_FUNC_DBG,
+            list);
+    #endif
+    /*
+     *  
+     * free_String_list_link(String_list_link* list)
+     * Esta funcion libera una lista enlazada del tipo String_list_link
+     * 
+     * Se espera recibir una lista enlazada a liberar, valida
+     *  
+     */
+    if (list != NULL) {
+        size_t count_blocks_nodes_in_list = 0; // contar cuantos bloques tiene la lista enlazada:
+        String_list_link *next_block; // apuntar al siguiente bloque, para no perder
+        // la referencia al eliminar al bloque que apunta a este
+        for (String_list_link *i = list; i != NULL; i = next_block) {
+            #ifdef DEBUG_ENABLE
+                printf_color("#{FG:reset}Liberando i(#{FG:lred}%p#{FG:reset}), next_block(#{FG:lred}%p#{FG:reset}) #{FG:reset}\n", i, next_block);
+            #endif
+            next_block = i->next_string; // almacenar el siguiente bloque antes de liberar el actual
+            free(i); // liberar el bloque actual
+        }
+    }
+    return NULL;
 }
 
 String_list_link* get_string_instruction(Instruction_info *my_instruccion_, encoder_x86 encoder_val) {
@@ -173,6 +204,30 @@ char *get_addr_to_encoder_x86(uint64_t addr, encoder_x86 encoder_val) {
 }
 
 void print_table_hex(char *string_init, char *string_text_for_printing, size_t size_string_text_for_printing, encoder_x86 encoder_val) {
+    /*
+     *  
+     * print_table_hex(char *string_init, char *string_text_for_printing, size_t size_string_text_for_printing, encoder_x86 encoder_val):
+     * Esta funcion imprime un "string_text_for_printing" en forma de tabla hexadecimal de tamaño de X * 0xf(16 en decimal).
+     * Donde X es size_string_text_for_printing / 16. 
+     * 
+     * Se espera recibir un string_init, el cual es un string que se imprimira al inicio de cada fila.
+     * Se espera recibir un string_text_for_printing el cual sea la cadena o secuencia de bytes a imprimir en formao hexadecimal
+     * Se espera recibir un size_string_text_for_printing el cual sea el tamaño del string  o secuencia de bytes a imprimir.
+     * Se espera a recibir un encoder_val el cual indica el tamaño de las direcciones de memoria a imprimir:
+     *      Posibles valores para encoder_x86 encoder_val:
+     *          - ENCODER_IN_16bits = 0 : para 16bits
+     *          - ENCODER_IN_32bits = 1 : para 32bits
+     *          - ENCODER_IN_64bits = 2 : para 64bits
+     * 
+     * En caso de que string_init no sea un puntero valido o NULL se usara una cadena vacia por defecto.
+     * En caso de que string_text_for_printing no sea un puntero valido o NULL, la funcion no imprimira nada.
+     * En caso de que size_string_text_for_printing sea 0 no se imprimira nada.
+     *  
+     */
+
+    char my_string_default[] = "";
+    if ((string_text_for_printing == NULL) || (size_string_text_for_printing == 0)) return; // error
+    if (string_init == NULL) string_init = my_string_default; // no se ingreso un valor de incio que usar para imprimir cada fila
 
     size_t size;
     char *buffer_Position_memory = get_addr_to_encoder_x86(0, encoder_val), *buffer_spaces = NULL;
@@ -203,10 +258,13 @@ void print_table_hex(char *string_init, char *string_text_for_printing, size_t s
         Avalue2 = jenkins_hash(Avalue1, values[0], values[1], values[2], values[3], values[4], values[5]);
         Avalue3 = jenkins_hash(Avalue2, values[0], values[1], values[2], values[3], values[4], values[5]);
 
+        // mediante la operacion ((((uint8_t)valor >> 2)) & 0b1110111) | 0b00001001
+        // de puede obtener colores claros
         printf_color("|"FOREGROUND_COLOR_CUSTOM("%d")"%.2X#{BG:reset}", 
-        ((((uint8_t)string_text_for_printing[i] >> 2)) & 0b1110111) | 0b00001001,
+        ((((uint8_t)string_text_for_printing[i] >> 2)) & 0b1110111) | 0b00001001, 
         (uint8_t)string_text_for_printing[i]);
 
+        // imrpimir en X * 16
         if ((i+1) % (BLOCK_SLICES / 8) == 0){
             // imprimir la siguiente filas, despues de imprimir 16 bytes
             free(buffer_Position_memory);
@@ -221,8 +279,19 @@ void print_table_hex(char *string_init, char *string_text_for_printing, size_t s
 }
 
 void print_binary(unsigned int num, uint16_t num_bits, uint16_t init_count) {
-    // num_bits = 2
-    // init_count = 0
+    /*
+     *  
+     * print_binary(unsigned int num, uint16_t num_bits, uint16_t init_count):
+     * Esta funcion imprime un numero binario de entrada con color amarillo, usando un espacio por cada nibble.
+     * Se rellenara una cantidad de "init_count" con guiones en color blanco como relleno. 
+     * 
+     * Se espera recibir un "num" el cual sea el valor a imprimir en binario.
+     * Se espera recibir un num_bits el cual indique la cantidad de bits a imprimir
+     * Se espera recibir un init_count el cual desde que posicion empezar a poner 1's o 0's, hasta que no se alcanze esa posicion
+     *      se rellenara con guiones.
+     * 
+     *  
+     */
     uint16_t global_counter = 0;
     uint16_t counter_bits = num_bits -1;
     for (uint16_t i = 1; (counter_bits  > 0) || (i <= 8); i++ ) {
@@ -313,10 +382,13 @@ void print_instruccion(Instruction_info *my_instruccion_, encoder_x86 encoder_va
         }
     
     printf_color("string instruccion: #{BG:%d;%d;%d} %s#{FG:reset} (color: %u %u %u)\n", (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3,  get_string_instrution(my_instruccion_->string), (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3);
+
     String_list_link *string_list = get_string_instruction(my_instruccion_, encoder_val);
     printf_color("total string instruccion: #{BG:%d;%d;%d} ", (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3);
     print_String_list_link(string_list);
+    string_list = free_String_list_link(string_list);
     printf_color("#{FG:reset}\n");
+
     Instruction *my_instruccion = &(my_instruccion_->instruction);
     printf_color("prefix:       #{FG:lgreen}%02X %02X %02X %02X#{FG:reset} = \n", my_instruccion->prefix[0], my_instruccion->prefix[1], my_instruccion->prefix[2], my_instruccion->prefix[3]);
     for (int i = 0; i < sizeof(uint8_t) *4; i++) {
