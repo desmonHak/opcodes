@@ -246,13 +246,13 @@ uint8_t get_registers_form_byte(Instruction_info *Instruction, uint8_t* bytes) {
             Instruction, bytes);
     #endif
     if (Instruction == NULL) return -1;
-    
+    #endifz
     uint8_t byte = *((bytes + 1) - Instruction->position_reg); 
-    
+    #ifdef DEBUG_ENABLE
     printf("[[>> Instruction->mask_reg(%02x) count_get_mask(Instruction->mask_reg)(%02x)", Instruction->mask_reg, count_get_mask(Instruction->mask_reg));
     Instruction->instruction.Mod_rm.reg = (byte & Instruction->mask_reg) >> count_get_mask(Instruction->mask_reg);
     printf(" [[>> byte(%02x)      Instruction->instruction.Mod_rm.reg(%02x)\n", byte, Instruction->instruction.Mod_rm.reg);
-
+    #endif
     return Instruction->instruction.Mod_rm.reg;
 }
 
