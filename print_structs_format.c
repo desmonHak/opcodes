@@ -167,8 +167,30 @@ String_list_link* get_string_instruction(Instruction_info *my_instruccion_, enco
         destino  = fuente;   // a = b
         fuente   = auxiliar; // b = c
     }
-    
+
     String_list_link *ptr = ptr_org; // copia del puntero que usar para añadir elementos
+    switch(my_instruccion_->instruction.Mod_rm.mod) { 
+        case 0b00:  // Modo 00 (00b): El operando se codifica como un registro, sin desplazamiento (offset). En este modo, el campo 
+                    // "R/M" especifica el registro.
+            break;
+        case 0b10: // Modo 01 (01b): El operando se codifica como un registro con un desplazamiento de 8 bits. En este modo, el campo 
+                   // "R/M" especifica el registro, y sigue un byte inmediato que proporciona el desplazamiento.
+        case 0b01: //  Modo 10 (10b): El operando se codifica como un registro con un desplazamiento de 32 bits. En este modo, el campo 
+                   // "R/M" especifica el registro, y sigue una palabra doble (dword) inmediata que proporciona el desplazamiento.
+
+        case 0b11: // Modo 11 (11b): El operando se codifica como un registro de memoria. En este modo, el campo "R/M" especifica el 
+                   // registro de memoria.
+            string = get_string_register(encoder_val, get_bit_w(my_instruccion_), destino);
+            ptr->next_string = Init_String(string, CALC_SIZE_STRING_FLAG);
+            ptr = ptr->next_string;
+            string = get_string_register(encoder_val, get_bit_w(my_instruccion_), fuente);
+            ptr->next_string = Init_String(string, CALC_SIZE_STRING_FLAG);
+            ptr = ptr->next_string;
+            break;
+        default: break;// error al descodificar la instruccion
+    }
+
+    /*
     switch (my_instruccion_->number_reg) { // si hay algun registro, se obtiene
         case 0b00: break; // - no usa campo reg
         case 0b10: // uso dos campos como registros, "reg" y "r/m"
@@ -176,8 +198,13 @@ String_list_link* get_string_instruction(Instruction_info *my_instruccion_, enco
             string = get_string_register(encoder_val, get_bit_w(my_instruccion_), destino);
             ptr->next_string = Init_String(string, CALC_SIZE_STRING_FLAG);
             ptr = ptr->next_string;
-        case 0b01: // solo tiene un campo de registro, "reg"
+        case 0b01: // solo tiene un campo de registro, "reg", si tiene el campo mod en 0b11, señade otro registro
         // obtener registro del campo reg
+            if(my_instruccion_->instruction.Mod_rm.mod == 0b11) { // en caso de que mod sea 0b11
+                string = get_string_register(encoder_val, get_bit_w(my_instruccion_), destino);
+                ptr->next_string = Init_String(string, CALC_SIZE_STRING_FLAG);
+                ptr = ptr->next_string;
+            }
             string = get_string_register(encoder_val, get_bit_w(my_instruccion_), fuente);
             ptr->next_string = Init_String(string, CALC_SIZE_STRING_FLAG);
             ptr = ptr->next_string;
@@ -185,7 +212,7 @@ String_list_link* get_string_instruction(Instruction_info *my_instruccion_, enco
         default: // error al descodificar la instruccion
             ptr->size_string = -1;
             goto exit_get_string_instruction;
-    }
+    }*/
     
     exit_get_string_instruction:
     return ptr_org;
@@ -433,13 +460,13 @@ void print_instruccion(Instruction_info *my_instruccion_, encoder_x86 encoder_va
     // mostart solo x bytes del opcode definidos por el miembro .opcode_size
     // se recorre el array de 3 posiciones de forma inversa, [2, 1, 0], siendo 2 el opcode primario.
     for (unsigned char pos = my_instruccion_->opcode_size +1; pos != 0; pos--)
-        print_opcode(my_instruccion_, my_instruccion->opcode[3-pos], pos);
+        print_opcode(my_instruccion_, my_instruccion->opcode[pos], pos);
         // array[limite del array - posicion actual] == recorrer array desde el final
 
     
     printf_color("Mod_rm:       #{FG:lgreen}%02X#{FG:reset} =       ", *((uint8_t*)&(my_instruccion->Mod_rm)));
     print_binary( *((uint8_t*)&(my_instruccion->Mod_rm)), 8, 0);
-    printf_color("mod:          #{FG:lgreen}%02X#{FG:reset} =       ", my_instruccion->Mod_rm.mod); print_binary(my_instruccion->Mod_rm.mod, 2, 0);
+    printf_color("mod:          #{FG:lgreen}%02X#{FG:reset} =       ", my_instruccion->Mod_rm.mod); print_binary(my_instruccion->Mod_rm.mod << 6, 8, 0);
     if ( my_instruccion_->number_reg != 0b00 ) {
         printf_color("reg:          #{FG:lgreen}%02X#{FG:reset} = %03s = ", my_instruccion->Mod_rm.reg, get_string_register(encoder_val, get_bit_w(my_instruccion_), my_instruccion->Mod_rm.reg)); 
         //(instrutions[i] & my_instruccion_->mask_reg) >> count_get_mask(actual_node->Instruction.mask_reg)

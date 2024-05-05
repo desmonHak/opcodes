@@ -193,40 +193,67 @@ void print_List_instrution(List_instrution *list_instrution, encoder_x86 encoder
     }
 }
 
-uint8_t get_registers_form_byte(Instruction_info *Instruction, uint8_t byte) {
+uint8_t get_rm_form_byte(Instruction_info *Instruction, uint8_t* bytes) {
+    #ifdef DEBUG_ENABLE
+        DEBUG_PRINT(DEBUG_LEVEL_INFO,
+            INIT_TYPE_FUNC_DBG(uint8_t, get_rm_form_byte)
+            TYPE_DATA_DBG(Instruction_info *, "Instruction = %p")
+            TYPE_DATA_DBG(uint8_t, "bytes = %02x")
+            END_TYPE_FUNC_DBG,
+            Instruction, bytes);
+    #endif
+    if (Instruction == NULL) return -1;
+    uint8_t byte = *((bytes + 1) - Instruction->position_rm); // obtiene el byte donde esta el campo mod
+    Instruction->instruction.Mod_rm.R_M =  ((byte & (uint8_t)Instruction->mask_rm)) >> count_get_mask(Instruction->mask_rm); // obtiene los bits del campo mod
+    return Instruction->instruction.Mod_rm.R_M;
+}
+
+uint8_t get_mod_form_byte(Instruction_info *Instruction, uint8_t* bytes) {
+    #ifdef DEBUG_ENABLE
+        DEBUG_PRINT(DEBUG_LEVEL_INFO,
+            INIT_TYPE_FUNC_DBG(uint8_t, get_mod_form_byte)
+            TYPE_DATA_DBG(Instruction_info *, "Instruction = %p")
+            TYPE_DATA_DBG(uint8_t, "bytes = %p")
+            END_TYPE_FUNC_DBG,
+            Instruction, bytes);
+    #endif
+    if (Instruction == NULL) return -1;
+    uint8_t byte = *((bytes + 1) - Instruction->position_mod); // obtiene el byte donde esta el campo mod
+    Instruction->instruction.Mod_rm.mod =  ((byte & (uint8_t)Instruction->mask_mod)) >> count_get_mask(Instruction->mask_mod); // obtiene los bits del campo mod
+    return Instruction->instruction.Mod_rm.mod;
+}
+
+uint8_t get_registers_form_byte(Instruction_info *Instruction, uint8_t* bytes) {
     /*
      *
-     * get_registers_form_byte(Instruction_info *Instruction, uint8_t byte):
-     * Se usa para obtener los registros de un "byte" y obetenerlos segun una estructura Instruction_info(mask).
+     * get_registers_form_byte(Instruction_info *Instruction, uint8_t* bytes):
+     * Se usa para obtener los registros desde "bytes" y obetenerlos segun una estructura Instruction_info(mask).
      *  Los mismos valores son almacenados en la estructura de entrada.
      * 
      * Se recibe un Instruction el cual contiene informacion acerca de la indtruccion a descodificar, la ubicacion de los registros
      *  etc. En caso de que sea NULL o un puntero no valido la funcion retorna -1
      * 
-     * Se espera recibir un byte donde pueda estar contenido un registro, dos o ninguno
+     * Se espera recibir un bytes donde el primer valor sea el primer byte del opcode,
+     * el segundo valor de bytes sea el segundo byte del opcode, etc...
      * 
      */
     #ifdef DEBUG_ENABLE
         DEBUG_PRINT(DEBUG_LEVEL_INFO,
             INIT_TYPE_FUNC_DBG(uint8_t, get_registers_form_byte)
             TYPE_DATA_DBG(Instruction_info *, "Instruction = %p")
-            TYPE_DATA_DBG(uint8_t, "byte = %02x")
+            TYPE_DATA_DBG(uint8_t, "bytes = %p")
             END_TYPE_FUNC_DBG,
-            Instruction, byte);
+            Instruction, bytes);
     #endif
     if (Instruction == NULL) return -1;
-    switch (Instruction->number_reg)
-    {
-        case 0b00: break; // 0b00 - no usa campo reg
-        case 0b01: break; // 0b01 - usa un campo reg
-        case 0b10:  // 0b10 - usa dos campos reg (rm se convierte en un campo registro)
-            // obetenemos
-            Instruction->instruction.Mod_rm.reg = (byte & Instruction->mask_reg) >> count_get_mask(Instruction->mask_reg);
-            Instruction->instruction.Mod_rm.R_M =  (byte & Instruction->mask_rm) >> count_get_mask(Instruction->mask_rm); 
-            break; // 0b10 - usa dos campos reg (rm se convierte en un campo registro)
-        default:   break; // 0b11 - no se define(error)
-    }
-    return Instruction->number_reg;
+    
+    uint8_t byte = *((bytes + 1) - Instruction->position_reg); 
+    
+    printf("[[>> Instruction->mask_reg(%02x) count_get_mask(Instruction->mask_reg)(%02x)", Instruction->mask_reg, count_get_mask(Instruction->mask_reg));
+    Instruction->instruction.Mod_rm.reg = (byte & Instruction->mask_reg) >> count_get_mask(Instruction->mask_reg);
+    printf(" [[>> byte(%02x)      Instruction->instruction.Mod_rm.reg(%02x)\n", byte, Instruction->instruction.Mod_rm.reg);
+
+    return Instruction->instruction.Mod_rm.reg;
 }
 
 List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, encoder_x86 encoder_val) {
@@ -264,8 +291,6 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
             case Prefix_repne_repnez:  prefix_actual = Prefix_repne_repnez; break;
             case Prefix_repe_rep_repz: prefix_actual = Prefix_repe_rep_repz; break;
         }
-        
-
 
         // si se encontro un prefijo se agrega a la instruccion
         if (prefix_actual) {
@@ -308,13 +333,16 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
                     goto regenerate_keys;
                 }
             DEBUG_PRINT(DEBUG_LEVEL_INFO, "#{FG:reset} >>> buscando byte.... #{BG:%d;%d;%d}0x%02x#{FG:reset}\n",(unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3, instrutions[i]);
+            printf(">>>%02x & %02x = %02x\n",my_instruccion[j].instruction.opcode[2].opcode_byte.byte, instrutions[i], my_instruccion[j].instruction.opcode[2].opcode_byte.byte & instrutions[i]);
             #endif
-
             //printf("2bytes; i = %d, j = %d\n", i, j);
             switch (my_instruccion[j].opcode_size)
             {
                 case 0b00: // un byte de opcode
-                    if (my_instruccion[j].instruction.opcode[2].opcode_byte.byte & instrutions[i] == my_instruccion[j].instruction.opcode[2].opcode_byte.byte) {
+                    #ifdef DEBUG_ENABLE
+                    puts("1byte opcode");
+                    #endif
+                    if ((my_instruccion[j].instruction.opcode[2].opcode_byte.byte & instrutions[i]) == my_instruccion[j].instruction.opcode[2].opcode_byte.byte) {
                         memcpy(&(actual_node->Instruction), &(my_instruccion[j]), sizeof(Instruction_info));
                         actual_node->Instruction.instruction.opcode[2].opcode_byte.byte = instrutions[i];
                         #ifdef DEBUG_ENABLE
@@ -322,9 +350,17 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
                         printf_color("#{BG:%d;%d;%d} %s#{FG:reset} (color: %u %u %u)\n", (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3,  get_string_instrution(actual_node->Instruction.string), (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3);
                         #endif
                         if (actual_node->Instruction.immediate_instrution) goto the_end_for; // si se trata de una instruccion inmediata no hay nada mas que analizar
-                        get_registers_form_byte(&(actual_node->Instruction), instrutions[i]);
+                        uint8_t a = get_mod_form_byte(&(actual_node->Instruction), instrutions + i);
+                        uint8_t b = get_rm_form_byte(&(actual_node->Instruction), instrutions + i);
+                        uint8_t c = get_registers_form_byte(&(actual_node->Instruction), instrutions + i);
+                        goto the_end_for;
                     } break;
                 case 0b01: // dos bytes de opcode
+                    #ifdef DEBUG_ENABLE
+                    puts("2byte opcode");
+                    printf(">>> (%02x & %02x = %02x) && ",my_instruccion[j].instruction.opcode[2].opcode_byte.byte, instrutions[i], my_instruccion[j].instruction.opcode[2].opcode_byte.byte & instrutions[i]);
+                    printf("(%02x & %02x = %02x)\n",my_instruccion[j].instruction.opcode[1].opcode_byte.byte, instrutions[i+1], my_instruccion[j].instruction.opcode[1].opcode_byte.byte & instrutions[i+1]);
+                    #endif
                     if (
                         ((my_instruccion[j].instruction.opcode[2].opcode_byte.byte & instrutions[i]) == my_instruccion[j].instruction.opcode[2].opcode_byte.byte) &&
                         ((my_instruccion[j].instruction.opcode[1].opcode_byte.byte & instrutions[i+1]) == my_instruccion[j].instruction.opcode[1].opcode_byte.byte)
@@ -334,12 +370,14 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
                         memcpy(&(actual_node->Instruction), &(my_instruccion[j]), sizeof(Instruction_info));
                         actual_node->Instruction.instruction.opcode[2].opcode_byte.byte = instrutions[i];
                         actual_node->Instruction.instruction.opcode[1].opcode_byte.byte = instrutions[i+1];
-                        i+=1;
+                        
                         #ifdef DEBUG_ENABLE
+                        printf("encontrada, byte1(%02x), byte2(%02x)\n", instrutions[i], instrutions[i+1]);
                         DEBUG_PRINT(DEBUG_LEVEL_INFO, "#{FG:reset}instruccion actual -> #{FG:lpurple}%s#{FG:reset} -> ", get_string_instrution(actual_node->Instruction.string));
                         printf_color("#{BG:%d;%d;%d} %s#{FG:reset} (color: %u %u %u)\n", (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3,  get_string_instrution(actual_node->Instruction.string), (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3);
                         #endif
                         if (actual_node->Instruction.immediate_instrution) goto the_end_for; // si se trata de una instruccion inmediata no hay nada mas que analizar
+                        i+=1;
                         //printf("actual_node->Instruction.number_reg %d, %02x & %02x = %02x", actual_node->Instruction.number_reg, instrutions[i], actual_node->Instruction.mask_reg, instrutions[i] & actual_node->Instruction.mask_reg);
                         /*switch (actual_node->Instruction.number_reg)
                         {
@@ -352,19 +390,37 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
                             break; // 0b10 - usa dos campos reg (rm se convierte en un campo registro)
                         default:   break; // 0b11 - no se define(error)
                         }*/
-                        get_registers_form_byte(&(actual_node->Instruction), instrutions[i]);
+                        printf(">> %02x %02x\n", 
+                        actual_node->Instruction.instruction.opcode[2].opcode_byte.byte,
+                        actual_node->Instruction.instruction.opcode[1].opcode_byte.byte
+                        );
+                        //get_mod_form_byte(&(actual_node->Instruction), instrutions[i]);
+                        uint8_t a = get_mod_form_byte(&(actual_node->Instruction), instrutions + i);
+                        uint8_t b = get_rm_form_byte(&(actual_node->Instruction), instrutions + i);
+                        uint8_t c = get_registers_form_byte(&(actual_node->Instruction), instrutions + i);
+                        printf(">> mod(%02x) rm(%02x) reg(%02x), instrutions[i] = %02x\n",  a, b, c, instrutions[i] );
+                        goto the_end_for;
                     } break;
                 case 0b10: // tres byte de opcode
-                    if (my_instruccion[j].instruction.opcode[2].opcode_byte.byte & instrutions[i] == my_instruccion[j].instruction.opcode[2].opcode_byte.byte) {
+                    #ifdef DEBUG_ENABLE
+                    puts("3byte opcode");
+                    #endif
+                    if ((my_instruccion[j].instruction.opcode[2].opcode_byte.byte & instrutions[i]) == my_instruccion[j].instruction.opcode[2].opcode_byte.byte) {
                         //copy_info_instruction(&(actual_node->Instruction), &(my_instruccion[j]), encoder_val);
                         memcpy(&(actual_node->Instruction), &(my_instruccion[j]), sizeof(Instruction_info));
                         actual_node->Instruction.instruction.opcode[0].opcode_byte.byte = instrutions[i+2];
                         actual_node->Instruction.instruction.opcode[1].opcode_byte.byte = instrutions[i+1];
                         actual_node->Instruction.instruction.opcode[2].opcode_byte.byte = instrutions[i];
                         if (actual_node->Instruction.immediate_instrution) goto the_end_for; // si se trata de una instruccion inmediata no hay nada mas que analizar
-                        get_registers_form_byte(&(actual_node->Instruction), instrutions[i]);
+                        uint8_t a = get_mod_form_byte(&(actual_node->Instruction), instrutions + i);
+                        uint8_t b = get_rm_form_byte(&(actual_node->Instruction), instrutions + i);
+                        uint8_t c = get_registers_form_byte(&(actual_node->Instruction), instrutions + i);
+                        goto the_end_for;
                     } break;
-                default: break; // error 0b11 se define como no existe
+                default: 
+                    puts("ERRRRRRRRoR");
+                    exit(0);
+                    break; // error 0b11 se define como no existe
             }
         }
         the_end_for: {} // el compilador me obliga a poner algun codigo por ser el final del estamento, sino da error :'v

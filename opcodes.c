@@ -1506,4 +1506,46 @@
  * 
  * 
  * 
+ * ADC – ADD with Carry ->  0001 00dw : mod reg r/m (de memoria a registro y de registro a memoria)
+ *      |------|--------------------------|------|---------|---------|
+ *      | bits | 0  0  0  1  0  0 | 1 | 0 | 0  0 | 1  1  0 | 0  0  1 | == 0x12 0x31 == adc dh, byte ptr [bx + di]
+ *      |  uso | opcode           | d | w |  mod |   reg   |   R/M   |
+ *      |------|--------------------------|------|---------|---------|
+ * 
+ * ADC – ADD with Carry ->  0001 001w : mod reg r/m
+ *      |------|--------------------------|------|---------|---------|--------------------------|
+ *      | bits | 0  0  0  1  0  0 | 1 | 0 | 0  1 | 1  1  0 | 0  0  1 |  0  0  0  0  1  0  1  0  | == 0x12 0x71 0x0a== adc dh, byte ptr [bx + di + 0xa]
+ *      |  uso | opcode           | d | w |  mod |   reg   |   R/M   |   desplazamiento 8 bits  |
+ *      |------|--------------------------|------|---------|---------|---------------------------
+ *      
+ *      primer byte:
+ *          - El campo "opcode" 0001 0010 representa la instruccion ADC.
+ *          - El campo "d"(direccion) del opcode, indica que estamos añadiendo el campo R/M al campo REG al poner 1 como valor,
+ *              en otras palabras, que el campo fuente es el especificado en R/M y el campo destino es REG.
+ *                  d = 1: REG <- MOD R/M, REG es el destino
+ *          - El campo "w" en 0 especifica registro de 8bits, de eso dh, [bx + di] depende del tamaño de palabra de la cpu,
+ *              en el caso de que este activo el bit, la instruccion pasa a "adc si, word ptr [bx + di + 0xa]"
+ *      segundo byte:
+ *          - El campo "mod" en 01 especifica un [registro + desp8(desplazamiento de 8bits)].
+ *          - El campo "R/M" del opcode indica el registro y desplazamiento a usar, en caso de descodificar ls instruccion en 32bits:
+ *                  | MOD | R/M | Addressing Mode |
+ *                  |  01 | 001 | [ ecx + disp8 ] |
+ *              En caso de 16bits es:
+ *                  | MOD | R/M |  Addressing Mode  |
+ *                  |  01 | 001 | [bx + di + disp8] |
+ *                  
+ *          - El campo "reg" del opcode, en este caso especifica donde almacenar el valor, en este caso "dh" por ser "w" = 0,
+ *              En caso de que sea W = 1, y la instruccion se descodifique para 16bits, el registro es "si", o en caso
+ *              de ser 32bits, sera "si"
+ *      tercer byte:
+ *          - desplazamiento de 8bits a realizar, 0xa en este caso
+ * 
+ * 
+ * ADC – ADD with Carry ->  0001 001w : mod reg r/m
+ *      |------|--------------------------|------|---------|---------|
+ *      | bits | 0  0  0  1  0  0 | 1 | 0 | 1  0 | 1  1  0 | 0  0  1 | == 0x12 0x71  == adc dh, byte ptr [bx + di]
+ *      |  uso | opcode               | w |  mod |   reg   |   R/M   |
+ *      |------|--------------------------|------|---------|---------|
+ * 
+ * 
  */

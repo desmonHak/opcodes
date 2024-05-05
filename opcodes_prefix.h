@@ -362,7 +362,7 @@ __attribute__((__section__(".instruccion"))) static Instruction_info my_instrucc
             .immediate    = { 0b00000000, 0b00000000, 0b00000000, 0b00000000}
         }
     },
-    {
+    /*{
         .string               = STRING_ADC,
         .immediate_instrution = 0b0,          // es una instruccion inmediata
         .opcode_size          = 0b01,         // dos byte's de opcode
@@ -386,7 +386,37 @@ __attribute__((__section__(".instruccion"))) static Instruction_info my_instrucc
                 (opcode){ .opcode_byte.byte = 0b11000000 }, // opcode secundario
                 (opcode){ .opcode_byte.byte = 0b00010000 }, // opcode primario
             },
-            .Mod_rm = (Mod_rm){   .mod = 0b11,   .reg = 0b000,  .R_M = 0b000 },
+            .Mod_rm = (Mod_rm){   .mod = 0b00,   .reg = 0b000,  .R_M = 0b000 },
+            .SIB    =    (SIB){ .scale = 0b00, .index = 0b000, .base = 0b000 },
+            .displacement = { 0b00000000, 0b00000000, 0b00000000, 0b00000000},
+            .immediate    = { 0b00000000, 0b00000000, 0b00000000, 0b00000000}
+        }
+    },*/
+    /**/{
+        .string               = STRING_ADC,
+        .immediate_instrution = 0b0,          // es una instruccion inmediata
+        .opcode_size          = 0b01,         // dos byte's de opcode
+        .posicion_w           = 0b0001,       // hay bit "w" en el bit 1
+        .posicion_d           = 0b0010,       // hay bit "d" el bit 2 del opcode primario
+        .posicion_s           = 0b0000,       // no hay bit "s"
+        .position_rm          = 0b01,         // hay r/m en el segundo byte 
+        .position_reg         = 0b01,         // hay reg en el segundo byte
+        .position_mod         = 0b01,         // hay campo mod en el segundo byte
+        .position_tttn        = 0b11,         // no hay tttn
+        .mask_mod             = 0b11000000,   // los bits mod's estan en los primeros 2 bits del segundo byte de opcode
+        .mask_reg             = 0b00111000,   // con esta mascara se obtiene los bits 5, 4 y 3 de 7,6,5,4,3,2,1,0
+        .mask_rm              = 0b00000111,   // con esta mascara se obtiene los bits 2, 1 y 0 de 7,6,5,4,3,2,1,0
+        .mask_tttn            = 0b000000,
+        .number_reg           = 0b01,         // 0b10 - usa un campo reg 
+        .immediate_data       = 0b0,          // no tiene datos inmediatos
+        .instruction = { // ADC – ADD with Carry
+            .prefix = { 0b00000000, 0b00000000, 0b00000000, 0b00000000 },
+            .opcode = {
+                (opcode){ .opcode_byte.byte = 0b00000000 },
+                (opcode){ .opcode_byte.byte = 0b00000000 }, // opcode secundario
+                (opcode){ .opcode_byte.byte = 0b00010000 }, // opcode primario
+            },
+            .Mod_rm = (Mod_rm){   .mod = 0b00,   .reg = 0b000,  .R_M = 0b000 },
             .SIB    =    (SIB){ .scale = 0b00, .index = 0b000, .base = 0b000 },
             .displacement = { 0b00000000, 0b00000000, 0b00000000, 0b00000000},
             .immediate    = { 0b00000000, 0b00000000, 0b00000000, 0b00000000}

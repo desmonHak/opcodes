@@ -45,7 +45,7 @@ typedef struct List_instrution {
 } List_instrution;
 
 void print_List_instrution(List_instrution *list_instrution, encoder_x86 encoder_val);
-uint8_t get_registers_form_byte(Instruction_info *Instruction, uint8_t byte);
+uint8_t get_registers_form_byte(Instruction_info *Instruction, uint8_t* bytes);
 size_t get_number_instrutions(List_instrution *instrutions);
 
 List_instrution *init_List_instrution();
