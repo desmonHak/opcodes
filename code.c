@@ -54,7 +54,7 @@ int main(){
     char text[] = " ";
     print_table_hex(text, instrucciones, sizeof(instrucciones), ENCODER_IN_16bits);
     List_instrution *instrutions_struct = format_instruccion(instrucciones, sizeof(instrucciones), ENCODER_IN_16bits);
-    instrutions_struct = pop_List_instrution(instrutions_struct,2);
+    //instrutions_struct = pop_List_instrution(instrutions_struct,2);
     print_List_instrution(instrutions_struct, ENCODER_IN_16bits);
     //size_t number_of_instrutions = get_number_instrutions(instrucciones, sizeof(instrucciones));
 
