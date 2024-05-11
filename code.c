@@ -52,7 +52,7 @@ int main(){
         0x12, 0b00110001   // ADC dh, byte ptr [bx + di] = 0001 0010  00 110 001 (0x31)
     };
     char text[] = " ";
-    print_table_hex(text, instrucciones, sizeof(instrucciones), ENCODER_IN_16bits);
+    print_table_hex(text, (char*)instrucciones, sizeof(instrucciones), ENCODER_IN_16bits);
     List_instrution *instrutions_struct = format_instruccion(instrucciones, sizeof(instrucciones), ENCODER_IN_16bits);
     //instrutions_struct = pop_List_instrution(instrutions_struct,2);
     print_List_instrution(instrutions_struct, ENCODER_IN_16bits);

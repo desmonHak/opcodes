@@ -183,7 +183,7 @@ void print_List_instrution(List_instrution *list_instrution, encoder_x86 encoder
 
     for (List_instrution *i = list_instrution; i->next_list_instrution != NULL; i = i->next_list_instrution) {
         printf("\n\nlist_instrution->next_list_instrution = %p\n", i->next_list_instrution);
-        printf("list_instrution[%d] = %p\n", i->id, i);
+        printf("list_instrution[%zu] = %p\n", i->id, i);
         print_instruccion(&(i->Instruction), encoder_val);
         //print_instruccion_binary(&(i->Instruction.instruction));
         print_instruccion_hex(&(i->Instruction.instruction), encoder_val);
@@ -247,8 +247,8 @@ uint8_t get_registers_form_byte(Instruction_info *Instruction, uint8_t* bytes) {
     #endif
     if (Instruction == NULL) return -1;
 
-    uint8_t byte = *((bytes + 1) - Instruction->position_reg); 
     #ifdef DEBUG_ENABLE
+    uint8_t byte = *((bytes + 1) - Instruction->position_reg); 
     printf("[[>> Instruction->mask_reg(%02x) count_get_mask(Instruction->mask_reg)(%02x)", Instruction->mask_reg, count_get_mask(Instruction->mask_reg));
     Instruction->instruction.Mod_rm.reg = (byte & Instruction->mask_reg) >> count_get_mask(Instruction->mask_reg);
     printf(" [[>> byte(%02x)      Instruction->instruction.Mod_rm.reg(%02x)\n", byte, Instruction->instruction.Mod_rm.reg);
