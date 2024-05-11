@@ -76,7 +76,7 @@ uint64_t count_get_mask(uint64_t x)
     for(uint64_t one_count = 0; x; ++one_count, x >>= 1) if(x & 1) return one_count; 
 }
 
-static char *get_string_instrution(string_instrution_id id) {
+static char *get_string_instruction_by_id(string_instrution_id id) {
     switch (id)
     {
         case STRING_AAA: return "aaa";

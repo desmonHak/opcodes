@@ -50,7 +50,7 @@ size_t get_number_instrutions(List_instrution *instrutions);
 
 List_instrution *init_List_instrution();
 List_instrution *push_List_instrution(List_instrution *list_instrution);
-List_instrution * pop_List_instrution(List_instrution *list_instrution, size_t position);
+List_instrution *pop_List_instrution(List_instrution *list_instrution, size_t position);
 List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, encoder_x86 encoder_val);
 #include "instrutions_format.c"
 #endif

@@ -239,7 +239,7 @@ static inline uint8_t get_bit_w(Instruction_info *instrucion);
 static inline uint8_t get_bit_d(Instruction_info *instrucion);
 static inline uint64_t count_get_mask(uint64_t x);
 static inline uint64_t popcnt_software(uint64_t x);
-static char *get_string_instrution(string_instrution_id id);
+static char *get_string_instruction_by_id(string_instrution_id id);
 static char *get_string_register(encoder_x86 size_word, uint8_t bit_w, register_id id);
 
 

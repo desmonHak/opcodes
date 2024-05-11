@@ -41,14 +41,15 @@
 #define CALC_SIZE_STRING_FLAG 0
 
 typedef struct String_list_link {
-    size_t size_string;    // tamaño del string contenido
-    char   *actual_string; // punteo del string actual
+    size_t size_string;                   // tamaño del string contenido
+    char   *actual_string;                // punteo del string actual
     struct String_list_link *next_string; // puntero al siguiente string
 } String_list_link;
 
-String_list_link* Init_String(char *string, size_t size_string);
-String_list_link* free_String_list_link(String_list_link* list);
-String_list_link* get_string_instruction(Instruction_info *my_instruccion_, encoder_x86 encoder_val);
+String_list_link *Init_String(char *string, size_t size_string);
+String_list_link *free_String_list_link(String_list_link* list);
+String_list_link *push_String(String_list_link *list, char* string, size_t size_string);
+String_list_link *get_string_instruction(Instruction_info *my_instruccion_, encoder_x86 encoder_val);
 void print_String_list_link(String_list_link *list);
 
 #include "stringx.c"

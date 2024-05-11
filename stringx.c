@@ -129,6 +129,33 @@ String_list_link* free_String_list_link(String_list_link* list) {
     return NULL;
 }
 
+String_list_link *push_String(String_list_link *list, char* string, size_t size_string) {
+    /*
+     *  
+     * push_String(String_list_link *list, char* string, size_t size_string):
+     * Esta funcion añade un nodo a la lista enlazada.
+     * 
+     * Se espera recibir un list que sea valido, en caso de ser NULL o un puntero no valido, se retorna NULL.
+     * Se espera recibir un string para crear el nuevo nodo.
+     * Se espera recibir un size_string con el tamaño del string, en caso de ser 0 se calcula el tamaño.
+     * 
+     * Se espera retornar una lista enlazada con el nuevo nodo creado.
+     *  
+     */
+    #ifdef DEBUG_ENABLE
+        DEBUG_PRINT(DEBUG_LEVEL_INFO,
+            INIT_TYPE_FUNC_DBG(String_list_link*, push_String)
+                TYPE_DATA_DBG(String_list_link *, "list = %p")
+            END_TYPE_FUNC_DBG,
+            list);
+    #endif
+    if (list == NULL) return NULL; // la lista enlazada recibida es un puntero no valido o es nulo
+
+    list->next_string = Init_String(string, size_string);
+    return list->next_string;
+}
+
+
 String_list_link* get_string_instruction(Instruction_info *my_instruccion_, encoder_x86 encoder_val) {
     #ifdef DEBUG_ENABLE
         DEBUG_PRINT(DEBUG_LEVEL_INFO,
@@ -155,7 +182,7 @@ String_list_link* get_string_instruction(Instruction_info *my_instruccion_, enco
      * de la estructura sera -1.
      *  
      */
-    char *string = get_string_instrution(my_instruccion_->string); // string de la instruccion ya descodificada
+    char *string = get_string_instruction_by_id(my_instruccion_->string); // string de la instruccion ya descodificada
     String_list_link *ptr_org = Init_String(string, CALC_SIZE_STRING_FLAG); // el tamaño del string se calcula dentro de la funcion
     if (ptr_org == NULL) goto exit_get_string_instruction; // error ocurrio
 
@@ -181,38 +208,14 @@ String_list_link* get_string_instruction(Instruction_info *my_instruccion_, enco
         case 0b11: // Modo 11 (11b): El operando se codifica como un registro de memoria. En este modo, el campo "R/M" especifica el 
                    // registro de memoria.
             string = get_string_register(encoder_val, get_bit_w(my_instruccion_), destino);
-            ptr->next_string = Init_String(string, CALC_SIZE_STRING_FLAG);
-            ptr = ptr->next_string;
+            ptr = push_String(ptr, string, CALC_SIZE_STRING_FLAG); 
+            // CALC_SIZE_STRING_FLAG especifica que se a de obtener la longitud del string
             string = get_string_register(encoder_val, get_bit_w(my_instruccion_), fuente);
-            ptr->next_string = Init_String(string, CALC_SIZE_STRING_FLAG);
-            ptr = ptr->next_string;
+            ptr = push_String(ptr, string, CALC_SIZE_STRING_FLAG);
             break;
         default: break;// error al descodificar la instruccion
-    }
 
-    /*
-    switch (my_instruccion_->number_reg) { // si hay algun registro, se obtiene
-        case 0b00: break; // - no usa campo reg
-        case 0b10: // uso dos campos como registros, "reg" y "r/m"
-            // obtener registro del campo RM
-            string = get_string_register(encoder_val, get_bit_w(my_instruccion_), destino);
-            ptr->next_string = Init_String(string, CALC_SIZE_STRING_FLAG);
-            ptr = ptr->next_string;
-        case 0b01: // solo tiene un campo de registro, "reg", si tiene el campo mod en 0b11, señade otro registro
-        // obtener registro del campo reg
-            if(my_instruccion_->instruction.Mod_rm.mod == 0b11) { // en caso de que mod sea 0b11
-                string = get_string_register(encoder_val, get_bit_w(my_instruccion_), destino);
-                ptr->next_string = Init_String(string, CALC_SIZE_STRING_FLAG);
-                ptr = ptr->next_string;
-            }
-            string = get_string_register(encoder_val, get_bit_w(my_instruccion_), fuente);
-            ptr->next_string = Init_String(string, CALC_SIZE_STRING_FLAG);
-            ptr = ptr->next_string;
-            break;
-        default: // error al descodificar la instruccion
-            ptr->size_string = -1;
-            goto exit_get_string_instruction;
-    }*/
+    }
     
     exit_get_string_instruction:
     return ptr_org;

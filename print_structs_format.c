@@ -253,7 +253,7 @@ void print_instruccion(Instruction_info *my_instruccion_, encoder_x86 encoder_va
                     goto regenerate_keys;
         }
     
-    printf_color("string instruccion: #{BG:%d;%d;%d} %s#{FG:reset} (color: %u %u %u)\n", (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3,  get_string_instrution(my_instruccion_->string), (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3);
+    printf_color("string instruccion: #{BG:%d;%d;%d} %s#{FG:reset} (color: %u %u %u)\n", (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3,  get_string_instruction_by_id(my_instruccion_->string), (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3);
 
     String_list_link *string_list = get_string_instruction(my_instruccion_, encoder_val);
     printf_color("total string instruccion: #{BG:%d;%d;%d} ", (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3);
