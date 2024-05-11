@@ -187,25 +187,25 @@ void print_binary(unsigned int num, uint16_t num_bits, uint16_t init_count) {
 }*/
 
 void print_opcode(Instruction_info *my_instruccion_, opcode opcode, uint8_t number_opcode) {
-    printf_color("opcode#{FG:lpurple}{#{FG:lred}%d#{FG:lpurple}}#{FG:reset} (#{FG:lblue}8bits#{FG:reset}): #{FG:lgreen}%02X#{FG:reset} = #{FG:lyellow}", number_opcode, *((uint8_t*)(&opcode)));
+    printf_color("opcode#{FG:lpurple}{#{FG:lred}%d#{FG:lpurple}}#{FG:reset} (#{FG:lblue}8bits#{FG:reset}): (value) #{FG:lgreen}%02X#{FG:reset} = #{FG:lyellow}", number_opcode, *((uint8_t*)(&opcode)));
     print_binary( *((uint8_t*)(&opcode)), 8, 0);
     printf_color("#{FG:reset}opcode[#{FG:lred}%d#{FG:reset}] (#{FG:lblue}6bits#{FG:reset}): (value) #{FG:lgreen}%02X#{FG:reset} = #{FG:lyellow}", number_opcode, opcode.opcode_bits_final.opcode);
     print_binary(opcode.opcode_bits_final.opcode<< 2, 8, 0);
     //printf_color("#{FG:reset}opcode[#{FG:lred}%d#{FG:reset}].d:  #{FG:lgreen}%02X#{FG:reset} =        #{FG:lyellow}%d#{FG:reset}\n", number_opcode, opcode.opcode_bits_final.d, opcode.opcode_bits_final.d);
     //printf_color("opcode[#{FG:lred}%d#{FG:reset}].s:  #{FG:lgreen}%02X#{FG:reset} =         #{FG:lyellow}%d#{FG:reset}\n\n", number_opcode, opcode.opcode_bits_final.s, opcode.opcode_bits_final.s);
-    if (number_opcode == 2) {
+    if (number_opcode >= 2) {
         if (my_instruccion_->posicion_d != 0) {
-            printf_color("#{FG:reset}opcode[#{FG:lred}%d#{FG:reset}].d(#{FG:lblue}1bit#{FG:reset}): (value) #{FG:lgreen}%02X#{FG:reset} = #{FG:reset}", number_opcode, opcode.opcode_bits_final.d);
-            print_binary(opcode.opcode_bits_final.d, 1, 6);
-        } else printf_color("#{FG:reset}opcode[#{FG:lred}%d#{FG:reset}].d(#{FG:lblue}1bit#{FG:reset}): #{FG:lred}%02X#{FG:reset} = #{FG:lred}not exists field D#{FG:reset}\n", number_opcode, opcode.opcode_bits_final.d);
+            printf_color("#{FG:reset}opcode[#{FG:lred}%d#{FG:reset}].d(#{FG:lblue}1bit#{FG:reset}): (value) #{FG:lgreen}%02X#{FG:reset} = ", number_opcode, opcode.opcode_bits_final.d);
+            print_binary(opcode.opcode_bits_final.d << (my_instruccion_->posicion_d-1), 4, 4);
+        } else printf_color("#{FG:reset}opcode[#{FG:lred}%d#{FG:reset}].d(#{FG:lblue}1bit#{FG:reset}): (value) #{FG:lred}--#{FG:reset} = #{FG:lred}not exists field D#{FG:reset}\n", number_opcode, opcode.opcode_bits_final.d);
         if (my_instruccion_->posicion_s != 0) {
-            printf_color("opcode[#{FG:lred}%d#{FG:reset}].s(#{FG:lblue}1bit#{FG:reset}): (value) #{FG:lgreen}%02X#{FG:reset} = #{FG:reset}", number_opcode, opcode.opcode_bits_final.s);
-            print_binary(opcode.opcode_bits_final.d, 1, 7);
-        } else printf_color("#{FG:reset}opcode[#{FG:lred}%d#{FG:reset}].s(#{FG:lblue}1bit#{FG:reset}): #{FG:lred}%02X#{FG:reset} = #{FG:lred}not exists field S#{FG:reset}\n", number_opcode, opcode.opcode_bits_final.s);
+            printf_color("opcode[#{FG:lred}%d#{FG:reset}].s(#{FG:lblue}1bit#{FG:reset}): (value) #{FG:lgreen}%02X#{FG:reset} = ", number_opcode, opcode.opcode_bits_final.s);
+            print_binary(opcode.opcode_bits_final.s << (my_instruccion_->posicion_s-1), 4, 4);
+        } else printf_color("#{FG:reset}opcode[#{FG:lred}%d#{FG:reset}].s(#{FG:lblue}1bit#{FG:reset}): (value) #{FG:lred}--#{FG:reset} = #{FG:lred}not exists field S#{FG:reset}\n", number_opcode);
         if (my_instruccion_->posicion_w != 0) {
-            printf_color("opcode[#{FG:lred}%d#{FG:reset}].w(#{FG:lblue}1bit#{FG:reset}): (value) #{FG:lgreen}%02X#{FG:reset}   -> #{FG:lred}(#{FG:reset}mask#{FG:lred})#{FG:reset} #{FG:reset}", number_opcode, get_bit_w(my_instruccion_));
+            printf_color("opcode[#{FG:lred}%d#{FG:reset}].w(#{FG:lblue}1bit#{FG:reset}): (value) #{FG:lgreen}%02X#{FG:reset} = ", number_opcode, get_bit_w(my_instruccion_));
             print_binary(my_instruccion_->posicion_w, 4, 4);
-        } else printf_color("#{FG:reset}opcode[#{FG:lred}%d#{FG:reset}].w(#{FG:lblue}1bit#{FG:reset}): #{FG:lred}%02X#{FG:reset} = #{FG:lred}not exists field W#{FG:reset}\n", number_opcode, get_bit_w(my_instruccion_));
+        } else printf_color("#{FG:reset}opcode[#{FG:lred}%d#{FG:reset}].w(#{FG:lblue}1bit#{FG:reset}): (value) #{FG:lred}--X#{FG:reset} = #{FG:lred}not exists field W#{FG:reset}\n", number_opcode, get_bit_w(my_instruccion_));
     }
     putchar('\n');
 }

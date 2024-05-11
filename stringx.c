@@ -93,7 +93,7 @@ void print_String_list_link(String_list_link *list) {
      *  
      */
     if (list == NULL) printf_color("#{FG:lred}In String_list_link final list or invalid...#{FG:reset}");
-
+    //join_list_to_String(list, " ");
     for (String_list_link *i = list; i != NULL; i = i->next_string) {
         printf("%s ", i->actual_string);
     }
@@ -129,7 +129,7 @@ String_list_link* free_String_list_link(String_list_link* list) {
     return NULL;
 }
 
-String_list_link *push_String(String_list_link *list, char* string, size_t size_string) {
+static inline String_list_link *push_String(String_list_link *list, char* string, size_t size_string) {
     /*
      *  
      * push_String(String_list_link *list, char* string, size_t size_string):
@@ -221,5 +221,98 @@ String_list_link* get_string_instruction(Instruction_info *my_instruccion_, enco
     return ptr_org;
 }
 
+static inline size_t get_size_to_String(String_list_link *list) {
+    /*
+     *  
+     * get_size_to_String(String_list_link *list):
+     * Esta funcion genera realiza la suma del tamaño de todos los buffers(strings) contenidos en la lista enlazada.
+     * 
+     * Se espera recibir un list el cual sea la lista enlazada con los strings.
+     * 
+     * Se retorna el sumario de los tamaños de todos los strings, o en caso de error, -1.
+     *  
+     */
+    #ifdef DEBUG_ENABLE
+        DEBUG_PRINT(DEBUG_LEVEL_INFO,
+            INIT_TYPE_FUNC_DBG(size_t, get_size_to_String)
+                TYPE_DATA_DBG(list *, " = %p")
+            END_TYPE_FUNC_DBG,
+            list);
+    #endif
+    if (list == NULL) return -1; 
+
+    size_t size = 0;
+    for (String_list_link *i = list; i != NULL; i = i->next_string) size += i->size_string;
+    return size;
+}
+
+static inline size_t get_number_nodes_String_list_link(String_list_link *list) {
+    /*
+     *  
+     * get_number_nodes_String_list_link(String_list_link *list):
+     * Esta funcion cuenta la cantidad de nodos en una lista enlazada.
+     * 
+     * Se espera recibir un list el cual sea la lista enlazada con los strings. En caso de ser NULL se retorna NULL
+     * 
+     * Se retorna numero de nodos encontrados.
+     *  
+     */
+    #ifdef DEBUG_ENABLE
+        DEBUG_PRINT(DEBUG_LEVEL_INFO,
+            INIT_TYPE_FUNC_DBG(size_t, get_size_to_String)
+                TYPE_DATA_DBG(list *, " = %p")
+            END_TYPE_FUNC_DBG,
+            list);
+    #endif
+    if (list == NULL) return -1; 
+
+    size_t size = 0;
+    for (String_list_link *i = list; i != NULL; i = i->next_string) size++;
+    return size;
+}
+
+String_list_link *join_list_to_String(String_list_link *list, char* string_for_join) {
+    /*
+     *  
+     * join_list_to_String(String_list_link *list, char* string_for_join):
+     * Esta funcion une los strings de una lista enlazada en un solo strings, retornando una nueva lista enlazada, 
+     * con el string nuevo contenido.
+     * 
+     * - Se espera recibir un list que sea un puntero valido, en caso de no serlo, o ser NULL se retorna NULL.
+     * - Se espera recibir un string_for_join, el cual sea un string que usar de rellena para unir cada elementos,
+     *      en caso de ser NULL o un puntero no valido, la union se realizara sin cadenas de relleno.
+     * 
+     * Se una lista enlazada con el nuevo string concatenado.
+     *  
+     */
+    if (list == NULL) return NULL; 
+    // obtener el tamaño de todos los strings de la lista enlazada y reservar memoria:
+    size_t size_all_string = get_size_to_String(list) + 1; // añadir uno para el caracter final \0
+    char *string_join = NULL;
+    size_t counter_string_join = 0;
+    if (string_for_join == NULL) { // en caso de de no haya un string que usar para unir
+        string_join = (char*)malloc(sizeof(char) * size_all_string); 
+        for (String_list_link *i = list; i != NULL; i = i->next_string) {
+            memcpy((string_join + counter_string_join), i->actual_string,  i->size_string); // copiar bytes
+            counter_string_join += i->size_string; // cambiar el cursor de inicio de posicion
+        }
+    } else {
+        size_t size_of_string_for_join = strlen(string_for_join);
+        size_all_string += ((get_number_nodes_String_list_link(list)-1) * size_of_string_for_join)-1;
+        string_join = (char*)malloc(sizeof(char) * size_all_string ); 
+        for (String_list_link *i = list; i != NULL; i = i->next_string) {
+            memcpy((string_join + counter_string_join), i->actual_string,  i->size_string); // copiar bytes
+            counter_string_join += i->size_string; // cambiar el cursor de inicio de posicion
+            if ( i->next_string != NULL) { // revisar si este es el penultimo bloque
+                memcpy(string_join + counter_string_join, string_for_join, size_of_string_for_join); // copiar bytes
+                counter_string_join += size_of_string_for_join;
+            }
+        }
+    }
+    string_join[size_all_string] = '\0'; // poner caracter nulo
+
+    String_list_link *new_list_string = Init_String(string_join, size_all_string-1);
+    return new_list_string;
+}
 
 #endif

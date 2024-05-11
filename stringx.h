@@ -32,8 +32,10 @@
 #ifndef __STRINGX_H__
 #define __STRINGX_H__
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "opcodes_prefix.h"
 #include "colors-C-C-plus-plus\colors.h"
@@ -46,11 +48,15 @@ typedef struct String_list_link {
     struct String_list_link *next_string; // puntero al siguiente string
 } String_list_link;
 
+void print_String_list_link(String_list_link *list);
 String_list_link *Init_String(char *string, size_t size_string);
 String_list_link *free_String_list_link(String_list_link* list);
-String_list_link *push_String(String_list_link *list, char* string, size_t size_string);
+static inline size_t get_size_to_String(String_list_link *list);
+static inline size_t get_number_nodes_String_list_link(String_list_link *list);
+String_list_link *join_list_to_String(String_list_link *list, char* string_for_join);
 String_list_link *get_string_instruction(Instruction_info *my_instruccion_, encoder_x86 encoder_val);
-void print_String_list_link(String_list_link *list);
+static inline String_list_link *push_String(String_list_link *list, char* string, size_t size_string);
+
 
 #include "stringx.c"
 #endif
