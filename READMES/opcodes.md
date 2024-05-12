@@ -468,9 +468,9 @@ este campo, donde un único opcode puede referirse a múltiples instrucciones, y
 la instrucción. En los listados de opcode, éstos se especifican siguiendo el opcode con una barra (/) y 
 un dígito 0-7.
  
-[fuente1:](http://www.c-jump.com/CIS77/CPU/x86/X77_0060_mod_reg_r_m_byte.htm)
-[fuente2:](https://www.cs.loyola.edu/~binkley/371/Encoding_Real_x86_Instructions.html)
-![fuente3:](http://www.c-jump.com/CIS77/images/x86_instruction_format.png)
+[fuente1:](http://www.c-jump.com/CIS77/CPU/x86/X77_0060_mod_reg_r_m_byte.htm)<br>
+[fuente2:](https://www.cs.loyola.edu/~binkley/371/Encoding_Real_x86_Instructions.html)<br>
+![fuente3:](http://www.c-jump.com/CIS77/images/x86_instruction_format.png)<br>
          
  
  El campo R/M, combinado con MOD, especifica o bien
@@ -1125,7 +1125,7 @@ un dígito 0-7.
  Símbolo Aplicación
   S -> Si el valor de REX.W es 1, anula la presencia de 66H.
   w -> El valor del bit W en REX no tiene efecto.
- 
+```nasm
  ADC – ADD with Carry
   register1 to register2 0100 0R0B : 0001 000w : 11 reg1 reg2
   qwordregister1 to qwordregister2 0100 1R0B : 0001 0001 : 11 qwordreg1 qwordreg2
@@ -1138,9 +1138,10 @@ un dígito 0-7.
   immediate to register 0100 000B : 1000 00sw : 11 010 reg : immediate
   immediate to qwordregister 0100 100B : 1000 0001 : 11 010 qwordreg : imm32
   immediate to qwordregister 0100 1R0B : 1000 0011 : 11 010 qwordreg : imm8
-
+```
  Ejemplo de codificacion de  instruccion:
   add ecx, eax (ejemplo medio bien, ver mas abajo otros ejemplos):
+```nasm
  
       |------|--------------------------|------|---------|---------|
       | bits | 0  0  0  0  0  0 | 0 | 1 | 1  1 | 0  0  0 | 0  0  1 | == 0x01 0xc1 == add ecx, eax
@@ -1154,10 +1155,11 @@ un dígito 0-7.
           - El campo "mod" en este caso al poner 11 indica que lo que hay en R/M es un registro.
           - El campo "reg", en este caso junto al campo "d" del opcode, indica que el campo fuente es el registro eax.
           - El campo "r/m", en este caso junto al campo "d" del opcode indica que el registro de destino es ecx
- 
+```
  
  add edx, [desplazamiento32]: aqui desplazamiento es representado mediante una direccion de 32bits x =>  0xww 0xxx 0xyy 0xzz. ww es el byte mas bajo y zz el mas alto (littel endian)
- 
+
+```nasm
       |------|--------------------------|------|---------|---------|---------------------------------------|
       | bits | 0  0  0  0  0  0 | 1 | 1 | 0  0 | 0  1  1 | 1  0  1 |  desplazamiento 0xww 0xxx 0xyy 0xzz   | == 0x03 0x1d 0xww 0xxx 0xyy 0xzz == add edx, [ 0xww 0xxx 0xyy 0xzz ]
       |  uso | opcode ( add )   | d | s |  mod |   reg   |   R/M   | desplazamiento de 32bits en este caso |
@@ -1171,10 +1173,10 @@ un dígito 0-7.
           - El campo "mod" con valor 00 junto al campo "r/m" 101 indica que se trata del modo de direccionamiento de solo desplazamiento
       tercer a sexto byte:
           - direccion de desplazamiento de 32bits en este caso.
- 
- 
+```
  add edi, [ebx]
  
+```nasm
       |------|--------------------------|------|---------|---------|---------------------------------------|
       | bits | 0  0  0  0  0  0 | 1 | 1 | 0  0 | 1  1  1 | 0  1  1 |  desplazamiento 0xww 0xxx 0xyy 0xzz   | == 0x03 0x1b == add edx, [ ebx ]
       |  uso | opcode ( add )   | d | s |  mod |   reg   |   R/M   | desplazamiento de 32bits en este caso |
@@ -1187,10 +1189,10 @@ un dígito 0-7.
           - El campo "reg", en este caso junto al campo "d" del opcode, indica que el campo destino es el registro edi.
           - El campo "mod" en este caso indica que el desplazamiento es de 0 bytes.
           - El campo "r/m", en este caso el valor 011 indica el modo de uso de direccionamiento en [ebx]
- 
+```
  
  add ebx, [ebp + desplazamiento32]: aqui desplazamiento es representado mediante una direccion de 32bits x =>  0xww 0xxx 0xyy 0xzz. ww es el byte mas bajo y zz el mas alto (littel endian)
- 
+```nasm
       |------|--------------------------|------|---------|---------|---------------------------------------|
       | bits | 0  0  0  0  0  0 | 1 | 1 | 1  0 | 0  1  1 | 1  0  1 |  desplazamiento 0xww 0xxx 0xyy 0xzz   | == 0x03 0x9d 0xww 0xxx 0xyy 0xzz == add edx, [ 0xww 0xxx 0xyy 0xzz ]
       |  uso | opcode ( add )   | d | s |  mod |   reg   |   R/M   | desplazamiento de 32bits en este caso |
@@ -1205,7 +1207,8 @@ un dígito 0-7.
           - El campo "r/m", en este caso indica [ebp]
       tercer a sexto byte:
           - direccion de desplazamiento de 32bits en este caso.
- 
+```
+```nasm
  
  add ecx, [ebx + edi * 4]
  
@@ -1579,8 +1582,6 @@ ADC – ADD with Carry ->  0001 001w : mod reg r/m
      |  uso | opcode               | w |  mod |   reg   |   R/M   |
      |------|--------------------------|------|---------|---------|
 
-
-
-
+```
 
 ----
