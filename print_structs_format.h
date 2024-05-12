@@ -36,6 +36,7 @@
 #include <stdint.h>
 
 #include "stringx.h"
+#include "instrutions_format.h"
 #include "opcodes_prefix.h"
 #include "colors-C-C-plus-plus\colors.h"
 

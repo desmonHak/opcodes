@@ -227,6 +227,25 @@ void print_instruccion_hex(Instruction *my_instruccion, encoder_x86 encoder_val)
     printf("\n");
 }
 
+String_list_link *get_string_instruction_assembly(List_instrution *my_instruccion_list, encoder_x86 encoder_val) {
+    #ifdef DEBUG_ENABLE
+        DEBUG_PRINT(DEBUG_LEVEL_INFO,
+            INIT_TYPE_FUNC_DBG(String_list_link*, get_string_instruction_assembly)
+                TYPE_DATA_DBG(List_instrution *, "my_instruccion_list = %p")
+                TYPE_DATA_DBG(encoder_x86, "encoder_val = %d")
+            END_TYPE_FUNC_DBG,
+            my_instruccion_list, encoder_val);
+    #endif
+    String_list_link * all_instruction_assembly = Init_String(NULL, 0); // inicializar en 0
+    String_list_link * counter = all_instruction_assembly;
+    for (List_instrution *i = my_instruccion_list; i != NULL; i = i->next_list_instrution) {
+        String_list_link *string_list = get_string_instruction(&(i->Instruction), encoder_val);
+        memcpy(counter, string_list, sizeof(String_list_link));
+        counter->next_string = Init_String(NULL, 0);
+        counter = counter->next_string;
+    }
+    return all_instruction_assembly;
+}
 
 void print_instruccion(Instruction_info *my_instruccion_, encoder_x86 encoder_val) {
 
@@ -259,7 +278,7 @@ void print_instruccion(Instruction_info *my_instruccion_, encoder_x86 encoder_va
     String_list_link *string_list = get_string_instruction(my_instruccion_, encoder_val);
     printf_color("total string instruccion: #{BG:%d;%d;%d} ", (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3);
     print_String_list_link(string_list);
-    string_list = free_String_list_link(string_list);
+    //string_list = free_String_list_link(string_list);
     printf_color("#{FG:reset}\n");
 
     Instruction *my_instruccion = &(my_instruccion_->instruction);

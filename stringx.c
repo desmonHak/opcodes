@@ -122,7 +122,7 @@ String_list_link* free_String_list_link(String_list_link* list) {
         // la referencia al eliminar al bloque que apunta a este
         for (String_list_link *i = list; i != NULL; i = next_block) {
             #ifdef DEBUG_ENABLE
-                printf_color("#{FG:reset}Liberando i(#{FG:lred}%p#{FG:reset}), next_block(#{FG:lred}%p#{FG:reset}) #{FG:reset}\n", i, next_block);
+                printf_color("#{FG:reset}Liberando i(#{FG:lred}%p#{FG:reset}), flag_i(%02x), next_block(#{FG:lred}%p#{FG:reset})#{FG:reset},  -> %s\n", i, i->flags, next_block, i->actual_string);
             #endif
             if ((i->flags & FLAG_FREE_Sll) == FLAG_FREE_Sll) free(i->actual_string);
             next_block = i->next_string; // almacenar el siguiente bloque antes de liberar el actual
@@ -192,18 +192,18 @@ String_list_link* get_string_instruction(Instruction_info *my_instruccion_, enco
     // si no tiene campo mod o rm se terna el string solo con la instruccion
     if ((my_instruccion_->position_rm == 0b11) || (my_instruccion_->position_mod == 0b11) || (my_instruccion_->position_reg == 0b11)) return ptr_org;
 
+    uint32_t val = 0;
+    bool is_free = false;
     char *dest,*fuent,*auxi;
     uint8_t destino, fuente, auxiliar; // se mantiene asi si d == 0
     String_list_link *ptr = ptr_org; // copia del puntero que usar para añadir elementos
+    int size_len_register = 0;
 
     switch(my_instruccion_->instruction.Mod_rm.mod) { 
         case 0b00:  // Modo 00 (00b): El operando se codifica como un registro, sin desplazamiento (offset). En este modo, el campo 
                     // "R/M" especifica el registro.
             dest = get_string_mod_0(encoder_val, my_instruccion_->instruction.Mod_rm.R_M, -1);
-
-            int size_len_register;
-            uint32_t val = 0;
-            bool is_free = false; // si se marca en true, se a de marcar en la lista enlazada que el string del desplazamiento a de liberarse
+            is_free = false; // si se marca en true, se a de marcar en la lista enlazada que el string del desplazamiento a de liberarse
             if ((encoder_val == 0b0) && (my_instruccion_->instruction.Mod_rm.R_M == 0b110)) { // desplazamiento de 16bits
                 val = *((uint16_t*)&(my_instruccion_->instruction.displacement));
             } else if ((encoder_val == 0b1) && (my_instruccion_->instruction.Mod_rm.R_M == 0b101)) { // desplazamiento de 32bits
@@ -247,11 +247,88 @@ String_list_link* get_string_instruction(Instruction_info *my_instruccion_, enco
             ptr = join_list_to_String(ptr_org, " "); // unir todo usando un espacio
             free_String_list_link(ptr_org); // liberar la antigua lista enlazada
             break;
-        case 0b10: // Modo 01 (01b): El operando se codifica como un registro con un desplazamiento de 8 bits. En este modo, el campo 
+        case 0b01: // Modo 01 (01b): El operando se codifica como un registro con un desplazamiento de 8 bits. En este modo, el campo 
                    // "R/M" especifica el registro, y sigue un byte inmediato que proporciona el desplazamiento.
-        case 0b01: //  Modo 10 (10b): El operando se codifica como un registro con un desplazamiento de 32 bits. En este modo, el campo 
-                   // "R/M" especifica el registro, y sigue una palabra doble (dword) inmediata que proporciona el desplazamiento.
+            dest = get_string_mod_1(encoder_val, my_instruccion_->instruction.Mod_rm.R_M, -1);
+            val = *((uint8_t*)&(my_instruccion_->instruction.displacement)); // desplazamientod e 8bits
+            is_free = true; // si se marca en true, se a de marcar en la lista enlazada que el string del desplazamiento a de liberarse
+                            // indicar que el desplazamiento debera liberarse al liberar la lista enlazada
+            
+            size_len_register = (snprintf(NULL, 0, dest,  val) + 1) * sizeof(char);
+            auxi = (char *)malloc(size_len_register); // almacenar el buffer para guardar la instruccion formateada
+            sprintf(auxi, dest, val); // formatear la instruiccion
+            dest = auxi; // poner el string formateado como destino.
 
+            fuent = get_string_register(encoder_val, get_bit_w(my_instruccion_), my_instruccion_->instruction.Mod_rm.reg);
+            if (get_bit_d(my_instruccion_)) { // si d == 1 se cambia para que reg sea fuente y rm destino
+                //auxi  = dest;  // c = a
+                //dest  = fuent; // a = b
+                //fuent = auxi;  // b = c
+                #ifdef DEBUG_ENABLE
+                printf("d = 1 -> %s %s\n", fuent, dest);
+                #endif
+                ptr = push_String(ptr, fuent, CALC_SIZE_STRING_FLAG); 
+                ptr = push_String(ptr, ",", CALC_SIZE_STRING_FLAG); 
+                // CALC_SIZE_STRING_FLAG especifica que se a de obtener la longitud del string
+                ptr = push_String(ptr, dest, CALC_SIZE_STRING_FLAG);
+                ptr->flags |= FLAG_FREE_Sll; // indiciar que se a de liberar el desplazamiento
+                                                        
+            } else {
+                #ifdef DEBUG_ENABLE
+                printf("d = 0 -> %s %s\n", dest, fuent);
+                #endif
+                ptr = push_String(ptr, dest, CALC_SIZE_STRING_FLAG); 
+                ptr->flags |= FLAG_FREE_Sll; // indiciar que se a de liberar el desplazamiento
+                                                         
+                ptr = push_String(ptr, ",", CALC_SIZE_STRING_FLAG); 
+                // CALC_SIZE_STRING_FLAG especifica que se a de obtener la longitud del string
+                ptr = push_String(ptr, fuent, CALC_SIZE_STRING_FLAG);
+            }
+            ptr = join_list_to_String(ptr_org, " "); // unir todo usando un espacio
+            free_String_list_link(ptr_org); // liberar la antigua lista enlazada
+            break; 
+        case 0b10: //  Modo 10 (10b): El operando se codifica como un registro con un desplazamiento de 32 bits. En este modo, el campo 
+                   // "R/M" especifica el registro, y sigue una palabra doble (dword) inmediata que proporciona el desplazamiento.
+            dest = get_string_mod_2(encoder_val, my_instruccion_->instruction.Mod_rm.R_M, -1);
+            is_free = true; // si se marca en true, se a de marcar en la lista enlazada que el string del desplazamiento a de liberarse
+                            // indicar que el desplazamiento debera liberarse al liberar la lista enlazada
+            if (encoder_val == 0b0)  // desplazamiento de 16bits
+                val = *((uint16_t*)&(my_instruccion_->instruction.displacement));
+            else if (encoder_val == 0b1)  // desplazamiento de 32bits
+                val = *((uint32_t*)&(my_instruccion_->instruction.displacement));
+            size_len_register = (snprintf(NULL, 0, dest,  val) + 1) * sizeof(char);
+            auxi = (char *)malloc(size_len_register); // almacenar el buffer para guardar la instruccion formateada
+            sprintf(auxi, dest, val); // formatear la instruiccion
+            dest = auxi; // poner el string formateado como destino.
+
+            fuent = get_string_register(encoder_val, get_bit_w(my_instruccion_), my_instruccion_->instruction.Mod_rm.reg);
+            if (get_bit_d(my_instruccion_)) { // si d == 1 se cambia para que reg sea fuente y rm destino
+                //auxi  = dest;  // c = a
+                //dest  = fuent; // a = b
+                //fuent = auxi;  // b = c
+                #ifdef DEBUG_ENABLE
+                printf("d = 1 -> %s %s\n", fuent, dest);
+                #endif
+                ptr = push_String(ptr, fuent, CALC_SIZE_STRING_FLAG); 
+                ptr = push_String(ptr, ",", CALC_SIZE_STRING_FLAG); 
+                // CALC_SIZE_STRING_FLAG especifica que se a de obtener la longitud del string
+                ptr = push_String(ptr, dest, CALC_SIZE_STRING_FLAG);
+                ptr->flags |= FLAG_FREE_Sll; // indiciar que se a de liberar el desplazamiento
+                                                         
+            } else {
+                #ifdef DEBUG_ENABLE
+                printf("d = 0 -> %s %s\n", dest, fuent);
+                #endif
+                ptr = push_String(ptr, dest, CALC_SIZE_STRING_FLAG); 
+                ptr->flags |= FLAG_FREE_Sll; // indiciar que se a de liberar el desplazamiento
+                                                         
+                ptr = push_String(ptr, ",", CALC_SIZE_STRING_FLAG); 
+                // CALC_SIZE_STRING_FLAG especifica que se a de obtener la longitud del string
+                ptr = push_String(ptr, fuent, CALC_SIZE_STRING_FLAG);
+            }
+            ptr = join_list_to_String(ptr_org, " "); // unir todo usando un espacio
+            free_String_list_link(ptr_org); // liberar la antigua lista enlazada
+            break;
         case 0b11: // Modo 11 (11b): El operando se codifica como un registro de memoria. En este modo, el campo "R/M" especifica el 
                    // registro de memoria.
             // d = 0 -> <instruccion> <registro R/M>, <registro reg>
@@ -359,7 +436,7 @@ String_list_link *join_list_to_String(String_list_link *list, char* string_for_j
         }
     } else {
         size_t size_of_string_for_join = strlen(string_for_join);
-        size_all_string += ((get_number_nodes_String_list_link(list)-1) * size_of_string_for_join)-1;
+        size_all_string += ((get_number_nodes_String_list_link(list)-1) * size_of_string_for_join);
         string_join = (char*)malloc(sizeof(char) * size_all_string ); 
         for (String_list_link *i = list; i != NULL; i = i->next_string) {
             memcpy((string_join + counter_string_join), i->actual_string,  i->size_string); // copiar bytes

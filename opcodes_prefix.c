@@ -101,10 +101,10 @@ static char *get_string_mod_0(encoder_x86 size_word, register_id id, uint32_t di
     switch (size_word){ // si hay un bit, el campo w es 1, si hay 0 bits 1. el campo w esta en 0. si hay mas de 1, error
         case 0b0: // para 16 bits
             switch (id) { // registros de 16 bits
-                case 0b000: return "[bx+si]";
-                case 0b001: return "[bx+di]";
-                case 0b010: return "[bp+si]";
-                case 0b011: return "[bp+di]";
+                case 0b000: return "[bx + si]";
+                case 0b001: return "[bx + di]";
+                case 0b010: return "[bp + si]";
+                case 0b011: return "[bp + di]";
                 case 0b100: return "[si]";
                 case 0b101: return "[di]";
                 case 0b110: return "[0x%04x]"; // desplazamiento de 16bits
@@ -131,26 +131,26 @@ static char *get_string_mod_1(encoder_x86 size_word, register_id id, uint8_t dis
     switch (size_word){ // si hay un bit, el campo w es 1, si hay 0 bits 1. el campo w esta en 0. si hay mas de 1, error
         case 0b0: // para 16 bits
             switch (id) { // registros de 16 bits
-                case 0b000: return "[bx+si] + 0x%02x";
-                case 0b001: return "[bx+di] + 0x%02x";
-                case 0b010: return "[bp+si] + 0x%02x";
-                case 0b011: return "[bp+di] + 0x%02x";
-                case 0b100: return "[si] + 0x%02x";
-                case 0b101: return "[di] + 0x%02x";
-                case 0b110: return "[bp] + 0x%02x";
-                case 0b111: return "[bx] + 0x%02x";
+                case 0b000: return "[bx + si + 0x%02x]";
+                case 0b001: return "[bx + di + 0x%02x]";
+                case 0b010: return "[bp + si + 0x%02x]";
+                case 0b011: return "[bp + di + 0x%02x]";
+                case 0b100: return "[si + 0x%02x]";
+                case 0b101: return "[di + 0x%02x]";
+                case 0b110: return "[bp + 0x%02x]";
+                case 0b111: return "[bx + 0x%02x]";
                 default: return  "error - Este mod 0 en con rm en 16bits no se define.";
             }
         case 0b1: // para 32 bits
             switch (id) { // registros de 32 bits
-                case 0b000: return "[eax] + 0x%02x";
-                case 0b001: return "[ecx] + 0x%02x";
-                case 0b010: return "[edx] + 0x%02x";
-                case 0b011: return "[ebx] + 0x%02x";
+                case 0b000: return "[eax + 0x%02x]";
+                case 0b001: return "[ecx + 0x%02x]";
+                case 0b010: return "[edx + 0x%02x]";
+                case 0b011: return "[ebx + 0x%02x]";
                 case 0b100: return "sib + 0x%02x";
-                case 0b101: return "[ebp] + 0x%02x";
-                case 0b110: return "[esi] + 0x%02x";
-                case 0b111: return "[edi] + 0x%02x";
+                case 0b101: return "[ebp + 0x%02x]";
+                case 0b110: return "[esi + 0x%02x]";
+                case 0b111: return "[edi + 0x%02x]";
                 default: return  "error - Este mod 0 en con rm en 32bits no se define.";
             }
         default: return  "error - No se puede operar en este size de datos.";
@@ -161,14 +161,14 @@ static char *get_string_mod_2(encoder_x86 size_word, register_id id, uint32_t di
     switch (size_word){ // si hay un bit, el campo w es 1, si hay 0 bits 1. el campo w esta en 0. si hay mas de 1, error
         case 0b0: // para 16 bits
             switch (id) { // registros de 16 bits
-                case 0b000: return "[bx+si] + 0x%04x";
-                case 0b001: return "[bx+di] + 0x%04x";
-                case 0b010: return "[bp+si] + 0x%04x";
-                case 0b011: return "[bp+di] + 0x%04x";
-                case 0b100: return "[si] + 0x%04x";
-                case 0b101: return "[di] + 0x%04x";
-                case 0b110: return "[bp] + 0x%04x";
-                case 0b111: return "[bx] + 0x%04x";
+                case 0b000: return "[bx + si + 0x%04x]";
+                case 0b001: return "[bx + di + 0x%04x]";
+                case 0b010: return "[bp + si + 0x%04x]";
+                case 0b011: return "[bp + di + 0x%04x]";
+                case 0b100: return "[si + 0x%04x]";
+                case 0b101: return "[di + 0x%04x]";
+                case 0b110: return "[bp + 0x%04x]";
+                case 0b111: return "[bx + 0x%04x]";
                 default: return  "error - Este mod 0 en con rm en 16bits no se define.";
             }
         case 0b1: // para 32 bits

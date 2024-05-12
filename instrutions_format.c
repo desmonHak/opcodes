@@ -80,7 +80,7 @@ size_t get_number_instrutions(List_instrution *instrutions) {
     return number_instrutions;
 }
 
-List_instrution * pop_nodo_List_instrution(List_instrution *list_instrution, List_instrution *nodo) {
+/*List_instrution * pop_nodo_List_instrution(List_instrution *list_instrution, List_instrution *nodo) {
     #ifdef DEBUG_ENABLE
         DEBUG_PRINT(DEBUG_LEVEL_INFO,
             INIT_TYPE_FUNC_DBG(List_instrution *, pop_nodo_List_instrution)
@@ -95,7 +95,7 @@ List_instrution * pop_nodo_List_instrution(List_instrution *list_instrution, Lis
 
     List_instrution *last_block; // apuntar al ultimo bloque, para no perderle (A)
     for (List_instrution *i = list_instrution; i->next_list_instrution != NULL;i = i->next_list_instrution) {
-        if (i == nodo) {
+        if (i->next_list_instrution == nodo) {
             #ifdef DEBUG_ENABLE
             printf_color("#{FG:lred} liberando nodo %p de lista %p#{FG:reset}", nodo, list_instrution);
             #endif
@@ -122,7 +122,7 @@ List_instrution * pop_nodo_List_instrution(List_instrution *list_instrution, Lis
         
     }
     return list_instrution;
-}
+}*/
 
 List_instrution * pop_List_instrution(List_instrution *list_instrution, size_t position){
     /*
@@ -382,34 +382,35 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
             DEBUG_PRINT(DEBUG_LEVEL_INFO, "#{FG:reset} >>> buscando byte.... #{BG:%d;%d;%d}0x%02x#{FG:reset}\n",(unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3, instrutions[i]);
             printf(">>>%02x & %02x = %02x\n",my_instruccion[j].instruction.opcode[2].opcode_byte.byte, instrutions[i], my_instruccion[j].instruction.opcode[2].opcode_byte.byte & instrutions[i]);
             #endif
+
+            
             List_instrution *actual_node;
             //printf("2bytes; i = %d, j = %d\n", i, j);
             switch (my_instruccion[j].opcode_size)
             {
-                case 0b00: // un byte de opcode
+                /*
+                 *
+                 * Este switch case permite determinar si la instruccion del mapa de instrucciones con la que se va a comparar es de 3, 2 o 1 byte,
+                 * La examinacion de los casos a de hacerse en este orden, puse si se hicera de 1, 2 a 3 bytes, los opcodes de las instrucciones
+                 * de un byte pueden confundirse con los de 3 o dos bytes.
+                 *
+                 */
+                case 0b10: // tres byte de opcode
                     #ifdef DEBUG_ENABLE
-                    puts("1byte opcode");
+                    puts("3byte opcode");
                     #endif
                     if ((my_instruccion[j].instruction.opcode[2].opcode_byte.byte & instrutions[i]) == my_instruccion[j].instruction.opcode[2].opcode_byte.byte) {
-                        actual_node = push_List_instrution(list_instrution_resb);// añadir nodo 
+                        //copy_info_instruction(&(actual_node->Instruction), &(my_instruccion[j]), encoder_val);
                         memcpy(&(actual_node->Instruction), &(my_instruccion[j]), sizeof(Instruction_info));
+                        actual_node->Instruction.instruction.opcode[0].opcode_byte.byte = instrutions[i+2];
+                        actual_node->Instruction.instruction.opcode[1].opcode_byte.byte = instrutions[i+1];
                         actual_node->Instruction.instruction.opcode[2].opcode_byte.byte = instrutions[i];
-                        #ifdef DEBUG_ENABLE
-                        DEBUG_PRINT(DEBUG_LEVEL_INFO, "#{FG:reset}instruccion actual -> #{FG:lpurple}%s#{FG:reset} -> ", get_string_instruction_by_id(actual_node->Instruction.string));
-                        printf_color("#{BG:%d;%d;%d} %s#{FG:reset} (color: %u %u %u)\n", (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3,  get_string_instruction_by_id(actual_node->Instruction.string), (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3);
-                        printf("encontrada, byte1(%02x)\n", instrutions[i]);
-                        #endif
                         if (actual_node->Instruction.immediate_instrution) goto the_end_for; // si se trata de una instruccion inmediata no hay nada mas que analizar
                         uint8_t a = get_mod_form_byte(&(actual_node->Instruction), instrutions + i);
                         uint8_t b = get_rm_form_byte(&(actual_node->Instruction), instrutions + i);
                         uint8_t c = get_registers_form_byte(&(actual_node->Instruction), instrutions + i);
-                        goto the_end_for; // dejar de buscar instrucciones en el mapa de instrucciones
-                    } 
-                    /*if (pop_nodo_List_instrution(list_instrution_resb, actual_node) == NULL) {
-                        puts("pop_nodo_List_instrution - Error");
-                        exit(1); // liberar el nodo actual si la instruccion no es encontrada
-                    }*/
-                    break; // seguir buscando la instruccion en el mapa de instrucciones
+                        goto the_end_for;
+                    } break;
                 case 0b01: // dos bytes de opcode
                     #ifdef DEBUG_ENABLE
                     puts("2byte opcode");
@@ -490,41 +491,63 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
                                 }
                                 break;
                             case 0b01: // obtener un desplazamiento de 8bits en cualquiera de los casos
+                                actual_node->Instruction.instruction.displacement[0] = *((instrutions + i +1)); // obtener desplazamiento de 1 byte
                                 #ifdef DEBUG_ENABLE
                                 printf("[8] %02x\n", *((instrutions + i +1)));
+                                printf("[8.8]{0} %02x\n", actual_node->Instruction.instruction.displacement[0]);
                                 #endif
+                                i++; // avanzar en un byte pues se obtuvo es desplazamiento
                                 break;
                             case 0b10: // obtener un desplazamiento de 16bits o 32bits
                                 if (encoder_val == 0b0) { // desplazamiento de 16bits
+                                    *((uint16_t*)&(actual_node->Instruction.instruction.displacement)) = *((uint16_t*)(instrutions + i + 1)); // obtener el desplazamiento de 16bits
                                     #ifdef DEBUG_ENABLE
-                                    printf("[16] %04x\n", *((uint16_t*)(instrutions + i +1)));
+                                    printf("[16] %04x\n", *((uint16_t*)&(actual_node->Instruction.instruction.displacement)));
+                                    printf("[16.8]{0} %02x\n", actual_node->Instruction.instruction.displacement[0]);
+                                    printf("[16.8]{1} %02x\n", actual_node->Instruction.instruction.displacement[1]);
                                     #endif
+                                    i+=2; // avanzar 2bytes en el array de instrucciones maquina
                                 } else if (encoder_val == 0b1) { // desplazamiento de 32bits
+                                    *((uint32_t*)&(actual_node->Instruction.instruction.displacement)) = *((uint32_t*)(instrutions + i + 1)); // obtener el desplazamiento de 32bits
                                     #ifdef DEBUG_ENABLE
-                                    printf("[32] %08x\n", *((uint32_t*)(instrutions + i +1)));
+                                    printf("[32] %08x\n", *((uint32_t*)&(actual_node->Instruction.instruction.displacement)));
+                                    printf("[32.8]{0} %02x\n", actual_node->Instruction.instruction.displacement[0]);
+                                    printf("[32.8]{2} %02x\n", actual_node->Instruction.instruction.displacement[1]);
+                                    printf("[32.8]{3} %02x\n", actual_node->Instruction.instruction.displacement[2]);
+                                    printf("[32.8]{4} %02x\n", actual_node->Instruction.instruction.displacement[3]);
                                     #endif
+                                    i+=4; // avanzar 4bytes en el array de instrucciones maquina
                                 }
                                 break;
                             default: break; // para 0b11 no de obtiene desplazamientos
                         }
                         goto the_end_for;
                     } break; // seguir buscando la instruccion en el mapa de instrucciones
-                case 0b10: // tres byte de opcode
+                case 0b00: // un byte de opcode
                     #ifdef DEBUG_ENABLE
-                    puts("3byte opcode");
+                    puts("1byte opcode");
                     #endif
-                    if ((my_instruccion[j].instruction.opcode[2].opcode_byte.byte & instrutions[i]) == my_instruccion[j].instruction.opcode[2].opcode_byte.byte) {
-                        //copy_info_instruction(&(actual_node->Instruction), &(my_instruccion[j]), encoder_val);
+                    // las instrucciones de un byte de opcode (no tiene mod/rm ni reg) no necesitan realizar la operacion and
+                    if (instrutions[i] == my_instruccion[j].instruction.opcode[2].opcode_byte.byte) {
+                        actual_node = push_List_instrution(list_instrution_resb);// añadir nodo 
                         memcpy(&(actual_node->Instruction), &(my_instruccion[j]), sizeof(Instruction_info));
-                        actual_node->Instruction.instruction.opcode[0].opcode_byte.byte = instrutions[i+2];
-                        actual_node->Instruction.instruction.opcode[1].opcode_byte.byte = instrutions[i+1];
                         actual_node->Instruction.instruction.opcode[2].opcode_byte.byte = instrutions[i];
+                        #ifdef DEBUG_ENABLE
+                        DEBUG_PRINT(DEBUG_LEVEL_INFO, "#{FG:reset}instruccion actual -> #{FG:lpurple}%s#{FG:reset} -> ", get_string_instruction_by_id(actual_node->Instruction.string));
+                        printf_color("#{BG:%d;%d;%d} %s#{FG:reset} (color: %u %u %u)\n", (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3,  get_string_instruction_by_id(actual_node->Instruction.string), (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3);
+                        printf("encontrada, byte1(%02x)\n", instrutions[i]);
+                        #endif
                         if (actual_node->Instruction.immediate_instrution) goto the_end_for; // si se trata de una instruccion inmediata no hay nada mas que analizar
                         uint8_t a = get_mod_form_byte(&(actual_node->Instruction), instrutions + i);
                         uint8_t b = get_rm_form_byte(&(actual_node->Instruction), instrutions + i);
                         uint8_t c = get_registers_form_byte(&(actual_node->Instruction), instrutions + i);
-                        goto the_end_for;
-                    } break;
+                        goto the_end_for; // dejar de buscar instrucciones en el mapa de instrucciones
+                    } 
+                    /*if (pop_nodo_List_instrution(list_instrution_resb, actual_node) == NULL) {
+                        puts("pop_nodo_List_instrution - Error");
+                        exit(1); // liberar el nodo actual si la instruccion no es encontrada
+                    }*/
+                    break; // seguir buscando la instruccion en el mapa de instrucciones
                 default: 
                     puts("ERRRRRRRRoR");
                     exit(0);

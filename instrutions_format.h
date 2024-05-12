@@ -33,7 +33,6 @@
 #define __INSTRUTTIONS_FORMAT_H__
 
 #include "opcodes_prefix.h"
-#include "print_structs_format.h"
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -52,5 +51,8 @@ List_instrution *init_List_instrution();
 List_instrution *push_List_instrution(List_instrution *list_instrution);
 List_instrution *pop_List_instrution(List_instrution *list_instrution, size_t position);
 List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, encoder_x86 encoder_val);
+
+#include "print_structs_format.h"
+
 #include "instrutions_format.c"
 #endif
