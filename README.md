@@ -2,6 +2,7 @@
 
 ------
 
+- [Formato de instrucciones de 16 y 32bits](./READMES/opcodes.md)
 
 Licencia:
 ```C
