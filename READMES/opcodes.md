@@ -133,27 +133,30 @@ opcode primario.
 * Si d = 1, REG es el destino, MOD R/M fuente    REG     <- MOD R/M.
  
 [fuente:](https://en.wikipedia.org/wiki/ModR/M)
- Los opcodes en x86 son generalmente de un byte, aunque existen instrucciones y prefijos de dos bytes. 
- ModR/M es el byte que sigue al opcode y añade información adicional sobre cómo se ejecuta la instrucción: 
- El formato es:
- ```nasm
-      | Bit | 7 6 | 5 4 3 | 2 1 0 |
-      | Uso | MOD |  REG  |  R/M  |
- ```
- donde REG especifica un registro y R/M puede contener un registro o especificar un modo de 
- direccionamiento, dependiendo del valor de MOD:
- 
- - Modo 00 (00b): El operando se codifica como un registro, sin desplazamiento (offset). En este modo, el campo 
-      "R/M" especifica el registro.
- 
- - Modo 01 (01b): El operando se codifica como un registro con un desplazamiento de 8 bits. En este modo, el campo 
-      "R/M" especifica el registro, y sigue un byte inmediato que proporciona el desplazamiento.
- 
- - Modo 10 (10b): El operando se codifica como un registro con un desplazamiento de 32 bits. En este modo, el campo 
-      "R/M" especifica el registro, y sigue una palabra doble (dword) inmediata que proporciona el desplazamiento.
- 
- - Modo 11 (11b): El operando se codifica como un registro de memoria. En este modo, el campo "R/M" especifica el 
-      registro de memoria.
+
+Los opcodes en x86 son generalmente de un byte, aunque existen instrucciones y prefijos de dos bytes. 
+ModR/M es el byte que sigue al opcode y añade información adicional sobre cómo se ejecuta la instrucción: 
+El formato es:
+
+```nasm
+     | Bit | 7 6 | 5 4 3 | 2 1 0 |
+     | Uso | MOD |  REG  |  R/M  |
+```
+
+donde REG especifica un registro y R/M puede contener un registro o especificar un modo de 
+direccionamiento, dependiendo del valor de MOD:
+
+- Modo 00 (00b): El operando se codifica como un registro, sin desplazamiento (offset). En este modo, el campo 
+     "R/M" especifica el registro.
+
+- Modo 01 (01b): El operando se codifica como un registro con un desplazamiento de 8 bits. En este modo, el campo 
+     "R/M" especifica el registro, y sigue un byte inmediato que proporciona el desplazamiento.
+
+- Modo 10 (10b): El operando se codifica como un registro con un desplazamiento de 32 bits. En este modo, el campo 
+     "R/M" especifica el registro, y sigue una palabra doble (dword) inmediata que proporciona el desplazamiento.
+
+- Modo 11 (11b): El operando se codifica como un registro de memoria. En este modo, el campo "R/M" especifica el 
+     registro de memoria.
  
  
  
@@ -459,15 +462,16 @@ Registro especificado por el campo reg Durante operaciones de datos de 16 bits (
  
  
  
- Algunas instrucciones no pueden hacer uso de la parte REG del byte ModR/M. Muchas de estas 
- instrucciones son "multiplexadas". Muchas de estas instrucciones están "multiplexadas" utilizando 
- este campo, donde un único opcode puede referirse a múltiples instrucciones, y el campo REG determina 
- la instrucción. En los listados de opcode, éstos se especifican siguiendo el opcode con una barra (/) y 
- un dígito 0-7.
+Algunas instrucciones no pueden hacer uso de la parte REG del byte ModR/M. Muchas de estas 
+instrucciones son "multiplexadas". Muchas de estas instrucciones están "multiplexadas" utilizando 
+este campo, donde un único opcode puede referirse a múltiples instrucciones, y el campo REG determina 
+la instrucción. En los listados de opcode, éstos se especifican siguiendo el opcode con una barra (/) y 
+un dígito 0-7.
  
- fuente: http://www.c-jump.com/CIS77/CPU/x86/X77_0060_mod_reg_r_m_byte.htm
-         https://www.cs.loyola.edu/~binkley/371/Encoding_Real_x86_Instructions.html
-         http://www.c-jump.com/CIS77/images/x86_instruction_format.png
+[fuente1:](http://www.c-jump.com/CIS77/CPU/x86/X77_0060_mod_reg_r_m_byte.htm)
+[fuente2:](https://www.cs.loyola.edu/~binkley/371/Encoding_Real_x86_Instructions.html)
+![fuente3:](http://www.c-jump.com/CIS77/images/x86_instruction_format.png)
+         
  
  El campo R/M, combinado con MOD, especifica o bien
  el segundo operando en una instrucción de dos operandos, o bien
@@ -575,6 +579,7 @@ Registro especificado por el campo reg Durante operaciones de datos de 16 bits (
 ```
  
  Instrucciones de proposito general y formatos para modos no de 64bits(pagina 2875)
+```nasm
  ADD – Add 
   register1 to register2      -> 0000 000w : mod(11)       reg1 reg2 (si d no esta activo)
   register2 to register1      -> 0000 001w : mod(11)       reg1 reg2 (si d si esta activo)
@@ -1101,7 +1106,8 @@ Registro especificado por el campo reg Durante operaciones de datos de 16 bits (
   immediate to register 1000 00sw : 11 110 reg : immediate data
   immediate to AL, AX, or EAX 0011 010w : immediate data
   immediate to memory 1000 00sw : mod 110 r/m : immediate data
- 
+```
+```nasm
  Prefix Bytes
   address size 0110 0111
   LOCK 1111 0000
@@ -1112,7 +1118,7 @@ Registro especificado por el campo reg Durante operaciones de datos de 16 bits (
   FS segment override 0110 0100
   GS segment override 0110 0101
   SS segment override 0011 0110
- 
+```
  
  Instrucciones y formatos de proposito general para 64bits (pagina 2886):
  
@@ -1132,13 +1138,7 @@ Registro especificado por el campo reg Durante operaciones de datos de 16 bits (
   immediate to register 0100 000B : 1000 00sw : 11 010 reg : immediate
   immediate to qwordregister 0100 100B : 1000 0001 : 11 010 qwordreg : imm32
   immediate to qwordregister 0100 1R0B : 1000 0011 : 11 010 qwordreg : imm8
- 
- 
- 
- 
- 
- 
- 
+
  Ejemplo de codificacion de  instruccion:
   add ecx, eax (ejemplo medio bien, ver mas abajo otros ejemplos):
  
