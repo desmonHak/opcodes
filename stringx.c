@@ -118,11 +118,11 @@ String_list_link* free_String_list_link(String_list_link* list) {
      *  
      */
     if (list != NULL) {
-        String_list_link *next_block; // apuntar al siguiente bloque, para no perder
+        String_list_link *next_block = list; // apuntar al siguiente bloque, para no perder
         // la referencia al eliminar al bloque que apunta a este
         for (String_list_link *i = list; i != NULL; i = next_block) {
             #ifdef DEBUG_ENABLE
-                printf_color("#{FG:reset}Liberando i(#{FG:lred}%p#{FG:reset}), flag_i(%02x), next_block(#{FG:lred}%p#{FG:reset})#{FG:reset},  -> %s\n", i, i->flags, next_block, i->actual_string);
+                printf_color("#{FG:reset}Liberando i(#{FG:cyan}%p#{FG:reset}), flag_i(%02x), next_block(#{FG:cyan}%p#{FG:reset})#{FG:reset},  -> %s\n", i, i->flags, next_block, i->actual_string);
             #endif
             if ((i->flags & FLAG_FREE_Sll) == FLAG_FREE_Sll) free(i->actual_string);
             next_block = i->next_string; // almacenar el siguiente bloque antes de liberar el actual
@@ -423,6 +423,14 @@ String_list_link *join_list_to_String(String_list_link *list, char* string_for_j
      * **Si se llama a esta funcion, se a de liberar la memoria de esta funcion, poner campo flags en 1
      *  
      */
+    #ifdef DEBUG_ENABLE
+        DEBUG_PRINT(DEBUG_LEVEL_INFO,
+            INIT_TYPE_FUNC_DBG(String_list_link *, join_list_to_String)
+                TYPE_DATA_DBG(String_list_link *, " list = %p")
+                TYPE_DATA_DBG(char *, " string_for_join = \"%s\"")
+            END_TYPE_FUNC_DBG,
+            list, string_for_join);
+    #endif
     if (list == NULL) return NULL; 
     // obtener el tamaño de todos los strings de la lista enlazada y reservar memoria:
     size_t size_all_string = get_size_to_String(list) + 1; // añadir uno para el caracter final \0
@@ -447,7 +455,7 @@ String_list_link *join_list_to_String(String_list_link *list, char* string_for_j
             }
         }
     }
-    string_join[size_all_string] = '\0'; // poner caracter nulo
+    string_join[size_all_string-1] = '\0'; // poner caracter nulo
 
     String_list_link *new_list_string = Init_String(string_join, size_all_string-1);
     new_list_string->flags |= FLAG_FREE_Sll; // indicar que se a de liberar la memoria de size_string

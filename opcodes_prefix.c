@@ -73,7 +73,10 @@ uint64_t count_get_mask(uint64_t x)
      * Cuenta 0's desde la derecha a izquierda hasta obtener algun 1
      *
      */
-    for(uint64_t one_count = 0; x; ++one_count, x >>= 1) if(x & 1) return one_count; 
+    for(uint64_t one_count = 0; x; ++one_count, x >>= 1) 
+        if(x & 1) 
+            return one_count; 
+    return 0;
 }
 
 static char *get_string_instruction_by_id(string_instrution_id id) {
@@ -98,6 +101,15 @@ static char *get_string_mod_0(encoder_x86 size_word, register_id id, uint32_t di
      *  de 16bits (size_word = 0b0) o si se trata de operaciones de datos de 32bits (size_word = 0b1)
      * 
      */
+    #ifdef DEBUG_ENABLE
+        DEBUG_PRINT(DEBUG_LEVEL_INFO,
+            INIT_TYPE_FUNC_DBG(static char *, get_string_mod_0)
+                TYPE_DATA_DBG(encoder_x86, "encoder_x86 = %02x")
+                TYPE_DATA_DBG(register_id, "id = %02x")
+                TYPE_DATA_DBG(uint32_t, "disp32 = 0x%08x")
+            END_TYPE_FUNC_DBG,
+            size_word, id, disp32);
+    #endif
     switch (size_word){ // si hay un bit, el campo w es 1, si hay 0 bits 1. el campo w esta en 0. si hay mas de 1, error
         case 0b0: // para 16 bits
             switch (id) { // registros de 16 bits
@@ -128,6 +140,15 @@ static char *get_string_mod_0(encoder_x86 size_word, register_id id, uint32_t di
 }
 
 static char *get_string_mod_1(encoder_x86 size_word, register_id id, uint8_t disp8){
+    #ifdef DEBUG_ENABLE
+        DEBUG_PRINT(DEBUG_LEVEL_INFO,
+            INIT_TYPE_FUNC_DBG(static char *, get_string_mod_1)
+                TYPE_DATA_DBG(encoder_x86, "encoder_x86 = %02x")
+                TYPE_DATA_DBG(register_id, "id = %02x")
+                TYPE_DATA_DBG(uint8_t, "disp8 = 0x%02x")
+            END_TYPE_FUNC_DBG,
+            size_word, id, disp8);
+    #endif
     switch (size_word){ // si hay un bit, el campo w es 1, si hay 0 bits 1. el campo w esta en 0. si hay mas de 1, error
         case 0b0: // para 16 bits
             switch (id) { // registros de 16 bits
@@ -158,6 +179,15 @@ static char *get_string_mod_1(encoder_x86 size_word, register_id id, uint8_t dis
 }
 
 static char *get_string_mod_2(encoder_x86 size_word, register_id id, uint32_t disp32){
+    #ifdef DEBUG_ENABLE
+        DEBUG_PRINT(DEBUG_LEVEL_INFO,
+            INIT_TYPE_FUNC_DBG(static char *, get_string_mod_1)
+                TYPE_DATA_DBG(encoder_x86, "encoder_x86 = %02x")
+                TYPE_DATA_DBG(register_id, "id = %02x")
+                TYPE_DATA_DBG(uint32_t, "disp32 = 0x%08x")
+            END_TYPE_FUNC_DBG,
+            size_word, id, disp32);
+    #endif
     switch (size_word){ // si hay un bit, el campo w es 1, si hay 0 bits 1. el campo w esta en 0. si hay mas de 1, error
         case 0b0: // para 16 bits
             switch (id) { // registros de 16 bits
@@ -196,6 +226,15 @@ static char *get_string_mod_3(encoder_x86 size_word, uint8_t bit_w, register_id 
      *  de 16bits (size_word = 0b0) o si se trata de operaciones de datos de 32bits (size_word = 0b1)
      * 
      */
+    #ifdef DEBUG_ENABLE
+        DEBUG_PRINT(DEBUG_LEVEL_INFO,
+            INIT_TYPE_FUNC_DBG(static char *, get_string_mod_3)
+                TYPE_DATA_DBG(encoder_x86, "encoder_x86 = %02x")
+                TYPE_DATA_DBG(uint8_t, "bit_w = %02x")
+                TYPE_DATA_DBG(register_id, "id = 0x%02x")
+            END_TYPE_FUNC_DBG,
+            size_word, bit_w, id);
+    #endif
     switch (popcnt_software(bit_w)){ // si hay un bit, el campo w es 1, si hay 0 bits 1. el campo w esta en 0. si hay mas de 1, error
         case 0b0:  // si el campo "w" fue definido como 0 (8bits)
             switch (id) { // registros de 8 bits

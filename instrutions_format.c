@@ -155,7 +155,7 @@ List_instrution * pop_List_instrution(List_instrution *list_instrution, size_t p
     }
     size_t number_instrutions = 1; // empezar en 1 como si del siguiente bloque se tratara, pues 
     // eliminar el bloque 0 se hace en la parte superior.
-    List_instrution *last_block; // apuntar al ultimo bloque, para no perderle (A)
+    List_instrution *last_block = list_instrution; // apuntar al ultimo bloque, para no perderle (A)
     for (List_instrution *i = list_instrution; i->next_list_instrution != NULL; number_instrutions++) {
         if (number_instrutions == position) {
             // se obtiene la direccion del siguiente bloque, del bloque a eliminar. En el caso de A -> B -> C,
@@ -293,7 +293,7 @@ uint8_t get_registers_form_byte(Instruction_info *Instruction, uint8_t* bytes) {
 
     uint8_t byte = *((bytes + 1) - Instruction->position_reg); 
     #ifdef DEBUG_ENABLE
-    printf("[[>> Instruction->mask_reg(%02x) count_get_mask(Instruction->mask_reg)(%02x)", Instruction->mask_reg, count_get_mask(Instruction->mask_reg));
+    printf("[[>> Instruction->mask_reg(%02x) count_get_mask(Instruction->mask_reg)(%02llx)", Instruction->mask_reg, count_get_mask(Instruction->mask_reg));
     Instruction->instruction.Mod_rm.reg = (byte & Instruction->mask_reg) >> count_get_mask(Instruction->mask_reg);
     printf(" [[>> byte(%02x)      Instruction->instruction.Mod_rm.reg(%02x)\n", byte, Instruction->instruction.Mod_rm.reg);
     #else
@@ -400,15 +400,16 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
                     puts("3byte opcode");
                     #endif
                     if ((my_instruccion[j].instruction.opcode[2].opcode_byte.byte & instrutions[i]) == my_instruccion[j].instruction.opcode[2].opcode_byte.byte) {
-                        //copy_info_instruction(&(actual_node->Instruction), &(my_instruccion[j]), encoder_val);
+                        actual_node = push_List_instrution(list_instrution_resb); // añadir nodo 
                         memcpy(&(actual_node->Instruction), &(my_instruccion[j]), sizeof(Instruction_info));
                         actual_node->Instruction.instruction.opcode[0].opcode_byte.byte = instrutions[i+2];
                         actual_node->Instruction.instruction.opcode[1].opcode_byte.byte = instrutions[i+1];
                         actual_node->Instruction.instruction.opcode[2].opcode_byte.byte = instrutions[i];
+                        *((uint32_t*)(&actual_node->Instruction.instruction.prefix)) = *((uint32_t*)(prefi));
                         if (actual_node->Instruction.immediate_instrution) goto the_end_for; // si se trata de una instruccion inmediata no hay nada mas que analizar
-                        uint8_t a = get_mod_form_byte(&(actual_node->Instruction), instrutions + i);
-                        uint8_t b = get_rm_form_byte(&(actual_node->Instruction), instrutions + i);
-                        uint8_t c = get_registers_form_byte(&(actual_node->Instruction), instrutions + i);
+                        //uint8_t a = get_mod_form_byte(&(actual_node->Instruction), instrutions + i);
+                        //uint8_t b = get_rm_form_byte(&(actual_node->Instruction), instrutions + i);
+                        //uint8_t c = get_registers_form_byte(&(actual_node->Instruction), instrutions + i);
                         goto the_end_for;
                     } break;
                 case 0b01: // dos bytes de opcode
@@ -422,11 +423,10 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
                         ((my_instruccion[j].instruction.opcode[1].opcode_byte.byte & instrutions[i+1]) == my_instruccion[j].instruction.opcode[1].opcode_byte.byte)
                        ) {
                         actual_node = push_List_instrution(list_instrution_resb); // añadir nodo 
-                        //actual_node->Instruction.instruction.opcode[2].opcode_byte.byte = my_instruccion[j].instruction.opcode[2].opcode_byte.byte;
-                        //copy_info_instruction(&(actual_node->Instruction), &(my_instruccion[j]), encoder_val);
                         memcpy(&(actual_node->Instruction), &(my_instruccion[j]), sizeof(Instruction_info));
                         actual_node->Instruction.instruction.opcode[2].opcode_byte.byte = instrutions[i];
                         actual_node->Instruction.instruction.opcode[1].opcode_byte.byte = instrutions[i+1];
+                        *((uint32_t*)(&actual_node->Instruction.instruction.prefix)) = *((uint32_t*)(prefi));
                         
                         #ifdef DEBUG_ENABLE
                         printf("encontrada, byte1(%02x), byte2(%02x)\n", instrutions[i], instrutions[i+1]);
@@ -453,15 +453,19 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
                         actual_node->Instruction.instruction.opcode[1].opcode_byte.byte
                         );
                         #endif
-                        //get_mod_form_byte(&(actual_node->Instruction), instrutions[i]);
+                        #ifdef DEBUG_ENABLE
                         uint8_t a = get_mod_form_byte(&(actual_node->Instruction), instrutions + i);
                         uint8_t b = get_rm_form_byte(&(actual_node->Instruction), instrutions + i);
                         uint8_t c = get_registers_form_byte(&(actual_node->Instruction), instrutions + i);
-                        #ifdef DEBUG_ENABLE
                         printf(">> mod(%02x) rm(%02x) reg(%02x), instrutions[i] = %02x\n",  a, b, c, instrutions[i] );
                         printf("[>>>>>>>>] %08x\n", *((uint32_t*)(instrutions + i)));
-                        printf("popcnt_software (%02x) R_M (%02x) w(%02x)\n", popcnt_software(get_bit_w(&(actual_node->Instruction))),
+                        printf("popcnt_software (%02llx) R_M (%02x) w(%02x)\n", popcnt_software(get_bit_w(&(actual_node->Instruction))),
                             actual_node->Instruction.instruction.Mod_rm.R_M, get_bit_w(&(actual_node->Instruction)));
+                        #else
+                        //get_mod_form_byte(&(actual_node->Instruction), instrutions[i]);
+                        get_mod_form_byte(&(actual_node->Instruction), instrutions + i);
+                        get_rm_form_byte(&(actual_node->Instruction), instrutions + i);
+                        get_registers_form_byte(&(actual_node->Instruction), instrutions + i);
                         #endif
                         
                         switch(actual_node->Instruction.instruction.Mod_rm.mod) {
@@ -532,15 +536,16 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
                         actual_node = push_List_instrution(list_instrution_resb);// añadir nodo 
                         memcpy(&(actual_node->Instruction), &(my_instruccion[j]), sizeof(Instruction_info));
                         actual_node->Instruction.instruction.opcode[2].opcode_byte.byte = instrutions[i];
+                        *((uint32_t*)(&actual_node->Instruction.instruction.prefix)) = *((uint32_t*)(prefi));
                         #ifdef DEBUG_ENABLE
                         DEBUG_PRINT(DEBUG_LEVEL_INFO, "#{FG:reset}instruccion actual -> #{FG:lpurple}%s#{FG:reset} -> ", get_string_instruction_by_id(actual_node->Instruction.string));
                         printf_color("#{BG:%d;%d;%d} %s#{FG:reset} (color: %u %u %u)\n", (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3,  get_string_instruction_by_id(actual_node->Instruction.string), (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3);
                         printf("encontrada, byte1(%02x)\n", instrutions[i]);
                         #endif
                         if (actual_node->Instruction.immediate_instrution) goto the_end_for; // si se trata de una instruccion inmediata no hay nada mas que analizar
-                        uint8_t a = get_mod_form_byte(&(actual_node->Instruction), instrutions + i);
-                        uint8_t b = get_rm_form_byte(&(actual_node->Instruction), instrutions + i);
-                        uint8_t c = get_registers_form_byte(&(actual_node->Instruction), instrutions + i);
+                        get_mod_form_byte(&(actual_node->Instruction), instrutions + i);
+                        get_rm_form_byte(&(actual_node->Instruction), instrutions + i);
+                        get_registers_form_byte(&(actual_node->Instruction), instrutions + i);
                         goto the_end_for; // dejar de buscar instrucciones en el mapa de instrucciones
                     } 
                     /*if (pop_nodo_List_instrution(list_instrution_resb, actual_node) == NULL) {

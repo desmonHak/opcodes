@@ -36,9 +36,8 @@
 #include <stdio.h>
 
 int main(){
-    /**/
-    uint8_t instrucciones[] = {
-        /**/Prefix_operand_size,
+    uint8_t instrucciones1[] = {
+        Prefix_operand_size,
         Prefix_CS,
         Prefix_repe_rep_repz,
         0x37,                   // AAA                               = 0011 0111
@@ -73,19 +72,19 @@ int main(){
         0x12, 0x87, 0xda, 0x00, // adc al,       [bx + 0x00da]       = 0001 0010  |10| 000 111
 
     };
-    char text[] = " ";
-    print_table_hex(text, (char*)instrucciones, sizeof(instrucciones), ENCODER_IN_16bits);
-    List_instrution *instrutions_struct = format_instruccion(instrucciones, sizeof(instrucciones), ENCODER_IN_16bits);
-    String_list_link *string_asm = get_string_instruction_assembly(instrutions_struct, ENCODER_IN_16bits);
-    String_list_link *string_asm_join = join_list_to_String(string_asm, "\n");
-    free_String_list_link(string_asm);
-    print_String_list_link(string_asm_join);
-    free_String_list_link(string_asm_join);
-    //instrutions_struct = pop_List_instrution(instrutions_struct,2);
-    print_List_instrution(instrutions_struct, ENCODER_IN_16bits);
-    //size_t number_of_instrutions = get_number_instrutions(instrucciones, sizeof(instrucciones));
+    char text1[] = " ";
+    print_table_hex(text1, (char*)instrucciones1, sizeof(instrucciones1), ENCODER_IN_16bits);
+    List_instrution *instrutions_struct1 = format_instruccion(instrucciones1, sizeof(instrucciones1), ENCODER_IN_16bits);
+    String_list_link *string_asm1 = get_string_instruction_assembly(instrutions_struct1, ENCODER_IN_16bits);
+    String_list_link *string_asm_join1 = join_list_to_String(string_asm1, "\n");
+    free_String_list_link(string_asm1);
+    print_String_list_link(string_asm_join1);
+    free_String_list_link(string_asm_join1);
+    //instrutions_struct1 = pop_List_instrution(instrutions_struct1,2);
+    print_List_instrution(instrutions_struct1, ENCODER_IN_16bits);
+    //size_t number_of_instrutions = get_number_instrutions(instrucciones1, sizeof(instrucciones1));
     
-   /*uint8_t instrucciones[] = {
+   /**/uint8_t instrucciones[] = {
         Prefix_operand_size,
         Prefix_CS,
         Prefix_repe_rep_repz,
@@ -103,15 +102,20 @@ int main(){
         0x12, 0x09,                         // adc cl,    [ecx]
         0x13, 0x2e,                         // adc ebp,   [esi]
         0x11, 0x2e,                         // adc [esi], ebp
-        0x13, 0x05, 0xaa, 0xbb, 0xcc, 0xdd, // adc eax, dword ptr [0xddccbbaa] 
-        0x13, 0x3f,                         // adc edi, dword ptr [edi]
+        0x13, 0x05, 0xaa, 0xbb, 0xcc, 0xdd, // adc eax,   [0xddccbbaa] 
+        0x13, 0x3f,                         // adc edi,   [edi]
     };
     char text[] = " ";
     print_table_hex(text, (char*)instrucciones, sizeof(instrucciones), ENCODER_IN_32bits);
     List_instrution *instrutions_struct = format_instruccion(instrucciones, sizeof(instrucciones), ENCODER_IN_32bits);
-    instrutions_struct = pop_List_instrution(instrutions_struct,2);
+    String_list_link *string_asm = get_string_instruction_assembly(instrutions_struct, ENCODER_IN_32bits);
+    String_list_link *string_asm_join = join_list_to_String(string_asm, "\n");
+    free_String_list_link(string_asm);
+    print_String_list_link(string_asm_join);
+    free_String_list_link(string_asm_join);
+    //instrutions_struct = pop_List_instrution(instrutions_struct,2);
     print_List_instrution(instrutions_struct, ENCODER_IN_32bits);
-    //size_t number_of_instrutions = get_number_instrutions(instrucciones, sizeof(instrucciones));*/
+    //size_t number_of_instrutions = get_number_instrutions(instrucciones, sizeof(instrucciones));
  
 
     printf("Numero de instrucciones descodificadas: %zu\n", get_number_instrutions(instrutions_struct));
