@@ -39,7 +39,7 @@
 ```
 [fuente:](https://intelxed.github.io/ref-manual/index.html#INTRO)
 Las instrucciones en x86 ocupan un maximo de 1-15 bytes
-
+```nasm
      |-----------------|---------|--------|----------------------------------------------------------|-------|----------------|-------------|
      | numero de bytes |  0 a 4  | 1 a 3  |                                0 o 1                     | 0 o 1 |  0, 1,  2 o 4  | 0, 1, 2 o 4 |  
      | valores         | prefijo | opcode |                               Mod-RM                     |  SIB  | desplazamiento |  inmediato  |
@@ -50,7 +50,7 @@ Las instrucciones en x86 ocupan un maximo de 1-15 bytes
        | Bit |  7  6 5  4 3  2  |     1     |            0          |  | Bit | 7 6 | 5 4 3 | 2 1 0 |  | Bit |  7 6  | 5 4 3 | 2 1 0 |
        | uso | main bits opcode | direccion | Longitud del operando |  | Uso | MOD |  REG  |  R/M  |  | Uso | SCALE | INDEX |  BASE |
        |-----|------------------|-----------|-----------------------|  |-----|-----|-------|-------|  |-----|-------|-------|-------|
-  
+```
 [fuente:](https://www.scs.stanford.edu/05au-cs240c/lab/i386/s17_02.htm)
  Prefijos:
  
@@ -72,7 +72,7 @@ Las instrucciones en x86 ocupan un maximo de 1-15 bytes
  
       Los prefihos heredados se utilizan en extensiones de instrucciones. Los prefijos Legacy(heredados) deben colocarse antes de los prefijos REX.
  
-```
+```nasm
  B.1.2 Prefijos REX
  Los prefijos REX son un conjunto de 16 opcodes que abarcan una fila del mapa de opcodes y ocupan las entradas 40H a 4FH. Estos
  opcodes representan instrucciones válidas (INC o DEC) en los modos de operación IA-32 y en modo de compatibilidad. En modo
@@ -136,10 +136,10 @@ opcode primario.
  Los opcodes en x86 son generalmente de un byte, aunque existen instrucciones y prefijos de dos bytes. 
  ModR/M es el byte que sigue al opcode y añade información adicional sobre cómo se ejecuta la instrucción: 
  El formato es:
- 
+ ```nasm
       | Bit | 7 6 | 5 4 3 | 2 1 0 |
       | Uso | MOD |  REG  |  R/M  |
- 
+ ```
  donde REG especifica un registro y R/M puede contener un registro o especificar un modo de 
  direccionamiento, dependiendo del valor de MOD:
  
@@ -227,7 +227,7 @@ Registro especificado por el campo reg Durante operaciones de datos de 32 bits
  grupo de registros especificado se modifica por la presencia y el estado del bit w en una codificación (consulte la Sección
  B.1.4.3). La Tabla B-4 muestra la codificación del campo reg cuando el bit w no está presente en una codificación; la Tabla B-5
  muestra la codificación del campo reg cuando el bit w está presente. * 
- 
+```nasm
  |-------------------------------------------------------------------------------------------------------|
  | reg value |si tamaño de datos es 16bits | si tamaño de datos es 32bits | si tamaño de datos es 64bits |
  |-------------------------------------------------------------------------------------------------------|
@@ -240,7 +240,9 @@ Registro especificado por el campo reg Durante operaciones de datos de 32 bits
  |    110    |             si              |             esi              |             rsi              |
  |    111    |             di              |             edi              |             rdi              |
  |-------------------------------------------------------------------------------------------------------|
- Registro especificado por el campo reg Durante operaciones de datos de 16 bits (en funcion del campo "w")
+```
+Registro especificado por el campo reg Durante operaciones de datos de 16 bits (en funcion del campo "w")
+```nasm
  |------------------------------------------------------------------------|
  | reg value |          Cuando w = 0       |         Cuando w = 1         |
  |------------------------------------------------------------------------|
@@ -253,8 +255,9 @@ Registro especificado por el campo reg Durante operaciones de datos de 32 bits
  |    110    |            *dh              |              si              |
  |    111    |            *bh              |              di              |
  |------------------------------------------------------------------------|
- 
+```
  Registro especificado por el campo reg Durante operaciones de datos de 32 bits
+```nasm
  |------------------------------------------------------------------------|
  | reg value |          Cuando w = 0       |         Cuando w = 1         |
  |------------------------------------------------------------------------|
@@ -267,35 +270,38 @@ Registro especificado por el campo reg Durante operaciones de datos de 32 bits
  |    110    |            *dh              |             esi              |
  |    111    |            *bh              |             edi              |
  |------------------------------------------------------------------------|
+```
   AH, CH, DH, BH no pueden codificarse cuando se utiliza el prefijo REX. Una expresión de este tipo aparece por defecto en el byte inferior.
  
  Codificación del bit de tamaño de operando (w)
  El atributo de tamaño de operando actual determina si el procesador está realizando operaciones de 16, 32 o 64 bits. Dentro de las limitaciones del atributo de tamaño de operando actual, el bit de tamaño de operando (w) puede utilizarse para indicar
  operaciones en operandos de 8 bits o el tamaño completo del operando especificado con el atributo operand-size. La Tabla B-6 muestra la
  codificación del bit w dependiendo del atributo operand-size actual
+```nasm
  |-------------------------------------------------------------------------------------------------|
  | w Bit | cuando el atributo Operand-Size es 16 bits | cuando el atributo Operand-Size es 32 bits |
  |-------------------------------------------------------------------------------------------------|
  |   0   |                     8Bits                  |                   8Bits                    |
  |   1   |                    16Bits                  |                  32Bits                    |
  |-------------------------------------------------------------------------------------------------|
- 
+```
  Bit de extensión de signo (s)
  El bit de signo extendido (s) aparece en instrucciones con campos de datos inmediatos que se amplían de 8 bits a 16 ó 32 bits.
  o 32 bits. Véase la tabla B-7.
+```nasm
  |-----------------------------------------------------------------------------------------------------------------|
  | s Bit |        cuando el atributo Operand-Size es 16 bits          | cuando el atributo Operand-Size es 32 bits |
  |-----------------------------------------------------------------------------------------------------------------|
  |   0   |                      Nada                                  |                    Nada                    |
  |   1   | Extender el signo para rellenar el destino de 16 o 32 bits |                    Nada                    |
  |-----------------------------------------------------------------------------------------------------------------|
- 
+```
  Campo de registro de segmento (sreg)
  Cuando una instrucción opera sobre un registro de segmento, el campo reg del byte ModR/M se 
  denomina campo sreg y se utiliza para especificar el registro de segmento.
  se utiliza para especificar el registro de segmento. La Tabla B-8 muestra la codificación del 
  campo sreg. Este campo es a veces un campo de 2 bits (sreg2) y otras veces de 3 bits (sreg3). 
- 
+```nasm
  |----------------------------------------------------|
  | 2 Bit sreg2 | registro de segmento seleccionado    |
  |----------------------------------------------------|
@@ -316,7 +322,7 @@ Registro especificado por el campo reg Durante operaciones de datos de 32 bits
  |     110     |              reservado               |
  |     111     |              reservado               |
  |----------------------------------------------------|
- 
+```
  Campo de registro de propósito especial (eee) (pagina 2873)
  Cuando se hace referencia a registros de control o depuración en una instrucción, se codifican en el campo eee, situado en los bits 5
  aunque 3 del byte ModR/M (una codificación alternativa del campo sreg). Ver Tabla B-9.
@@ -329,6 +335,7 @@ Registro especificado por el campo reg Durante operaciones de datos de 32 bits
  - Para los opcodes primarios de 1 byte, el campo tttn se encuentra en los bits 3, 2, 1 y 0 del byte del opcode.
  - Para opcodes primarios de 2 bytes, el campo tttn se encuentra en los bits 3, 2, 1 y 0 del segundo byte del opcode.
  La Tabla B-10 muestra la codificación del campo tttn.
+```nasm
  |-----------------------------------------------------------|
  | tttn | Mnemonic |  Condition                              |  
  |-----------------------------------------------------------|       
@@ -348,7 +355,8 @@ Registro especificado por el campo reg Durante operaciones de datos de 32 bits
  | 1101 | NL, GE   | Not less than, Greater than or equal to |                                     
  | 1110 | LE, NG   | Less than or equal to, Not greater than |                                     
  | 1111 | NLE, G   | Not less than or equal to, Greater than |
- |-----------------------------------------------------------|                                     
+ |-----------------------------------------------------------| 
+```                                    
  
  
  Casi todas las instrucciones que hacen referencia a un registro y/o a un operando de memoria tienen un byte de modo de registro y/o de dirección
@@ -380,6 +388,7 @@ Registro especificado por el campo reg Durante operaciones de datos de 32 bits
       - 11 Modo de direccionamiento de registro.
  
  Formas con el Byte ModR/M para 32bits y 16bits:
+```nasm
  |--------------------------------------------------------------------------------------------------------------|
  | mod |        00        |                 01              |                  10               |       11      |
  | rm  | 16bits  | 32bits |      16bits     |    32bits     |      16bits      |      32bits    |   r/m // REB  |
@@ -393,10 +402,12 @@ Registro especificado por el campo reg Durante operaciones de datos de 32 bits
  | 110 | disp16  | [esi]  |    [bp] + disp8 | [esi] + disp8 |    [bp] + disp16 | [esi] + disp32 | dh / si / esi |
  | 111 |  [bx]   | [edi]  |    [bx] + disp8 | [edi] + disp8 |    [bx] + disp16 | [edi] + disp32 | bh / di / edi |
  |--------------------------------------------------------------------------------------------------------------|
+```
  
  La nomenclatura disp16 denota un desplazamiento de 16 bits que sigue al byte ModR/M y que se añade al índice.
  
  Formas con el Byte ModR/M solo para 32bits:
+```nasm
   | === | === | ================================= |
   | MOD | R/M | Addressing Mode                   | 
   | === | === | ================================= |
@@ -433,7 +444,7 @@ Registro especificado por el campo reg Durante operaciones de datos de 32 bits
   |  10 | 111 | [ edi + disp32 ]                  |                     
   |  11 | 111 | register  ( bh / di / edi )       |     
   | === | === | ================================= |       
- 
+```
  
     
  
@@ -492,6 +503,7 @@ Registro especificado por el campo reg Durante operaciones de datos de 32 bits
  codificado después del byte SIB que se aplica a la dirección final[4].
  
  Un prefijo REX puede permitir opcionalmente que el byte SIB utilice registros SSE.
+```nasm
  
                           |-----|-------|----------------|-------|
                           | Uso | SCALE |     INDEX      |  BASE |
@@ -512,20 +524,23 @@ Registro especificado por el campo reg Durante operaciones de datos de 32 bits
                                                       |  111  |   edi    |       |  111  |   edi                                              |
                                                       |-------|----------|       |-------|----------------------------------------------------|
  
- 
+```
  Modo de direccionamiento indexado escalonado:
  Nota: n = 1, 2, 4, u 8.
  En cada modo de direccionamiento indexado escalado, el campo MOD del byte MOD-REG-R/M especifica el tamaño del desplazamiento. Puede ser cero, uno o cuatro bytes:
+```nasm
      MOD R/M Modo de direccionamiento
      --- --- --------------------------- 
       00 100 SIB
       01 100 SIB + disp8
       10 100 SIB + disp32
+```
  
  Los campos Base e Índice del byte SIB seleccionan los registros base e índice, respectivamente.
  Tenga en cuenta que este modo de direccionamiento no permite el uso del registro ESP como registro de índice. Presumiblemente, 
  Intel dejó este modo particular sin definir para ofrecer la posibilidad de ampliar los modos de direccionamiento en una versión futura de la CPU.
- 
+
+```nasm
  [ reg32 + eax*n ] MOD = 00
  [ reg32 + ebx*n ] 
  [ reg32 + ecx*n ]
@@ -557,7 +572,7 @@ Registro especificado por el campo reg Durante operaciones de datos de 32 bits
  [ disp + ebp*n ]
  [ disp + esi*n ]
  [ disp + edi*n ]
- 
+```
  
  Instrucciones de proposito general y formatos para modos no de 64bits(pagina 2875)
  ADD – Add 
