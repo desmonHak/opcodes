@@ -36,17 +36,26 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "opcodes_prefix.h"
 #include "colors-C-C-plus-plus\colors.h"
 
 #define CALC_SIZE_STRING_FLAG 0
 
+typedef enum String_list_link_flags {
+    FLAG_NONE_Sll = 0b00000000, // ninguna flag activada
+    FLAG_FREE_Sll = 0b00000001, // esta flag indica que a de liberarse la memoria de size_string
+} String_list_link_flags;
+
 typedef struct String_list_link {
     size_t size_string;                   // tamaño del string contenido
     char   *actual_string;                // punteo del string actual
     struct String_list_link *next_string; // puntero al siguiente string
+    String_list_link_flags flags;         // en caso de necesitarte liberar actual_string, se marca como 1 esta flag
 } String_list_link;
+
+
 
 void print_String_list_link(String_list_link *list);
 String_list_link *Init_String(char *string, size_t size_string);

@@ -14,9 +14,11 @@ all:
 	$(CC) code.c $(CFLAGS) -o $(EXE) 
 	
 compile_debug:
+	@cls
 	$(CC) code.c $(D) $(CFLAGS) -o $(EXE) 
 
 compile_hidden: $(EJS)
+	@cls
 	$(CC) -Wl,--strip-all code.c $(CFLAGS) -o $(EXE) 
 
 create:

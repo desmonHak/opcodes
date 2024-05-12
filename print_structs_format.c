@@ -146,6 +146,7 @@ void print_table_hex(char *string_init, char *string_text_for_printing, size_t s
             printf_color("|\n%s"FOREGROUND_COLOR_CUSTOM("%d")"%s #{FG:reset}", string_init, ((((uint8_t)random_color >> 2)) & 0b1111111) | 0b00001001, buffer_Position_memory, i+1);
         }
     }
+    
     free(buffer_Position_memory);
     free(buffer_spaces);
     printf("|\n");
@@ -205,7 +206,7 @@ void print_opcode(Instruction_info *my_instruccion_, opcode opcode, uint8_t numb
         if (my_instruccion_->posicion_w != 0) {
             printf_color("opcode[#{FG:lred}%d#{FG:reset}].w(#{FG:lblue}1bit#{FG:reset}): (value) #{FG:lgreen}%02X#{FG:reset} = ", number_opcode, get_bit_w(my_instruccion_));
             print_binary(my_instruccion_->posicion_w, 4, 4);
-        } else printf_color("#{FG:reset}opcode[#{FG:lred}%d#{FG:reset}].w(#{FG:lblue}1bit#{FG:reset}): (value) #{FG:lred}--X#{FG:reset} = #{FG:lred}not exists field W#{FG:reset}\n", number_opcode, get_bit_w(my_instruccion_));
+        } else printf_color("#{FG:reset}opcode[#{FG:lred}%d#{FG:reset}].w(#{FG:lblue}1bit#{FG:reset}): (value) #{FG:lred}--#{FG:reset} = #{FG:lred}not exists field W#{FG:reset}\n", number_opcode, get_bit_w(my_instruccion_));
     }
     putchar('\n');
 }
