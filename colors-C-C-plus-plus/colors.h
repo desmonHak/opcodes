@@ -21,6 +21,9 @@ typedef enum ANSIColors
     ANSI_WHITE = 7,
 } ANSIColors;
 
+// macros que se definen para cada version windows:
+// https://learn.microsoft.com/es-es/windows/win32/winprog/using-the-windows-headers?redirectedfrom=MSDN#setting_winver_or__win32_winnt
+
 #define REGULAR_COLORS_LETTER 30
 #define HIGH_INTENSTY  90
 #define REGULAR_COLORS_BACKGROUND 40
@@ -281,6 +284,7 @@ typedef enum ConsoleColor
 #define POINTGREEN(data) "#{FG:green}[#{FG:blue}*#{FG:green}]#{FG:white}" data "#{FG:reset}"
 #define POINTRED(data)   "#{FG:yellow}[#{FG:blue}*#{FG:yellow}]#{FG:purple}" data "#{FG:reset}"
 
+#ifndef __DISABLE_COLORS_FORE_BACK_GROUND__ 
 // definir el color de fondo de forma personalizada
 #define BACKGROUND_COLOR_CUSTOM(color) "\033[48;5;"color"m"
 
@@ -289,6 +293,13 @@ typedef enum ConsoleColor
 
 // definir el color de letra de forma personalizada
 #define FOREGROUND_COLOR_CUSTOM(color) "\033[38;5;"color"m"
+
+#else  // no comptible para win7
+#warning BACKGROUND_COLOR_CUSTOM, BACKGROUND_COLOR_CUSTOM_RGB y FOREGROUND_COLOR_CUSTOM no son compatibles en Windows 7
+#define BACKGROUND_COLOR_CUSTOM(color) color 
+#define BACKGROUND_COLOR_CUSTOM_RGB(red, green, blue) red green blue
+#define FOREGROUND_COLOR_CUSTOM(color) color
+#endif
 
 #define FOREGROUND_COLOR_CUSTOM_RGB(red, green, blue) "\033[48;2;"red";"green";"blue"m"
 

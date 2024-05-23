@@ -105,37 +105,52 @@ void print_table_hex(char *string_init, char *string_text_for_printing, size_t s
     char *buffer_Position_memory = get_addr_to_encoder_x86(0, encoder_val);
     uint32_t level_space = strlen(buffer_Position_memory);
 
-    unsigned int random_color = jenkins_hash(string_text_for_printing[0], level_space, 0, 1, 2, 3, 4);
+    
     printf_color("\n%s ", string_init);
     for (uint32_t i = 0; i < level_space; i++) putchar(' ');
+    #ifndef __DISABLE_COLORS_FORE_BACK_GROUND__ 
+        unsigned int random_color = jenkins_hash(string_text_for_printing[0], level_space, 0, 1, 2, 3, 4);
+        // imprimir primera fila. (empezamos desde 0x23 para tener unos colores agradables)
+        for (uint16_t r = 0x23; r < 0x33; r++) printf_color("|"FOREGROUND_COLOR_CUSTOM("%d")"%02x#{FG:reset}", r >> 2, ((uint8_t)(r-0x33)) - 0xf0 ); 
+        printf_color("|\n%s"FOREGROUND_COLOR_CUSTOM("%d")"%s #{FG:reset}", string_init, ((((uint8_t)random_color >> 2)) & 0b1110111) | 0b00001001, buffer_Position_memory);
+    #else
+        for (uint16_t r = 0x23; r < 0x33; r++) printf_color("|%02x#{FG:reset}", r >> 2); 
+        printf_color("|\n%s%s #{FG:reset}", string_init, buffer_Position_memory);
+    #endif
     free(buffer_Position_memory);
-
-    // imprimir primera fila. (empezamos desde 0x23 para tener unos colores agradables)
-    for (uint16_t r = 0x23; r < 0x33; r++) printf_color("|"FOREGROUND_COLOR_CUSTOM("%d")"%02x#{FG:reset}", r >> 2, ((uint8_t)(r-0x33)) - 0xf0 ); 
-    printf_color("|\n%s"FOREGROUND_COLOR_CUSTOM("%d")"%s #{FG:reset}", string_init, ((((uint8_t)random_color >> 2)) & 0b1110111) | 0b00001001, buffer_Position_memory);
     for (uint32_t i = 0; i < size_string_text_for_printing; i++)
     {
-        // imprimir el resto de filas
-        unsigned int Avalue1, Avalue2, Avalue3, seed, values[] = {
-            (unsigned int)size_string_text_for_printing, 
-            size, level_space,  0xa0, 0xe1, string_text_for_printing[i]
-        };
-        // generar 3 valores apartir de una semilla de entrada y 6 valores(pueden ser constantes o variables)
-        seed = (unsigned int)(string_text_for_printing[i]);
-        Avalue1 = jenkins_hash(seed,    values[0], values[1], values[2], values[3], values[4], values[5]);
-        Avalue2 = jenkins_hash(Avalue1, values[0], values[1], values[2], values[3], values[4], values[5]);
-        Avalue3 = jenkins_hash(Avalue2, values[0], values[1], values[2], values[3], values[4], values[5]);
-        // mediante la operacion ((((uint8_t)valor >> 2)) & 0b1110111) | 0b00001001
-        // de puede obtener colores claros
-        printf_color("|"FOREGROUND_COLOR_CUSTOM("%d")"%.2X#{BG:reset}", 
-        ((((uint8_t)string_text_for_printing[i] >> 2)) & 0b1110111) | 0b00001001, 
-        (uint8_t)string_text_for_printing[i]);
+        #ifndef __DISABLE_COLORS_FORE_BACK_GROUND__
+            // imprimir el resto de filas
+            unsigned int Avalue1, Avalue2, Avalue3, seed, values[] = {
+                (unsigned int)size_string_text_for_printing, 
+                size, level_space,  0xa0, 0xe1, string_text_for_printing[i]
+            };
+            // generar 3 valores apartir de una semilla de entrada y 6 valores(pueden ser constantes o variables)
+            seed = (unsigned int)(string_text_for_printing[i]);
+            Avalue1 = jenkins_hash(seed,    values[0], values[1], values[2], values[3], values[4], values[5]);
+            Avalue2 = jenkins_hash(Avalue1, values[0], values[1], values[2], values[3], values[4], values[5]);
+            Avalue3 = jenkins_hash(Avalue2, values[0], values[1], values[2], values[3], values[4], values[5]);
+            // mediante la operacion ((((uint8_t)valor >> 2)) & 0b1110111) | 0b00001001
+            // de puede obtener colores claros
+            
+                printf_color("|"FOREGROUND_COLOR_CUSTOM("%d")"%.2X#{BG:reset}", 
+                    ((((uint8_t)string_text_for_printing[i] >> 2)) & 0b1110111) | 0b00001001, 
+                    (uint8_t)string_text_for_printing[i]);
+        #else
+            printf_color("|%.2X", 
+                (uint8_t)string_text_for_printing[i]);
+        #endif
         // imrpimir en X * 16
         if ((i+1) % (BLOCK_SLICES / 8) == 0){
             // imprimir la siguiente filas, despues de imprimir 16 bytes
             buffer_Position_memory = get_addr_to_encoder_x86(i+1, encoder_val);
-            random_color = jenkins_hash(string_text_for_printing[i], Avalue1, Avalue2, Avalue3, 2, 3, 4);
-            printf_color("|\n%s"FOREGROUND_COLOR_CUSTOM("%d")"%s #{FG:reset}", string_init, ((((uint8_t)random_color >> 2)) & 0b1111111) | 0b00001001, buffer_Position_memory, i+1);
+            #ifndef __DISABLE_COLORS_FORE_BACK_GROUND__ 
+                random_color = jenkins_hash(string_text_for_printing[i], Avalue1, Avalue2, Avalue3, 2, 3, 4);
+                printf_color("|\n%s"FOREGROUND_COLOR_CUSTOM("%d")"%s #{FG:reset}", string_init, ((((uint8_t)random_color >> 2)) & 0b1111111) | 0b00001001, buffer_Position_memory, i+1);
+            #else
+                printf_color("|\n%s%s #{FG:reset}", string_init, buffer_Position_memory, i+1);
+            #endif
             free(buffer_Position_memory);
         }
     }

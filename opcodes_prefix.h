@@ -242,11 +242,10 @@ static inline uint64_t popcnt_software(uint64_t x);
 static char *get_string_instruction_by_id(string_instrution_id id);
 
 #define get_string_register(size_word, bit_w, id) get_string_mod_3(size_word, bit_w, id)
-static char *get_string_mod_0(encoder_x86 size_word, register_id id, uint32_t disp32);
-static char *get_string_mod_1(encoder_x86 size_word, register_id id, uint8_t disp8);
-static char *get_string_mod_2(encoder_x86 size_word, register_id id, uint32_t disp32);
+static char *get_string_mod_0(encoder_x86 size_word, Instruction_info *my_instruccion_);
+static char *get_string_mod_1(encoder_x86 size_word, Instruction_info *my_instruccion_);
+static char *get_string_mod_2(encoder_x86 size_word, Instruction_info *my_instruccion_);
 static char *get_string_mod_3(encoder_x86 size_word, uint8_t bit_w, register_id id);
-
 
 // (Instrucciones en page: 2845/2875) Intel® 64 and IA-32 Architectures Software Developer’s Manual, Combined Volumes: 1, 2A, 2B, 2C, 2D, 3A, 3B,
 
@@ -367,37 +366,7 @@ __attribute__((__section__(".instruccion"))) static Instruction_info my_instrucc
             .immediate    = { 0b00000000, 0b00000000, 0b00000000, 0b00000000}
         }
     },
-    /*{
-        .string               = STRING_ADC,
-        .immediate_instrution = 0b0,          // es una instruccion inmediata
-        .opcode_size          = 0b01,         // dos byte's de opcode
-        .posicion_w           = 0b0001,       // hay bit "w" en el bit 1
-        .posicion_d           = 0b0010,       // hay bit "d" el bit 2 del opcode primario
-        .posicion_s           = 0b0000,       // no hay bit "s"
-        .position_rm          = 0b01,         // hay r/m en el segundo byte (se convierte en reg2 si number_reg == 0b10)
-        .position_reg         = 0b01,         // hay reg en el segundo byte
-        .position_mod         = 0b11,         // no hay mod
-        .position_tttn        = 0b11,         // no hay tttn
-        .mask_mod             = 0b00000000,   // -
-        .mask_reg             = 0b00111000,   // con esta mascara se obtiene los bits 5, 4 y 3 de 7,6,5,4,3,2,1,0
-        .mask_rm              = 0b00000111,   // con esta mascara se obtiene los bits 2, 1 y 0 de 7,6,5,4,3,2,1,0
-        .mask_tttn            = 0b000000,
-        .number_reg           = 0b10,         // 0b10 - usa dos campos reg (rm se convierte en un campo registro)
-        .immediate_data       = 0b0,          // no tiene datos inmediatos
-        .instruction = { // ADC – ADD with Carry
-            .prefix = { 0b00000000, 0b00000000, 0b00000000, 0b00000000 },
-            .opcode = {
-                (opcode){ .opcode_byte.byte = 0b00000000 },
-                (opcode){ .opcode_byte.byte = 0b11000000 }, // opcode secundario
-                (opcode){ .opcode_byte.byte = 0b00010000 }, // opcode primario
-            },
-            .Mod_rm = (Mod_rm){   .mod = 0b00,   .reg = 0b000,  .R_M = 0b000 },
-            .SIB    =    (SIB){ .scale = 0b00, .index = 0b000, .base = 0b000 },
-            .displacement = { 0b00000000, 0b00000000, 0b00000000, 0b00000000},
-            .immediate    = { 0b00000000, 0b00000000, 0b00000000, 0b00000000}
-        }
-    },*/
-    /**/{
+    {
         .string               = STRING_ADC,
         .immediate_instrution = 0b0,          // no es una instruccion inmediata
         .opcode_size          = 0b01,         // dos byte's de opcode
@@ -420,6 +389,38 @@ __attribute__((__section__(".instruccion"))) static Instruction_info my_instrucc
                 (opcode){ .opcode_byte.byte = 0b00000000 },
                 (opcode){ .opcode_byte.byte = 0b00000000 }, // opcode secundario
                 (opcode){ .opcode_byte.byte = 0b00010000 }, // opcode primario
+            },
+            .Mod_rm = (Mod_rm){   .mod = 0b00,   .reg = 0b000,  .R_M = 0b000 },
+            .SIB    =    (SIB){ .scale = 0b00, .index = 0b000, .base = 0b000 },
+            .displacement = { 0b00000000, 0b00000000, 0b00000000, 0b00000000},
+            .immediate    = { 0b00000000, 0b00000000, 0b00000000, 0b00000000}
+        }
+    },
+    {
+        // immediate to memory   1000 00sw : mod 010 r/m : immediate data
+        // immediate to register 1000 00sw : 11  010 reg : immediate data
+        .string               = STRING_ADC,
+        .immediate_instrution = 0b1,          // es una instruccion inmediata
+        .opcode_size          = 0b01,         // dos byte's de opcode
+        .posicion_w           = 0b0001,       // hay bit "w" en el bit 1
+        .posicion_d           = 0b0000,       // no hay bit "d" 
+        .posicion_s           = 0b0010,       // hay bit "s" en el segundo bit
+        .position_rm          = 0b01,         // hay r/m en el segundo byte 
+        .position_reg         = 0b01,         // hay reg en el segundo byte
+        .position_mod         = 0b01,         // hay campo mod en el segundo byte
+        .position_tttn        = 0b11,         // no hay tttn
+        .mask_mod             = 0b11000000,   // los bits mod's estan en los primeros 2 bits del segundo byte de opcode
+        .mask_reg             = 0b00000111,   // con esta mascara se obtiene los bits 5, 4 y 3 de 7,6,5,4,3,2,1,0
+        .mask_rm              = 0b00000111,   // con esta mascara se obtiene los bits 2, 1 y 0 de 7,6,5,4,3,2,1,0
+        .mask_tttn            = 0b000000,
+        .number_reg           = 0b01,         // 0b10 - usa un campo reg 
+        .immediate_data       = 0b1,          // tiene datos inmediatos
+        .instruction = { // ADC – ADD with Carry
+            .prefix = { 0b00000000, 0b00000000, 0b00000000, 0b00000000 },
+            .opcode = {
+                (opcode){ .opcode_byte.byte = 0b00000000 },
+                (opcode){ .opcode_byte.byte = 0b00010000 }, // opcode secundario
+                (opcode){ .opcode_byte.byte = 0b10000000 }, // opcode primario
             },
             .Mod_rm = (Mod_rm){   .mod = 0b00,   .reg = 0b000,  .R_M = 0b000 },
             .SIB    =    (SIB){ .scale = 0b00, .index = 0b000, .base = 0b000 },

@@ -59,13 +59,11 @@ static inline uint64_t popcnt_software(uint64_t x)
      * Cuenta la cantidad de 1's que hay en un valor x
      *
      */
-    uint64_t one_count = 0;
-    while(x) {
-        if(x % 2) ++one_count;
-        x >>= 1;
-    }
+    register size_t one_count = 0; // indicar que se use un registro si es posible
+    for(; x ; x >>= 1) if(x % 2) ++one_count;
     return one_count;
 }
+
 uint64_t count_get_mask(uint64_t x)
 {
     /*
@@ -73,7 +71,7 @@ uint64_t count_get_mask(uint64_t x)
      * Cuenta 0's desde la derecha a izquierda hasta obtener algun 1
      *
      */
-    for(uint64_t one_count = 0; x; ++one_count, x >>= 1) 
+    for(register size_t one_count = 0; x; ++one_count, x >>= 1) 
         if(x & 1) 
             return one_count; 
     return 0;
@@ -92,7 +90,96 @@ static char *get_string_instruction_by_id(string_instrution_id id) {
     }
 }
 
-static char *get_string_mod_0(encoder_x86 size_word, register_id id, uint32_t disp32) {
+char *get_build_SIB_format(Instruction_info *my_instruccion_){
+
+    #ifdef DEBUG_ENABLE
+        DEBUG_PRINT(DEBUG_LEVEL_INFO,
+            INIT_TYPE_FUNC_DBG(char *, get_build_SIB_format)
+                TYPE_DATA_DBG(Instruction_info*, "my_instruccion_ = %p")
+            END_TYPE_FUNC_DBG,
+            my_instruccion_);
+    #endif
+    if (my_instruccion_ == NULL) {
+        #ifdef DEBUG_ENABLE
+        printf("\t -> [get_build_SIB_format] my_instruccion_ == NULL: Error\n");
+        #endif
+        return NULL;
+    }
+
+    char    *formatter      = NULL, *formatter_building = NULL;
+    uint32_t desplazamiento = 0,     size_len_register  = 0;
+    switch (my_instruccion_->instruction.Mod_rm.mod) {
+        //  MOD R/M Modo de direccionamiento
+        //  --- --- --------------------------- 
+        //   00 100 SIB
+        //   01 100 SIB + disp8
+        //   10 100 SIB + disp32
+        case 0b00: // 00 100 SIB
+            formatter = "[%s * %u + %s]";
+            break;
+        case 0b01: // 00 100 SIB + disp8
+            formatter = "[%s * %u + %s + 0x%02x]";
+            desplazamiento = *((uint8_t*)&(my_instruccion_->instruction.displacement));
+            break;
+        case 0b10: // 00 100 SIB + disp32
+            formatter = "[%s * %u + %s + 0x%08x]";
+            desplazamiento = *((uint32_t*)&(my_instruccion_->instruction.displacement));
+            break;
+        default: return NULL;
+    }
+
+    if (my_instruccion_->instruction.Mod_rm.R_M != 0b00) {
+
+        // [    %s     *    %u      +     %s    +    0x%x    ]
+        // [Index(reg) * Scale(val) + Base(reg) + value_disp ] == [2 * eax + ebx + 0xaabbccdd]
+        size_len_register = (
+            snprintf(NULL, 0, formatter,
+                // sustitur get_string_mod_3 por una func para el sib, registros ilegales
+                get_string_mod_3(0b01, 0b01, my_instruccion_->instruction.SIB.index), // Index(reg)
+                0b01 << my_instruccion_->instruction.SIB.scale,                       // Scale(val)
+                // Scale = 00; -> index * 1   (0b01 << 0b00) == 0b0001 (1)
+                // Scale = 01; -> index * 2   (0b01 << 0b01) == 0b0010 (2)
+                // Scale = 10; -> index * 4   (0b01 << 0b10) == 0b0100 (4)
+                // Scale = 11; -> index * 8   (0b01 << 0b11) == 0b1000 (8)
+                //                            (0b01 << scale_binary_val) == scale_binary_decimal
+                get_string_mod_3(0b01, 0b01, my_instruccion_->instruction.SIB.base),  // Base(reg)
+                // se pasa 0b01, 0b01 pues la instruccion que se codifica es de 32bits con registros de 32bits
+                desplazamiento // solo se añade para mod != 0b00 o para 0b01 y 0b10
+            ) + 1
+        ) * sizeof(char);
+
+        formatter_building = (char *)malloc(size_len_register);
+        sprintf(formatter_building, formatter, 
+            get_string_mod_3(0b01, 0b01, my_instruccion_->instruction.SIB.index), // Index(reg)
+            0b01 << my_instruccion_->instruction.SIB.scale,                       // Scale(val)
+            get_string_mod_3(0b01, 0b01, my_instruccion_->instruction.SIB.base),  // Base(reg)
+            desplazamiento
+        ); 
+
+    } else {
+
+            size_len_register = (
+            snprintf(NULL, 0, formatter,
+                get_string_mod_3(0b01, 0b01, my_instruccion_->instruction.SIB.index), // Index(reg)
+                0b01 << my_instruccion_->instruction.SIB.scale,                       // Scale(val)
+                get_string_mod_3(0b01, 0b01, my_instruccion_->instruction.SIB.base)   // Base(reg)
+            ) + 1
+        ) * sizeof(char);
+
+        formatter_building = (char *)malloc(size_len_register);
+        sprintf(formatter_building, formatter, 
+            get_string_mod_3(0b01, 0b01, my_instruccion_->instruction.SIB.index), // Index(reg)
+            0b01 << my_instruccion_->instruction.SIB.scale,                       // Scale(val)
+            get_string_mod_3(0b01, 0b01, my_instruccion_->instruction.SIB.base)   // Base(reg)
+        ); 
+
+    }
+
+    //printf(">>> %s\n", formatter_building);
+    return formatter_building;
+}
+
+static char *get_string_mod_0(encoder_x86 size_word, Instruction_info *my_instruccion_) {
     /*
      *
      *  Se recibe un register_id el cual especifica un registro. Se espera recibir un bit "w"
@@ -105,14 +192,13 @@ static char *get_string_mod_0(encoder_x86 size_word, register_id id, uint32_t di
         DEBUG_PRINT(DEBUG_LEVEL_INFO,
             INIT_TYPE_FUNC_DBG(static char *, get_string_mod_0)
                 TYPE_DATA_DBG(encoder_x86, "encoder_x86 = %02x")
-                TYPE_DATA_DBG(register_id, "id = %02x")
-                TYPE_DATA_DBG(uint32_t, "disp32 = 0x%08x")
+                TYPE_DATA_DBG(Instruction_info*, "my_instruccion_ = %p")
             END_TYPE_FUNC_DBG,
-            size_word, id, disp32);
+            size_word, my_instruccion_);
     #endif
     switch (size_word){ // si hay un bit, el campo w es 1, si hay 0 bits 1. el campo w esta en 0. si hay mas de 1, error
         case 0b0: // para 16 bits
-            switch (id) { // registros de 16 bits
+            switch (my_instruccion_->instruction.Mod_rm.R_M) { // registros de 16 bits
                 case 0b000: return "[bx + si]";
                 case 0b001: return "[bx + di]";
                 case 0b010: return "[bp + si]";
@@ -124,12 +210,12 @@ static char *get_string_mod_0(encoder_x86 size_word, register_id id, uint32_t di
                 default: return  "error - Este mod 0 en con rm en 16bits no se define.";
             }
         case 0b1: // para 32 bits
-            switch (id) { // registros de 32 bits
+            switch (my_instruccion_->instruction.Mod_rm.R_M) { // registros de 32 bits
                 case 0b000: return "[eax]";
                 case 0b001: return "[ecx]";
                 case 0b010: return "[edx]";
                 case 0b011: return "[ebx]";
-                case 0b100: return "sib";
+                case 0b100: return "[sib]";
                 case 0b101: return "[0x%08x]"; // desplazamiento de 32bits
                 case 0b110: return "[esi]";
                 case 0b111: return "[edi]";
@@ -139,19 +225,18 @@ static char *get_string_mod_0(encoder_x86 size_word, register_id id, uint32_t di
     }
 }
 
-static char *get_string_mod_1(encoder_x86 size_word, register_id id, uint8_t disp8){
+static char *get_string_mod_1(encoder_x86 size_word, Instruction_info *my_instruccion_){
     #ifdef DEBUG_ENABLE
         DEBUG_PRINT(DEBUG_LEVEL_INFO,
             INIT_TYPE_FUNC_DBG(static char *, get_string_mod_1)
                 TYPE_DATA_DBG(encoder_x86, "encoder_x86 = %02x")
-                TYPE_DATA_DBG(register_id, "id = %02x")
-                TYPE_DATA_DBG(uint8_t, "disp8 = 0x%02x")
+                TYPE_DATA_DBG(Instruction_info*, "my_instruccion_ = %p")
             END_TYPE_FUNC_DBG,
-            size_word, id, disp8);
+            size_word, my_instruccion_);
     #endif
     switch (size_word){ // si hay un bit, el campo w es 1, si hay 0 bits 1. el campo w esta en 0. si hay mas de 1, error
         case 0b0: // para 16 bits
-            switch (id) { // registros de 16 bits
+            switch (my_instruccion_->instruction.Mod_rm.R_M) { // registros de 16 bits
                 case 0b000: return "[bx + si + 0x%02x]";
                 case 0b001: return "[bx + di + 0x%02x]";
                 case 0b010: return "[bp + si + 0x%02x]";
@@ -163,12 +248,12 @@ static char *get_string_mod_1(encoder_x86 size_word, register_id id, uint8_t dis
                 default: return  "error - Este mod 0 en con rm en 16bits no se define.";
             }
         case 0b1: // para 32 bits
-            switch (id) { // registros de 32 bits
+            switch (my_instruccion_->instruction.Mod_rm.R_M) { // registros de 32 bits
                 case 0b000: return "[eax + 0x%02x]";
                 case 0b001: return "[ecx + 0x%02x]";
                 case 0b010: return "[edx + 0x%02x]";
                 case 0b011: return "[ebx + 0x%02x]";
-                case 0b100: return "sib + 0x%02x";
+                case 0b100: return "[sib + 0x%02x]";
                 case 0b101: return "[ebp + 0x%02x]";
                 case 0b110: return "[esi + 0x%02x]";
                 case 0b111: return "[edi + 0x%02x]";
@@ -178,19 +263,18 @@ static char *get_string_mod_1(encoder_x86 size_word, register_id id, uint8_t dis
     }
 }
 
-static char *get_string_mod_2(encoder_x86 size_word, register_id id, uint32_t disp32){
+static char *get_string_mod_2(encoder_x86 size_word, Instruction_info *my_instruccion_){
     #ifdef DEBUG_ENABLE
         DEBUG_PRINT(DEBUG_LEVEL_INFO,
             INIT_TYPE_FUNC_DBG(static char *, get_string_mod_1)
                 TYPE_DATA_DBG(encoder_x86, "encoder_x86 = %02x")
-                TYPE_DATA_DBG(register_id, "id = %02x")
-                TYPE_DATA_DBG(uint32_t, "disp32 = 0x%08x")
+                TYPE_DATA_DBG(Instruction_info*, "my_instruccion_ = %p")
             END_TYPE_FUNC_DBG,
-            size_word, id, disp32);
+            size_word, my_instruccion_);
     #endif
     switch (size_word){ // si hay un bit, el campo w es 1, si hay 0 bits 1. el campo w esta en 0. si hay mas de 1, error
         case 0b0: // para 16 bits
-            switch (id) { // registros de 16 bits
+            switch (my_instruccion_->instruction.Mod_rm.R_M) { // registros de 16 bits
                 case 0b000: return "[bx + si + 0x%04x]";
                 case 0b001: return "[bx + di + 0x%04x]";
                 case 0b010: return "[bp + si + 0x%04x]";
@@ -202,15 +286,15 @@ static char *get_string_mod_2(encoder_x86 size_word, register_id id, uint32_t di
                 default: return  "error - Este mod 0 en con rm en 16bits no se define.";
             }
         case 0b1: // para 32 bits
-            switch (id) { // registros de 32 bits
-                case 0b000: return "[eax] + 0x%08x";
-                case 0b001: return "[ecx] + 0x%08x";
-                case 0b010: return "[edx] + 0x%08x";
-                case 0b011: return "[ebx] + 0x%08x";
-                case 0b100: return "sib + 0x%08x";
-                case 0b101: return "[ebp] + 0x%08x";
-                case 0b110: return "[esi] + 0x%08x";
-                case 0b111: return "[edi] + 0x%08x";
+            switch (my_instruccion_->instruction.Mod_rm.R_M) { // registros de 32 bits
+                case 0b000: return "[eax + 0x%08x]";
+                case 0b001: return "[ecx + 0x%08x]";
+                case 0b010: return "[edx + 0x%08x]";
+                case 0b011: return "[ebx + 0x%08x]";
+                case 0b100: return "[sib + 0x%08x]";
+                case 0b101: return "[ebp + 0x%08x]";
+                case 0b110: return "[esi + 0x%08x]";
+                case 0b111: return "[edi + 0x%08x]";
                 default: return  "error - Este mod 0 en con rm en 32bits no se define.";
             }
         default: return  "error - No se puede operar en este size de datos.";

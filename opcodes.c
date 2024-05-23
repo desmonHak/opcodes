@@ -1560,6 +1560,103 @@
  *      |  uso | opcode               | w |  mod |   reg   |   R/M   |
  *      |------|--------------------------|------|---------|---------|
  * 
+ * adc ch, [ebx + edi*4]
+ *                                     mod = 00/01/10    rm = 100 == SIB
+ *      |------|--------------------------|------|---------|---------|--------------------------------|
+ *      | bits | 0  0  0  1  0  0 | 1 | 0 | 0  0 | 0  0  1 | 1  0  0 |  1  0  |  1  1  1  |  0  1  1  | == 0x12 0x2c 0xbb == adc ch, [ebx + edi*4]
+ *      |  uso | opcode ( add )   | d | s |  mod |   reg   |   R/M   | SIB                 \    base  |     
+ *      |------|--------------------------|------|---------|---------|--------------------------------|
+ *      primer byte:
+ *          - El campo "opcode" 0001 00 representa la instruccion ADC.
+ *          - El campo "s" del opcode indica que se usara el registro de 8bits especificado por reg al poner 0 como valor.
+ *          - El campo "d" del opcode, indica el valor de la memoria se guardara en el registro ch
+ *      segundo byte:
+ *          - El campo "reg", en este caso indica que el registro destino es el registro ch.
+ *          - El campo "mod" con valor 00 junto al campo "r/m" 100 indica que se trata del modo SIB:
+ *				00 100 SIB
+ *      		01 100 SIB + disp8
+ *      		10 100 SIB + disp32
+ *      tercer byte:
+ *          - En este caso el campo "sib" que contiene un campo "base", indica que se usara el modo de indice escalado o SIB con EDI * 4, siendo 10 el *4 y 111 el registro edi
+ *          - El campo "base" del campo "sib" indica que el registro base es ebx
+ * 
+ * adc [ebx + edi*4], ch
+ *                                     mod = 00/01/10    rm = 100 == SIB
+ *      |------|--------------------------|------|---------|---------|--------------------------------|
+ *      | bits | 0  0  0  1  0  0 | 0 | 0 | 0  0 | 0  0  1 | 1  0  0 |  1  0  |  1  1  1  |  0  1  1  | == 0x10 0x2c 0xbb == adc [ebx + edi*4], ch
+ *      |  uso | opcode ( add )   | d | s |  mod |   reg   |   R/M   | SIB                 \    base  |     
+ *      |------|--------------------------|------|---------|---------|--------------------------------|
+ *      primer byte:
+ *          - El campo "opcode" 0001 00 representa la instruccion ADC.
+ *          - El campo "s" del opcode indica que se usara el registro de 8bits especificado por reg al poner 0 como valor.
+ *          - El campo "d" del opcode, en valor 0 indica que el valor de ch sera almacenado en un lugar de la memoria
+ *      segundo byte:
+ *          - El campo "reg", en este caso indica que el registro destino es el registro ch.
+ *          - El campo "mod" con valor 00 junto al campo "r/m" 100 indica que se trata del modo SIB:
+ *				00 100 SIB
+ *      		01 100 SIB + disp8
+ *      		10 100 SIB + disp32c
+ *      tercer byte:
+ *          - En este caso el campo "sib" que contiene un campo "base", indica que se usara el modo de indice escalado o SIB con EDI * 4, siendo 10 el *4 y 111 el registro edi
+ *          - El campo "base" del campo "sib" indica que el registro base es ebx
  * 
  * 
+ * adc [ebx + edi*4 + 0x12], ch
+ *                                     mod = 00/01/10    rm = 100 == SIB
+ *      |------|--------------------------|------|---------|---------|--------------------------------|-----------------------------------|
+ *      | bits | 0  0  0  1  0  0 | 0 | 0 | 0  1 | 0  0  1 | 1  0  0 |  1  0  |  1  1  1  |  0  1  1  |  desplazamiento  == 0xzz          | == 0x10 0x6c 0xbb 0x12 == adc [ebx + edi*4 + 0x12], ch
+ *      |  uso | opcode ( add )   | d | s |  mod |   reg   |   R/M   | SIB                 \    base  | desplazamiento  de 8bits/1 byte   |
+ *      |------|--------------------------|------|---------|---------|--------------------------------|-----------------------------------|
+ *      primer byte:
+ *          - El campo "opcode" 0001 00 representa la instruccion ADC.
+ *          - El campo "s" del opcode indica que se usara el registro de 8bits especificado por reg al poner 0 como valor.
+ *          - El campo "d" del opcode, en valor 0 indica que el valor de ch sera almacenado en un lugar de la memoria
+ *      segundo byte:
+ *          - El campo "reg", en este caso indica que el registro destino es el registro ch.
+ *          - El campo "mod" con valor 01 junto al campo "r/m" 100 indica que se trata del modo SIB mas 8bits de desplazamiento:
+ *				00 100 SIB
+ *      		01 100 SIB + disp8
+ *      		10 100 SIB + disp32
+ *      tercer byte:
+ *          - En este caso el campo "sib" que contiene un campo "base", indica que se usara el modo de indice escalado o SIB con EDI * 4, siendo 10 el *4 y 111 el registro edi
+ *          - El campo "base" del campo "sib" indica que el registro base es ebx
+ *      cuarto byte:
+ *          - En este caso el campo es el desplazamiento de 8bits a summar, este campo es un valor signed, eso quiere decir que el valor
+ *            especificado puede restar o sumar. (Complemento a 2) -> -1 == 0xff, -2 = 0xfe, ...
+ *            valor maximo a poder sumarse = 127, numero maximos a restarse = -128, rango de signed char 0 int8_t == (127, -128)
+ * 
+ * adc [ebx + edi*4 + 0x12345678], ch
+ *                                     mod = 00/01/10    rm = 100 == SIB
+ *      |------|--------------------------|------|---------|---------|--------------------------------|-----------------------------------------|
+ *      | bits | 0  0  0  1  0  0 | 0 | 0 | 1  0 | 0  0  1 | 1  0  0 |  1  0  |  1  1  1  |  0  1  1  |  desplazamiento  == 0xww 0xxx 0xyy 0xzz | == 0x10 0xAc 0xbb 0x78 0x56 0x34 0x12 == adc [ebx + edi*4 + 0x12345678], ch
+ *      |  uso | opcode ( add )   | d | s |  mod |   reg   |   R/M   | SIB                 \    base  |    desplazamiento  de 32bits/4 bytes    |
+ *      |------|--------------------------|------|---------|---------|--------------------------------|-----------------------------------------|
+ *      primer byte:
+ *          - El campo "opcode" 0001 00 representa la instruccion ADC.
+ *          - El campo "s" del opcode indica que se usara el registro de 8bits especificado por reg al poner 0 como valor.
+ *          - El campo "d" del opcode, en valor 0 indica que el valor de ch sera almacenado en un lugar de la memoria
+ *      segundo byte:
+ *          - El campo "reg", en este caso indica que el registro destino es el registro ch.
+ *          - El campo "mod" con valor 10 junto al campo "r/m" 100 indica que se trata del modo SIB mas 32bits de desplazamiento:
+ *				00 100 SIB
+ *      		01 100 SIB + disp8
+ *      		10 100 SIB + disp32
+ *      tercer byte:
+ *          - En este caso el campo "sib" que contiene un campo "base", indica que se usara el modo de indice escalado o SIB con EDI * 4, siendo 10 el *4 y 111 el registro edi
+ *          - El campo "base" del campo "sib" indica que el registro base es ebx
+ *      cuarto byte a septimo byte:
+ *          - En este caso el campo es el desplazamiento de 32bits a summar, este campo es un valor signed, eso quiere decir que el valor
+ *            especificado puede restar o sumar. (Complemento a 2) -> -1 == 0xffffffff, -2 = 0xfffffffe, ...
+ *            valor maximo a poder sumarse = 2.147.483.647, numero maximos a restarse = -2.147.483.648, rango de int32_t == (2.147.483.647, -2.147.483.648)
+ * 
+ * 
+ *    * Ejemplo de SIB con base = 101 (EBP):
+ *       Solo puede usarse EBP como base cuando se use mod 10 o 01
+ *	     	12 ac bd 11 22 11 22 == adc ch, [ebp + edi*4 + 0x22112211] (mod = 10)
+ *       	12 6c bd 11 22 11 22 == adc ch, [ebp + edi*4 + 0x22112211] (mod = 01)
+ *
+ *		 En caso de ser mod 00 no puede añadirse el registro EBP como base, quedando asi:
+ *	     	12 2c bd 11 22 11 22 == adc ch, [edi*4 + 0x22112211]       (mod = 00)
+ *		Se recuerda tambien que cualquier instruccion con index = 100 sera una instruccion ilegal.
+ *
  */

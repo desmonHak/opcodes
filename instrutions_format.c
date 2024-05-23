@@ -324,29 +324,37 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
         prefix_actual = 0x00;
         switch (instrutions[i]) // buscar prefijos
         {
-            case Prefix_SS: prefix_actual = Prefix_SS; break;
-            case Prefix_CS: prefix_actual = Prefix_CS; break;
-            case Prefix_ES: prefix_actual = Prefix_ES; break;
-            case Prefix_DS: prefix_actual = Prefix_DS; break;
-            case Prefix_FS: prefix_actual = Prefix_FS; break;
-            case Prefix_GS: prefix_actual = Prefix_GS; break;
+            case Prefix_SS: 
+            case Prefix_CS: 
+            case Prefix_ES: 
+            case Prefix_DS: 
+            case Prefix_FS: 
+            case Prefix_GS: 
 
-            case Prefix_operand_size:  prefix_actual = Prefix_operand_size; break;
-            case Prefix_addr_size:     prefix_actual = Prefix_addr_size; break;
-            case Prefix_lock:          prefix_actual = Prefix_lock; break;
-            case Prefix_repne_repnez:  prefix_actual = Prefix_repne_repnez; break;
-            case Prefix_repe_rep_repz: prefix_actual = Prefix_repe_rep_repz; break;
+            case Prefix_operand_size:  
+            case Prefix_addr_size:     
+            case Prefix_lock:          
+            case Prefix_repne_repnez:  
+            case Prefix_repe_rep_repz: 
+                prefix_actual = instrutions[i]; 
+                //actual_node->Instruction.instruction.prefix[prefix_actual_n] = prefix_actual; 
+                prefi[prefix_actual_n] = prefix_actual;
+                i++; // pasar al siguiente byte si se encontro un prefijo
+                prefix_actual_n++; // aumentar la cantidad de prefijos encontrados para la instruccion actual en 1. 
+                // if (prefix_actual > 0b11) // error
+                goto restart_for; // volver al inicio del for en busca de otro prefijo, conservando los datos de las variables
+            default: break; // no se encontraron prefijos
         }
 
         // si se encontro un prefijo se agrega a la instruccion
-        if (prefix_actual) {
+        /*if (prefix_actual) {
             //actual_node->Instruction.instruction.prefix[prefix_actual_n] = prefix_actual; 
             prefi[prefix_actual_n] = prefix_actual;
             i++; // pasar al siguiente byte si se encontro un prefijo
             prefix_actual_n++; // aumentar la cantidad de prefijos encontrados para la instruccion actual en 1. 
             // if (prefix_actual > 0b11) // error
             goto restart_for; // volver al inicio del for en busca de otro prefijo, conservando los datos de las variables
-        }
+        }*/
 
         // si no se encontro mas prefijos, se analiza el opcode
         for (size_t j = 0; j < sizeof(my_instruccion)/sizeof(Instruction_info); j++){
@@ -480,21 +488,40 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
                                     printf("[16.8]{1} %02x\n", actual_node->Instruction.instruction.displacement[1]);
                                     #endif
                                     i+=2; // avanzar 2bytes en el array de instrucciones maquina
-                                } else if ((encoder_val == 0b1) 
-                                    && (actual_node->Instruction.instruction.Mod_rm.R_M == 0b101)
-                                ) { // desplazamiento de 32bits
-                                    *((uint32_t*)&(actual_node->Instruction.instruction.displacement)) = *((uint32_t*)(instrutions + i + 1)); // obtener el desplazamiento de 32bits
-                                    #ifdef DEBUG_ENABLE
-                                    printf("[32] %08x\n", *((uint32_t*)&(actual_node->Instruction.instruction.displacement)));
-                                    printf("[32.8]{0} %02x\n", actual_node->Instruction.instruction.displacement[0]);
-                                    printf("[32.8]{2} %02x\n", actual_node->Instruction.instruction.displacement[1]);
-                                    printf("[32.8]{3} %02x\n", actual_node->Instruction.instruction.displacement[2]);
-                                    printf("[32.8]{4} %02x\n", actual_node->Instruction.instruction.displacement[3]);
-                                    #endif
-                                    i+=4; // avanzar 4bytes en el array de instrucciones maquina
+                                } else if (encoder_val == 0b1) {  // desplazamiento de 32bits o SIB
+                                    if (actual_node->Instruction.instruction.Mod_rm.R_M == 0b101) { // desplazamiento de 32bits
+                                        *((uint32_t*)&(actual_node->Instruction.instruction.displacement)) = *((uint32_t*)(instrutions + i + 1)); // obtener el desplazamiento de 32bits
+                                        #ifdef DEBUG_ENABLE
+                                        printf("[32] %08x\n", *((uint32_t*)&(actual_node->Instruction.instruction.displacement)));
+                                        printf("[32.8]{0} %02x\n", actual_node->Instruction.instruction.displacement[0]);
+                                        printf("[32.8]{2} %02x\n", actual_node->Instruction.instruction.displacement[1]);
+                                        printf("[32.8]{3} %02x\n", actual_node->Instruction.instruction.displacement[2]);
+                                        printf("[32.8]{4} %02x\n", actual_node->Instruction.instruction.displacement[3]);
+                                        #endif
+                                        i+=4; // avanzar 4bytes en el array de instrucciones maquina
+                                    } else if (actual_node->Instruction.instruction.Mod_rm.R_M == 0b100) { // SIB
+                                        *((uint8_t*)&(actual_node->Instruction.instruction.SIB)) = instrutions[i + 1]; // obtener el SIB como si un valor de 8bits se tratase
+                                        i+=1; // avanzar 1byte en el array de instrucciones maquina
+                                        #ifdef DEBUG_ENABLE
+                                        printf("[SIB] %08x\n", *((uint8_t*)&(actual_node->Instruction.instruction.SIB)));
+                                        printf("[scale]{0} %02x\n", actual_node->Instruction.instruction.SIB.scale);
+                                        printf("[index]{2} %02x\n", actual_node->Instruction.instruction.SIB.index);
+                                        printf("[base]{3} %02x\n", actual_node->Instruction.instruction.SIB.base);
+                                        #endif
+                                    }
                                 }
                                 break;
                             case 0b01: // obtener un desplazamiento de 8bits en cualquiera de los casos
+                                if ((encoder_val == 0b1) && (actual_node->Instruction.instruction.Mod_rm.R_M == 0b100)) { // si se esta descodificando en 32bits, se a de obtener el SIB primero si RM es 100
+                                    *((uint8_t*)&(actual_node->Instruction.instruction.SIB)) = instrutions[i + 1]; // obtener el SIB como si un valor de 8bits se tratase
+                                        i+=1; // avanzar 1byte en el array de instrucciones maquina
+                                        #ifdef DEBUG_ENABLE
+                                        printf("[SIB] %08x\n", *((uint8_t*)&(actual_node->Instruction.instruction.SIB)));
+                                        printf("[scale]{0} %02x\n", actual_node->Instruction.instruction.SIB.scale);
+                                        printf("[index]{2} %02x\n", actual_node->Instruction.instruction.SIB.index);
+                                        printf("[base]{3} %02x\n", actual_node->Instruction.instruction.SIB.base);
+                                        #endif
+                                }
                                 actual_node->Instruction.instruction.displacement[0] = *((instrutions + i +1)); // obtener desplazamiento de 1 byte
                                 #ifdef DEBUG_ENABLE
                                 printf("[8] %02x\n", *((instrutions + i +1)));
@@ -512,6 +539,16 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
                                     #endif
                                     i+=2; // avanzar 2bytes en el array de instrucciones maquina
                                 } else if (encoder_val == 0b1) { // desplazamiento de 32bits
+                                    if (actual_node->Instruction.instruction.Mod_rm.R_M == 0b100) { // si se esta descodificando en 32bits, se a de obtener el SIB primero si RM es 100
+                                        *((uint8_t*)&(actual_node->Instruction.instruction.SIB)) = instrutions[i + 1]; // obtener el SIB como si un valor de 8bits se tratase
+                                        i+=1; // avanzar 1byte en el array de instrucciones maquina
+                                        #ifdef DEBUG_ENABLE
+                                        printf("[SIB] %08x\n", *((uint8_t*)&(actual_node->Instruction.instruction.SIB)));
+                                        printf("[scale]{0} %02x\n", actual_node->Instruction.instruction.SIB.scale);
+                                        printf("[index]{2} %02x\n", actual_node->Instruction.instruction.SIB.index);
+                                        printf("[base]{3} %02x\n", actual_node->Instruction.instruction.SIB.base);
+                                        #endif
+                                    }
                                     *((uint32_t*)&(actual_node->Instruction.instruction.displacement)) = *((uint32_t*)(instrutions + i + 1)); // obtener el desplazamiento de 32bits
                                     #ifdef DEBUG_ENABLE
                                     printf("[32] %08x\n", *((uint32_t*)&(actual_node->Instruction.instruction.displacement)));
