@@ -116,12 +116,107 @@
  * d Especifica la dirección de la operación de datos -> 1bit
  * 
  * fuente: https://www-user.tu-chemnitz.de/~heha/hsn/chm/x86.chm/x86.htm
- * Si s = 0, los operandos son registros de 8 bits y posiciones de memoria.
- * Si s = 1, los operandos son de 16 bits o de 32 bits:
+ * Si w = 0, los operandos son registros de 8 bits y posiciones de memoria.
+ * Si w = 1, los operandos son de 16 bits o de 32 bits:
  * En sistemas operativos de 32 bits, si s = 1, los operandos son por defecto de 32 bits.
  * Para especificar un operando de 16 bits (en Windows o Linux) debe 
  * insertar un byte especial de prefijo de tamaño de operando delante de la instrucción 
  * (ejemplo de esto más adelante).
+ * 
+ * 
+ * Para instrucciones inmediatas:
+ * Interacción de w y s
+ * 
+ * w = 0 y s = 0:
+ * El operando inmediato es de 8 bits.
+ * No hay extensión de signo porque no es necesario, ya que el operando destino también es de 8 bits.
+ * w = 1 y s = 0:
+ * 
+ * El operando inmediato es del tamaño completo especificado por w (16 o 32 bits).
+ * No hay extensión de signo porque el operando inmediato ya coincide con el tamaño del operando destino.
+ * w = 1 y s = 1:
+ * 
+ * El operando inmediato es de 8 bits, pero se extiende con signo para coincidir con el tamaño del operando destino (16 o 32 bits).
+ * Esta configuración permite usar un operando inmediato pequeño (de 8 bits) y extenderlo para operaciones que requieren un operando más grande.
+ * 
+ * Ejemplo Práctico
+ * Supongamos que estamos en modo protegido y estamos usando la instrucción ADD con un operando inmediato. Aquí hay algunos 
+ * ejemplos de cómo los campos w y s afectan la instrucción:
+ * 
+ * Instrucción: ADD EAX, imm8 (opcode con w = 0 y s = 0)
+ * 
+ * Operando inmediato de 8 bits.
+ * Se suma directamente a EAX sin extensión de signo.
+ * Ejemplo: ADD EAX, 0x7F (suma 127 a EAX).
+ * Instrucción: ADD EAX, imm32 (opcode con w = 1 y s = 0)
+ * 
+ * Operando inmediato de 32 bits.
+ * Se suma directamente a EAX.
+ * Ejemplo: ADD EAX, 0x0000007F (suma 127 a EAX).
+ * Instrucción: ADD EAX, imm8 con extensión de signo (opcode con w = 1 y s = 1)
+ * 
+ * Operando inmediato de 8 bits.
+ * Se extiende con signo a 32 bits y luego se suma a EAX.
+ * Ejemplo: ADD EAX, 0xFF (suma -1 a EAX debido a la extensión de signo desde 8 bits a 32 bits, donde 0xFF se convierte en 0xFFFFFFFF).
+ * ¿El campo w puede anularse si s está activo?
+ * El campo w no se anula cuando el campo s está activo; más bien, trabajan juntos para definir cómo se maneja el operando inmediato:
+ * 
+ * w define el tamaño del operando destino.
+ * s define si el operando inmediato de 8 bits se extiende con signo para ajustarse al tamaño definido por w.
+ * Por lo tanto, si ambos campos están activos (w = 1 y s = 1), el operando inmediato de 8 bits se extiende con signo para convertirse en un operando de 32 bits (o 16 bits en modo real), y luego se utiliza en la operación.
+ * 
+ * Resumen
+ * El campo w determina el tamaño del operando destino.
+ * El campo s especifica si un operando inmediato de 8 bits debe ser extendido con signo para coincidir con el tamaño del operando destino.
+ * Cuando ambos campos están activos (w = 1 y s = 1), el operando inmediato de 8 bits se extiende con signo a 32 bits (en modo protegido) y se utiliza en la operación.
+ * En conclusión, el campo w no se anula cuando el campo s está activo; en su lugar, s indica que el operando inmediato de 8 bits debe ser sign-extended para coincidir con el tamaño especificado por w.
+ * 
+ * 
+ * Extender con signo (sign extension) es un proceso utilizado en la computación para convertir un número de una cantidad menor de bits a una cantidad mayor de bits, preservando su valor numérico y su signo (positivo o negativo). Este proceso es crucial cuando se trata de operaciones aritméticas que involucran operandos de diferentes tamaños.
+ * 
+ * ¿Qué es la Extensión de Signo?
+ * La extensión de signo se usa principalmente cuando tienes un número con signo en una representación más pequeña (como 8 bits) y necesitas convertirlo a una representación más grande (como 16 o 32 bits) sin cambiar su valor numérico. Esto se hace copiando el bit de signo (el bit más significativo) del número original en todos los bits adicionales de la representación más grande.
+ * 
+ * Ejemplo en 8 bits a 16 bits
+ * Supongamos que tienes un número en 8 bits:
+ * 
+ * 0x7F (127 en decimal, positivo)
+ * 0xFF (-1 en decimal, negativo usando complemento a dos)
+ * Para extender estos números a 16 bits preservando el signo:
+ * 
+ * Número Positivo (0x7F):
+ * 
+ * Binario (8 bits): 0111 1111
+ * El bit de signo es 0 (positivo).
+ * Extensión de signo a 16 bits: 0000 0000 0111 1111
+ * Los 8 bits adicionales a la izquierda se rellenan con 0, manteniendo el valor positivo.
+ * Número Negativo (0xFF):
+ * 
+ * Binario (8 bits): 1111 1111
+ * El bit de signo es 1 (negativo).
+ * Extensión de signo a 16 bits: 1111 1111 1111 1111
+ * Los 8 bits adicionales a la izquierda se rellenan con 1, manteniendo el valor negativo.
+ * Ejemplo en 8 bits a 32 bits
+ * Aplicando el mismo principio a la extensión de 8 bits a 32 bits:
+ * 
+ * Número Positivo (0x7F):
+ * 
+ * Binario (8 bits): 0111 1111
+ * El bit de signo es 0.
+ * Extensión de signo a 32 bits: 0000 0000 0000 0000 0000 0000 0111 1111
+ * Número Negativo (0xFF):
+ * 
+ * Binario (8 bits): 1111 1111
+ * El bit de signo es 1.
+ * Extensión de signo a 32 bits: 1111 1111 1111 1111 1111 1111 1111 1111
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
  * 
  * B.1.4.8 Bit de Dirección (d)
  * En muchas instrucciones de dos operandos, un bit de dirección (d) indica qué operando se considera origen y cuál

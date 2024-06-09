@@ -562,6 +562,35 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
                                 break;
                             default: break; // para 0b11 no de obtiene desplazamientos
                         }
+                        printf("immediate_data: %x\n", actual_node->Instruction.immediate_data);
+                        if (actual_node->Instruction.immediate_data == 0b1) {
+                            #ifdef DEBUG_ENABLE
+                            printf("Obteniendo datos inmediatos para la instruccion");
+                            #endif
+                            printf("bit w: %x\n", get_bit_w(&(actual_node->Instruction)));
+                            if (get_bit_w(&(actual_node->Instruction)) == 0b1) {
+                                if (encoder_val == 0b0) { // inmediato de 16bits
+                                    *((uint16_t*)&(actual_node->Instruction.instruction.immediate)) = *((uint16_t*)(instrutions + i + 1));
+                                    i+=2;
+                                    #ifdef DEBUG_ENABLE
+                                    printf("Inmediato de 16bits %04x\n", *((uint16_t*)&(actual_node->Instruction.instruction.immediate)));
+                                    #endif
+                                } else {  // inmediato de 32bits
+                                    // para instrucciones SIB con inmediatos, solo se puede usar valores de 8 y 32bits
+                                    *((uint32_t*)&(actual_node->Instruction.instruction.immediate)) = *((uint32_t*)(instrutions + i + 1));
+                                    i+=4;
+                                    #ifdef DEBUG_ENABLE
+                                    printf("Inmediato de 32bits %08x\n", *((uint32_t*)&(actual_node->Instruction.instruction.immediate)));
+                                    #endif
+                                }
+                            } else { // para las instruccion con datos inmediatos de 8bits
+                                *((uint8_t*)&(actual_node->Instruction.instruction.immediate)) = *((uint8_t*)(instrutions + i + 1));
+                                i+=1;
+                                #ifdef DEBUG_ENABLE
+                                printf("Inmediato de 32bits %02x\n", *((uint8_t*)&(actual_node->Instruction.instruction.immediate)));
+                                #endif
+                            }
+                        }
                         goto the_end_for;
                     } break; // seguir buscando la instruccion en el mapa de instrucciones
                 case 0b00: // un byte de opcode

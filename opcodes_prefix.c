@@ -90,8 +90,56 @@ static char *get_string_instruction_by_id(string_instrution_id id) {
     }
 }
 
-char *get_build_SIB_format(Instruction_info *my_instruccion_){
+char *get_build_SIB_format_for_data_inmediate(Instruction_info *my_instruccion_){
+    #ifdef DEBUG_ENABLE
+        DEBUG_PRINT(DEBUG_LEVEL_INFO,
+            INIT_TYPE_FUNC_DBG(char *, get_build_SIB_format_for_data_inmediate)
+                TYPE_DATA_DBG(Instruction_info*, "my_instruccion_ = %p")
+            END_TYPE_FUNC_DBG,
+            my_instruccion_);
+    #endif
+    if (my_instruccion_ == NULL) {
+        #ifdef DEBUG_ENABLE
+        printf("\t -> [get_build_SIB_format_for_data_inmediate] my_instruccion_ == NULL: Error\n");
+        #endif
+        return NULL;
+    }
+    // Esta funcion solo se usa para instrucciones con SIB y movimientos de datos inmediatos.
+    // por tanto solo se puede usar con w = 1 en 32bits y w = 0 (valor de 8bits) en 32bits,
+    // w = 1 16bits no se permite en el modo SIB
 
+    char    *formatter      = NULL;
+    uint32_t desplazamiento = 0;
+    if (my_instruccion_->immediate_data == 0b1) {
+        // verificar que la instruccion es de datos inmediatos
+        switch (get_bit_w(my_instruccion_)) {
+            case 0b0: // para 8bits
+                formatter = "0x%02x";
+                desplazamiento = *((uint8_t*)&(my_instruccion_->instruction.immediate));
+                break;
+            case 0b1: // para 32bits
+                formatter = "0x%08x";
+                desplazamiento = *((uint32_t*)&(my_instruccion_->instruction.immediate));
+                break;
+            default: return NULL;
+        }
+        uint32_t size_len_register  = (snprintf(NULL, 0, formatter, desplazamiento) + 1) * sizeof(char);
+        char* formatter_building = (char *)malloc(size_len_register);
+        sprintf(formatter_building, formatter, desplazamiento); 
+        #ifdef DEBUG_ENABLE
+        printf("\t -> [get_build_SIB_format_for_data_inmediate] La los datos inmediatos formateados es: %s\n", formatter_building);
+        #endif
+        return formatter_building;
+    } else {
+        // si la instruccion no es de datos inmediatos, ocurrio algo inesperado
+        #ifdef DEBUG_ENABLE
+        printf("\t -> [get_build_SIB_format_for_data_inmediate] La instruccion no es de datos inmediatos. ERROR!\n");
+        #endif
+        return NULL;
+    }
+}
+
+char *get_build_SIB_format(Instruction_info *my_instruccion_){
     #ifdef DEBUG_ENABLE
         DEBUG_PRINT(DEBUG_LEVEL_INFO,
             INIT_TYPE_FUNC_DBG(char *, get_build_SIB_format)
@@ -127,6 +175,9 @@ char *get_build_SIB_format(Instruction_info *my_instruccion_){
             break;
         default: return NULL;
     }
+    #ifdef DEBUG_ENABLE
+    printf_color("\t -> [get_build_SIB_format] formatter(#{FG:cyan}%s#{FG:reset}), desplazamiento(%08x)\n", formatter, desplazamiento);
+    #endif
 
     if (my_instruccion_->instruction.Mod_rm.R_M != 0b00) {
 
@@ -174,7 +225,9 @@ char *get_build_SIB_format(Instruction_info *my_instruccion_){
         ); 
 
     }
-
+    #ifdef DEBUG_ENABLE
+    printf_color("\t -> [get_build_SIB_format] formatter_building(#{FG:cyan}%s#{FG:reset})\n", formatter_building);
+    #endif
     //printf(">>> %s\n", formatter_building);
     return formatter_building;
 }

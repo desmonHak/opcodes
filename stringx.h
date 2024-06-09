@@ -39,7 +39,7 @@
 #include <stdbool.h>
 
 #include "opcodes_prefix.h"
-#include "colors-C-C-plus-plus\colors.h"
+#include "colors.h"
 
 #define CALC_SIZE_STRING_FLAG 0
 

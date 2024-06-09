@@ -35,7 +35,7 @@
 
 #include <stdio.h>
 #include <stdarg.h>
-#include "colors-C-C-plus-plus/colors.h"
+#include "colors.h"
 #include "error_c.h"
 
 //#include "WL_lib.h"
@@ -43,7 +43,7 @@
 //MyFile Log_debug_file;
 
 #ifdef DEBUG_ENABLE
-#define DEBUG_PRINT(level, fmt, ...) debug_print(level, "#{FG:lgreen}[#{FG:lpurple}%s#{FG:reset}:#{FG:cyan}%s#{FG:reset}:#{FG:red}%03d#{FG:green}]#{BG:reset} " fmt , get_level_debug(level), __FILE__, __LINE__, ##__VA_ARGS__)
+#define DEBUG_PRINT(level, fmt, ...) debug_print(level, "#{FG:lgreen}[#{FG:lpurple}%s#{FG:reset}:#{FG:cyan}%s#{FG:reset}:#{FG:red}%03d#{FG:green}]#{FG:reset} " fmt , get_level_debug(level), __FILE__, __LINE__, ##__VA_ARGS__)
 
 #else
 #define DEBUG_PRINT(level, fmt, ...)
@@ -60,6 +60,8 @@ typedef enum
     DEBUG_LEVEL_WARNING,
     DEBUG_LEVEL_ERROR
 } DebugLevel;
+static DebugLevel currentLevel = DEBUG_LEVEL_INFO; // nivel de debbug del programa por default
+
 const char* ErrorLevelStrings[] = {
     "INFO",
     "WARNING",
@@ -83,14 +85,14 @@ typedef struct {
 #ifdef DEBUG_ENABLE
 #define debug_malloc(type, name_var, size) \
         name_var = (type*)malloc(size); \
-        DEBUG_PRINT(DEBUG_LEVEL_INFO, "#{FG:red}[#{FG:yellow}MALLOC#{FG:red}]#{FG:lred}  #{FG:white}(#{FG:lred}%s#{FG:white}*)#{FG:cyan}malloc#{FG:white}(%d) #{FG:lgreen}Variable#{FG:white}: %s, #{FG:lgreen}Tipo#{FG:white}: %s, #{FG:lgreen}Puntero#{FG:white}: %p", #type, size * sizeof(type), #name_var, #type, name_var);
+        DEBUG_PRINT(DEBUG_LEVEL_INFO, "#{FG:red}[#{FG:yellow}MALLOC#{FG:red}]#{FG:lred}  #{FG:white}(#{FG:lred}%s#{FG:white}*)#{FG:cyan}malloc#{FG:white}(%d) #{FG:lgreen}Variable#{FG:white}: %s, #{FG:lgreen}Tipo#{FG:white}: %s, #{FG:lgreen}Puntero#{FG:white}: %p\n", #type, size, #name_var, #type, name_var);
 #else
 #define debug_malloc(type, name_var, size) name_var = (type*)malloc(size)
 #endif
 #ifdef DEBUG_ENABLE
 #define debug_calloc(type, name_var, cantidad, size) \
         name_var = (type*)calloc(cantidad, size); \
-        DEBUG_PRINT(DEBUG_LEVEL_INFO, "#{FG:red}[#{FG:yellow}CALLOC#{FG:red}] #{FG:white}(#{FG:lred}%s#{FG:white}*)#{FG:cyan}calloc#{FG:white}(%d, %d) #{FG:lgreen}Variable#{FG:white}: %s, #{FG:lgreen}Tipo#{FG:white}: %s, #{FG:lgreen}Puntero#{FG:white}: %p", #type, cantidad, size, #name_var, #type, name_var); \
+        DEBUG_PRINT(DEBUG_LEVEL_INFO, "#{FG:red}[#{FG:yellow}CALLOC#{FG:red}] #{FG:white}(#{FG:lred}%s#{FG:white}*)#{FG:cyan}calloc#{FG:white}(%d, %d) #{FG:lgreen}Variable#{FG:white}: %s, #{FG:lgreen}Tipo#{FG:white}: %s, #{FG:lgreen}Puntero#{FG:white}: %p\n", #type, cantidad, size, #name_var, #type, name_var); \
         if (NULL == name_var) puts("calloc error");
 #else
 #define debug_calloc(type, name_var, cantidad, size) name_var = (type*)calloc(cantidad, size); if (NULL == name_var) puts("calloc error");
@@ -99,7 +101,7 @@ typedef struct {
 #ifdef DEBUG_ENABLE
 #define debug_realloc(type, name_var, size) \
         name_var = (type*)realloc(name_var, size); \
-        DEBUG_PRINT(DEBUG_LEVEL_INFO, "#{FG:red}[#{FG:yellow}REALLOC#{FG:red}] #{FG:white}(#{FG:lred}%s#{FG:white}*)#{FG:cyan}realloc#{FG:white}(%p, %d) #{FG:lgreen}Variable#{FG:white}: %s, #{FG:lgreen}Tipo#{FG:white}: %s, #{FG:lgreen}Puntero#{FG:white}: %p", #type, name_var, size, #name_var, #type, name_var); \
+        DEBUG_PRINT(DEBUG_LEVEL_INFO, "#{FG:red}[#{FG:yellow}REALLOC#{FG:red}] #{FG:white}(#{FG:lred}%s#{FG:white}*)#{FG:cyan}realloc#{FG:white}(%p, %d) #{FG:lgreen}Variable#{FG:white}: %s, #{FG:lgreen}Tipo#{FG:white}: %s, #{FG:lgreen}Puntero#{FG:white}: %p\n", #type, name_var, size, #name_var, #type, name_var); \
         if (NULL == name_var) puts("realloc error");
 #else
 #define debug_realloc(type, name_var, size) name_var = (type*)realloc(name_var, size); if (NULL == name_var) puts("realloc error");
@@ -112,8 +114,15 @@ void debug_print(DebugLevel level, const char *fmt, ...);
 void __attribute__((constructor)) __constructor_debug_c__();
 void __attribute__((destructor)) __destructor_debug_c__();
 
+
+#ifdef _WIN32
+#ifndef _ExceptionHandler_WIN_
+#define _ExceptionHandler_WIN_
+LONG WINAPI ExceptionHandler(EXCEPTION_POINTERS *ExceptionInfo);
+#endif
+#endif
 //static FILE *logFile = NULL;
-static DebugLevel currentLevel = DEBUG_LEVEL_INFO;
+
 
 #include "debug_c.c"
 #endif 

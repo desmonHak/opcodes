@@ -287,8 +287,14 @@ String_list_link* get_string_instruction(Instruction_info *my_instruccion_, enco
 
             no_formatear_registro_desplazamiento: // obviar el formateo de desplazamiento
                                                   // si lo anterior no se a de realizar o si hay SIB
-
-            fuent->string = get_string_register(encoder_val, get_bit_w(my_instruccion_), my_instruccion_->instruction.Mod_rm.reg);
+            if (my_instruccion_->immediate_data == 0b1){ // si es una instruccion inmediata
+                fuent->string = get_build_SIB_format_for_data_inmediate(my_instruccion_); // asignar valor formateado para SIB.
+                #ifdef DEBUG_ENABLE
+                printf_color("\t -> [get_string_instruction] Instruccion inmediata con valor: %s\n", fuent->string);
+                #endif
+            } else {
+                fuent->string = get_string_register(encoder_val, get_bit_w(my_instruccion_), my_instruccion_->instruction.Mod_rm.reg);
+            }
             if (get_bit_d(my_instruccion_)) { // si d == 1 se cambia para que reg sea fuente y rm destino
                 //auxi->string  = dest->string;  // c = a
                 //dest->string  = fuent->string; // a = b
@@ -314,12 +320,21 @@ String_list_link* get_string_instruction(Instruction_info *my_instruccion_, enco
                 ptr = push_String(ptr, fuent->string, CALC_SIZE_STRING_FLAG);
             }
             ptr = join_list_to_String(ptr_org, " "); // unir todo usando un espacio
-            free_String_list_link(ptr_org); // liberar la antigua lista enlazada
+            free_String_list_link(ptr_org);          // liberar la antigua lista enlazada
             break;
         case 0b01: // Modo 01 (01b): El operando se codifica como un registro con un desplazamiento de 8 bits. En este modo, el campo 
                    // "R/M" especifica el registro, y sigue un byte inmediato que proporciona el desplazamiento.
             if (my_instruccion_->instruction.Mod_rm.R_M == 0b100) { // SIB
-                    dest->string = get_build_SIB_format(my_instruccion_);
+                #ifdef DEBUG_ENABLE
+                printf_color("\t -> [get_string_instruction] mod = 01, SIB = 100\n");
+                #endif
+                dest->string = get_build_SIB_format(my_instruccion_);
+            } 
+            if (my_instruccion_->immediate_data == 0b1){ // si es una instruccion inmediata
+                fuent->string = get_build_SIB_format_for_data_inmediate(my_instruccion_); // asignar valor formateado para SIB.
+                #ifdef DEBUG_ENABLE
+                printf_color("\t -> [get_string_instruction] Instruccion inmediata con valor: %s\n", fuent->string);
+                #endif
             } else {
                 dest->string = get_string_mod_1(encoder_val, my_instruccion_);
                 val = *((uint8_t*)&(my_instruccion_->instruction.displacement)); // desplazamientod e 8bits
@@ -328,11 +343,10 @@ String_list_link* get_string_instruction(Instruction_info *my_instruccion_, enco
                 
                 size_len_register = (snprintf(NULL, 0, dest->string,  val) + 1) * sizeof(char);
                 auxi->string = (char *)malloc(size_len_register); // almacenar el buffer para guardar la instruccion formateada
-                sprintf(auxi->string, dest->string, val); // formatear la instruiccion
-                dest->string = auxi->string; // poner el string formateado como destino.
+                sprintf(auxi->string, dest->string, val);         // formatear la instruiccion
+                dest->string = auxi->string;                      // poner el string formateado como destino.
+                fuent->string = get_string_register(encoder_val, get_bit_w(my_instruccion_), my_instruccion_->instruction.Mod_rm.reg);
             }
-
-            fuent->string = get_string_register(encoder_val, get_bit_w(my_instruccion_), my_instruccion_->instruction.Mod_rm.reg);
             if (get_bit_d(my_instruccion_)) { // si d == 1 se cambia para que reg sea fuente y rm destino
                 //auxi->string  = dest->string;  // c = a
                 //dest->string  = fuent->string; // a = b
@@ -363,7 +377,10 @@ String_list_link* get_string_instruction(Instruction_info *my_instruccion_, enco
         case 0b10: //  Modo 10 (10b): El operando se codifica como un registro con un desplazamiento de 32 bits. En este modo, el campo 
                    // "R/M" especifica el registro, y sigue una palabra doble (dword) inmediata que proporciona el desplazamiento.
             if (my_instruccion_->instruction.Mod_rm.R_M == 0b100) { // SIB
-                    dest->string = get_build_SIB_format(my_instruccion_);
+                #ifdef DEBUG_ENABLE
+                printf_color("\t -> [get_string_instruction] mod = 10, SIB = 100\n");
+                #endif
+                dest->string = get_build_SIB_format(my_instruccion_);
             } else {
                 dest->string = get_string_mod_2(encoder_val, my_instruccion_);
                 is_free = true; // si se marca en true, se a de marcar en la lista enlazada que el string del desplazamiento a de liberarse
@@ -378,7 +395,12 @@ String_list_link* get_string_instruction(Instruction_info *my_instruccion_, enco
                 dest->string = auxi->string; // poner el string formateado como destino.
             }
 
-            fuent->string = get_string_register(encoder_val, get_bit_w(my_instruccion_), my_instruccion_->instruction.Mod_rm.reg);
+            if (my_instruccion_->immediate_data == 0b1){ // si es una instruccion inmediata
+                fuent->string = get_build_SIB_format_for_data_inmediate(my_instruccion_); // asignar valor formateado para SIB.
+                #ifdef DEBUG_ENABLE
+                printf_color("\t -> [get_string_instruction] Instruccion inmediata con valor: %s\n", fuent->string);
+                #endif
+            } else fuent->string = get_string_register(encoder_val, get_bit_w(my_instruccion_), my_instruccion_->instruction.Mod_rm.reg);
             if (get_bit_d(my_instruccion_)) { // si d == 1 se cambia para que reg sea fuente y rm destino
                 //auxi->string  = dest->string;  // c = a
                 //dest->string  = fuent->string; // a = b
@@ -410,21 +432,36 @@ String_list_link* get_string_instruction(Instruction_info *my_instruccion_, enco
                    // registro de memoria.
             // d = 0 -> <instruccion> <registro R/M>, <registro reg>
             // d = 1 -> <instruccion> <registro reg>, <registro R/M>
-            destino = my_instruccion_->instruction.Mod_rm.R_M;
-            fuente = my_instruccion_->instruction.Mod_rm.reg; // se mantiene asi si d == 0
-            if (get_bit_d(my_instruccion_)) { // si d == 1 se cambia para que reg sea fuente y rm destino
-                auxiliar = destino;  // c = a
-                destino  = fuente;   // a = b
-                fuente   = auxiliar; // b = c
+            if (my_instruccion_->immediate_data == 0b1){ // si es una instruccion inmediata
+                string = get_string_register(encoder_val, get_bit_w(my_instruccion_), my_instruccion_->instruction.Mod_rm.R_M); // R/M para todas las instrucciones de datos inmediatos?
+                ptr = push_String(ptr, string, CALC_SIZE_STRING_FLAG); 
+                ptr = push_String(ptr, ",", CALC_SIZE_STRING_FLAG); 
+                fuent->string = get_build_SIB_format_for_data_inmediate(my_instruccion_); // asignar valor formateado para SIB.
+                push_String(ptr, fuent->string, CALC_SIZE_STRING_FLAG); 
+                #ifdef DEBUG_ENABLE
+                printf_color("\t -> [get_string_instruction] Instruccion inmediata con valor: %s\n", fuent->string);
+                #endif
+            } else {
+                destino = my_instruccion_->instruction.Mod_rm.R_M;
+                fuente = my_instruccion_->instruction.Mod_rm.reg; // se mantiene asi si d == 0
+                if (get_bit_d(my_instruccion_)) { // si d == 1 se cambia para que reg sea fuente y rm destino
+                    auxiliar = destino;  // c = a
+                    destino  = fuente;   // a = b
+                    fuente   = auxiliar; // b = c
+                }
+                string = get_string_register(encoder_val, get_bit_w(my_instruccion_), destino);
+                ptr = push_String(ptr, string, CALC_SIZE_STRING_FLAG); 
+                ptr = push_String(ptr, ",", CALC_SIZE_STRING_FLAG); 
+                // CALC_SIZE_STRING_FLAG especifica que se a de obtener la longitud del string
+                string = get_string_mod_3(encoder_val, get_bit_w(my_instruccion_), fuente);
+
+                ptr = push_String(ptr, string, CALC_SIZE_STRING_FLAG);
             }
-            string = get_string_register(encoder_val, get_bit_w(my_instruccion_), destino);
-            ptr = push_String(ptr, string, CALC_SIZE_STRING_FLAG); 
-            ptr = push_String(ptr, ",", CALC_SIZE_STRING_FLAG); 
-            // CALC_SIZE_STRING_FLAG especifica que se a de obtener la longitud del string
-            string = get_string_mod_3(encoder_val, get_bit_w(my_instruccion_), fuente);
-            ptr = push_String(ptr, string, CALC_SIZE_STRING_FLAG);
             ptr = join_list_to_String(ptr_org, " "); // unir todo usando un espacio
             free_String_list_link(ptr_org); // liberar la antigua lista enlazada
+            
+            
+            
             break;
         default: goto exit_get_string_instruction; // error al descodificar la instruccion
 
