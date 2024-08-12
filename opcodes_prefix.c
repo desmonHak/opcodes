@@ -43,6 +43,16 @@ static inline uint8_t get_bit_w(Instruction_info *instrucion) {
     return ((uint8_t)instrucion->instruction.opcode[2].opcode_byte.byte & (uint8_t)instrucion->posicion_w);
 }
 
+static inline uint8_t get_bit_s(Instruction_info *instrucion) {
+    /*
+     *
+     * obtiene el bit/campo s del opcode primario
+     *
+     */
+    if (instrucion->posicion_s == 0) return instrucion->posicion_s;
+    else return ((uint8_t)instrucion->instruction.opcode[2].opcode_byte.byte & (uint8_t)instrucion->posicion_s) >> (instrucion->posicion_s - 1);
+}
+
 static inline uint8_t get_bit_d(Instruction_info *instrucion) {
     /*
      *
@@ -134,6 +144,56 @@ char *get_build_SIB_format_for_data_inmediate(Instruction_info *my_instruccion_)
         // si la instruccion no es de datos inmediatos, ocurrio algo inesperado
         #ifdef DEBUG_ENABLE
         printf("\t -> [get_build_SIB_format_for_data_inmediate] La instruccion no es de datos inmediatos. ERROR!\n");
+        #endif
+        return NULL;
+    }
+}
+
+char *get_data_inmediate_16bits(Instruction_info *my_instruccion_){
+    #ifdef DEBUG_ENABLE
+        DEBUG_PRINT(DEBUG_LEVEL_INFO,
+            INIT_TYPE_FUNC_DBG(char *, get_data_inmediate_16bits)
+                TYPE_DATA_DBG(Instruction_info*, "my_instruccion_ = %p")
+            END_TYPE_FUNC_DBG,
+            my_instruccion_);
+    #endif
+    if (my_instruccion_ == NULL) {
+        #ifdef DEBUG_ENABLE
+        printf("\t -> [get_data_inmediate_16bits] my_instruccion_ == NULL: Error\n");
+        #endif
+        return NULL;
+    }
+
+    char    *formatter      = NULL;
+    uint16_t desplazamiento = 0;
+    if (my_instruccion_->immediate_data == 0b1) {
+        // verificar que la instruccion es de datos inmediatos
+        switch (get_bit_w(my_instruccion_)) {
+            case 0b0: // para 8bits
+                format_to_8bits:
+                formatter = "0x%02x";
+                desplazamiento = *((uint8_t*)&(my_instruccion_->instruction.immediate));
+                break;
+            case 0b1: // para 16bits
+                if (get_bit_s(my_instruccion_)) goto format_to_8bits;
+                // si el campo w y el s estan activo, se usa un valor de 8bits que se extiende a 16
+                
+                formatter = "0x%04x";
+                desplazamiento = *((uint16_t*)&(my_instruccion_->instruction.immediate));
+                break;
+            default: return NULL;
+        }
+        uint16_t size_len_register  = (snprintf(NULL, 0, formatter, desplazamiento) + 1) * sizeof(char);
+        char* formatter_building = (char *)malloc(size_len_register);
+        sprintf(formatter_building, formatter, desplazamiento); 
+        #ifdef DEBUG_ENABLE
+        printf("\t -> [get_data_inmediate_16bits] La los datos inmediatos formateados es: %s\n", formatter_building);
+        #endif
+        return formatter_building;
+    } else {
+        // si la instruccion no es de datos inmediatos, ocurrio algo inesperado
+        #ifdef DEBUG_ENABLE
+        printf("\t -> [get_data_inmediate_16bits] La instruccion no es de datos inmediatos. ERROR!\n");
         #endif
         return NULL;
     }
@@ -319,7 +379,7 @@ static char *get_string_mod_1(encoder_x86 size_word, Instruction_info *my_instru
 static char *get_string_mod_2(encoder_x86 size_word, Instruction_info *my_instruccion_){
     #ifdef DEBUG_ENABLE
         DEBUG_PRINT(DEBUG_LEVEL_INFO,
-            INIT_TYPE_FUNC_DBG(static char *, get_string_mod_1)
+            INIT_TYPE_FUNC_DBG(static char *, get_string_mod_2)
                 TYPE_DATA_DBG(encoder_x86, "encoder_x86 = %02x")
                 TYPE_DATA_DBG(Instruction_info*, "my_instruccion_ = %p")
             END_TYPE_FUNC_DBG,

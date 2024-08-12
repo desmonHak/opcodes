@@ -562,32 +562,72 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
                                 break;
                             default: break; // para 0b11 no de obtiene desplazamientos
                         }
+
+                        // este apartado se usa para obtener los datos de instrucciones con SIB o los datos de instrucciones que van a guardar
+                        // valores en registro o memoria. Por ejemplo la instruccion adc siguiente:
+                        // immediate to register 1000 00sw : 11 010 R/M(reg en este caso) : immediate data
+                        // no hace uso de SIB, sin invergo tiene datos inmediatos. En este caso el campo R/M
+                        // para a ser un campo reg, quedando reg2 invalidado como 010.
+                        // si la instruccion tuviera el campo w activo en este caso y se descodificara en 32bits, el registro seria de 32bits
+                        // segun el campo W, mientras que estando el campo S activo, indicara que se extendara el signo y valor a 32bits estando
+                        // W = 1
                         printf("immediate_data: %x\n", actual_node->Instruction.immediate_data);
                         if (actual_node->Instruction.immediate_data == 0b1) {
                             #ifdef DEBUG_ENABLE
                             printf("Obteniendo datos inmediatos para la instruccion");
-                            #endif
                             printf("bit w: %x\n", get_bit_w(&(actual_node->Instruction)));
+                            #endif
                             if (get_bit_w(&(actual_node->Instruction)) == 0b1) {
                                 if (encoder_val == 0b0) { // inmediato de 16bits
-                                    *((uint16_t*)&(actual_node->Instruction.instruction.immediate)) = *((uint16_t*)(instrutions + i + 1));
-                                    i+=2;
-                                    #ifdef DEBUG_ENABLE
-                                    printf("Inmediato de 16bits %04x\n", *((uint16_t*)&(actual_node->Instruction.instruction.immediate)));
-                                    #endif
-                                } else {  // inmediato de 32bits
-                                    // para instrucciones SIB con inmediatos, solo se puede usar valores de 8 y 32bits
-                                    *((uint32_t*)&(actual_node->Instruction.instruction.immediate)) = *((uint32_t*)(instrutions + i + 1));
-                                    i+=4;
-                                    #ifdef DEBUG_ENABLE
-                                    printf("Inmediato de 32bits %08x\n", *((uint32_t*)&(actual_node->Instruction.instruction.immediate)));
-                                    #endif
+                                    if (get_bit_s(&(actual_node->Instruction))) {
+                                        *((uint8_t*)&(actual_node->Instruction.instruction.immediate)) = *((uint8_t*)(instrutions + i + 1));
+                                        i+=1;
+                                        #ifdef DEBUG_ENABLE
+                                        printf("Inmediato de 8bits en 16bits %02x\n", *((uint8_t*)&(actual_node->Instruction.instruction.immediate)));
+                                        #endif
+                                    } else {
+                                        *((uint16_t*)&(actual_node->Instruction.instruction.immediate)) = *((uint16_t*)(instrutions + i + 1));
+                                        i+=2;
+                                        #ifdef DEBUG_ENABLE
+                                        printf("Inmediato de 16bits %04x\n", *((uint16_t*)&(actual_node->Instruction.instruction.immediate)));
+                                        #endif
+                                    }
+                                } else {  
+                                    if (actual_node->Instruction.instruction.Mod_rm.mod == 0b11) {
+                                        // para teoricamente cualqueir caso que no incluya SIB, para eso igual a un MOD 0b11 o 
+                                        // diferente a un Mod(00) R/M(100) o Mod(01) R/M(100) o Mod(10) R/M(100)
+                                        #ifdef DEBUG_ENABLE
+                                        printf("bit s: %x\n", get_bit_s(&(actual_node->Instruction)));
+                                        #endif
+                                        // si el bit "w" esta activado  y el "s" desactivado, el valor a almacenar es de 32bits
+                                        if (get_bit_s(&(actual_node->Instruction)) == 0b1) {
+                                            *((uint8_t*)&(actual_node->Instruction.instruction.immediate)) = *((uint8_t*)(instrutions + i + 1));
+                                            i+=1;
+                                            #ifdef DEBUG_ENABLE
+                                            printf("Inmediato de 8bits sin SIB %02x\n", *((uint8_t*)&(actual_node->Instruction.instruction.immediate)));
+                                            #endif
+                                        } else {
+                                            *((uint32_t*)&(actual_node->Instruction.instruction.immediate)) = *((uint32_t*)(instrutions + i + 1));
+                                            i+=4;
+                                            #ifdef DEBUG_ENABLE
+                                            printf("Inmediato de 32bits sin SIB %08x\n", *((uint32_t*)&(actual_node->Instruction.instruction.immediate)));
+                                            #endif
+                                        }
+                                    }else {
+                                        // inmediato de 32bits si es SIB
+                                        // para instrucciones SIB con inmediatos, solo se puede usar valores de 8 y 32bits
+                                        *((uint32_t*)&(actual_node->Instruction.instruction.immediate)) = *((uint32_t*)(instrutions + i + 1));
+                                        i+=4;
+                                        #ifdef DEBUG_ENABLE
+                                        printf("Inmediato de 32bits para SIB %08x\n", *((uint32_t*)&(actual_node->Instruction.instruction.immediate)));
+                                        #endif
+                                    }
                                 }
                             } else { // para las instruccion con datos inmediatos de 8bits
                                 *((uint8_t*)&(actual_node->Instruction.instruction.immediate)) = *((uint8_t*)(instrutions + i + 1));
                                 i+=1;
                                 #ifdef DEBUG_ENABLE
-                                printf("Inmediato de 32bits %02x\n", *((uint8_t*)&(actual_node->Instruction.instruction.immediate)));
+                                printf("Inmediato de 8bits %02x\n", *((uint8_t*)&(actual_node->Instruction.instruction.immediate)));
                                 #endif
                             }
                         }

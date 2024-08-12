@@ -36,7 +36,7 @@
 #include <stdio.h>
 
 int main(){
-    /*
+    /**/
     uint8_t instrucciones1[] = {
         Prefix_operand_size,
         Prefix_CS,
@@ -77,8 +77,8 @@ int main(){
         0x12, 0x87, 0xda, 0x00,                        // adc al,                  [bx + 0x00da]       = 0001 0010  |10| 000 111
 
         // ADC instrucciones con datos inmediatos
-        0x83, 0x94, 0xBB, 0x11, 0x22                   // adc [si + 0x11bb],       0x22                = 
-        0x83, 0xD4, 0x11,                              // adc sp,                  0x11                = 
+        0x83, 0x94, 0xBB, 0x11, 0x22,                   // adc [si + 0x11bb],       0x22                = 1000 0011 |10| 010 100
+        0x83, 0xD4, 0x11,                              // adc sp,                  0x11                = 1000 0011 |11| 010 100
     };
     char text1[] = " ";
     print_table_hex(text1, (char*)instrucciones1, sizeof(instrucciones1), ENCODER_IN_16bits);
@@ -91,7 +91,7 @@ int main(){
     //instrutions_struct1 = pop_List_instrution(instrutions_struct1,2);
     print_List_instrution(instrutions_struct1, ENCODER_IN_16bits);
     //size_t number_of_instrutions = get_number_instrutions(instrucciones1, sizeof(instrucciones1));
-    */
+    
    uint8_t instrucciones[] = {
         Prefix_operand_size,
         Prefix_CS,
