@@ -35,7 +35,42 @@
 
 #include <stdio.h>
 
+size_t get_size_func(unsigned char* func_ptr) {
+    for (size_t n_bytes_func = 0; func_ptr != NULL; func_ptr++)
+    {
+        if ( 
+            (
+                *(func_ptr + 0) == (unsigned char)0xc3 &&
+                *(func_ptr + 1) == (unsigned char)0xc3 &&
+                *(func_ptr + 2) == (unsigned char)0xc3 &&
+                *(func_ptr + 3) == (unsigned char)0xc3 &&
+                *(func_ptr + 4) == (unsigned char)0xc3 &&
+                *(func_ptr + 5) == (unsigned char)0xc3 &&
+                *(func_ptr + 6) == (unsigned char)0xc3 
+            ) || n_bytes_func > 0x75D410 // poner un tamaño limite
+        ) return n_bytes_func;
+        else {
+            n_bytes_func++;
+        }
+    }
+    return 0;
+}   
+
 int main(){
+    char text[] = " ";
+    printf("direccion de main: 0x%p\n", (char*)main);
+    /*printf("Tamano de main: %zu bytes\n", get_size_func((char*)main));
+    print_table_hex(text, (char*)main, get_size_func((char*)main), ENCODER_IN_32bits);
+    List_instrution *instrutions_struct = format_instruccion((char*)main, get_size_func((char*)main), ENCODER_IN_32bits);
+    String_list_link *string_asm = get_string_instruction_assembly(instrutions_struct, ENCODER_IN_32bits);
+    String_list_link *string_asm_join = join_list_to_String(string_asm, "\n");
+    free_String_list_link(string_asm);
+    print_String_list_link(string_asm_join);
+    free_String_list_link(string_asm_join);
+    //instrutions_struct = pop_List_instrution(instrutions_struct,2);
+    print_List_instrution(instrutions_struct, ENCODER_IN_32bits);
+    //size_t number_of_instrutions = get_number_instrutions(instrucciones, sizeof(instrucciones));
+    */
     /**/
     uint8_t instrucciones1[] = {
         Prefix_operand_size,
@@ -77,19 +112,26 @@ int main(){
         0x12, 0x87, 0xda, 0x00,                        // adc al,                  [bx + 0x00da]       = 0001 0010  |10| 000 111
 
         // ADC instrucciones con datos inmediatos
-        0x83, 0x94, 0xBB, 0x11, 0x22,                   // adc [si + 0x11bb],       0x22                = 1000 0011 |10| 010 100
+        0x83, 0x94, 0xBB, 0x11, 0x22,                  // adc [si + 0x11bb],       0x22                = 1000 0011 |10| 010 100
         0x83, 0xD4, 0x11,                              // adc sp,                  0x11                = 1000 0011 |11| 010 100
+        0x81, 0x94, 0xbb, 0x11, 0x33, 0x22,            // adc word ptr [si + 0x11bb], 0x2233
+        0x81, 0xd4, 0x22, 0x11,                        // adc sp , 0x1122
+        0x83, 0x56, 0x12, 0x11,                        // adc word ptr [bp+0x12], 0x11 = 1000 0011 |01| 010 110
+        0x15, 0x10, 0x00,                               // adc ax, 0x0010
+        0x14, 0x10                                     // adc al, 0x10
+
+
     };
     char text1[] = " ";
     print_table_hex(text1, (char*)instrucciones1, sizeof(instrucciones1), ENCODER_IN_16bits);
-    List_instrution *instrutions_struct1 = format_instruccion(instrucciones1, sizeof(instrucciones1), ENCODER_IN_16bits);
-    String_list_link *string_asm1 = get_string_instruction_assembly(instrutions_struct1, ENCODER_IN_16bits);
-    String_list_link *string_asm_join1 = join_list_to_String(string_asm1, "\n");
-    free_String_list_link(string_asm1);
-    print_String_list_link(string_asm_join1);
-    free_String_list_link(string_asm_join1);
-    //instrutions_struct1 = pop_List_instrution(instrutions_struct1,2);
-    print_List_instrution(instrutions_struct1, ENCODER_IN_16bits);
+    List_instrution *instrutions_struct = format_instruccion(instrucciones1, sizeof(instrucciones1) -1, ENCODER_IN_16bits);
+    String_list_link *string_asm = get_string_instruction_assembly(instrutions_struct, ENCODER_IN_16bits);
+    String_list_link *string_asm_join = join_list_to_String(string_asm, "\n");
+    free_String_list_link(string_asm);
+    print_String_list_link(string_asm_join);
+    free_String_list_link(string_asm_join);
+    //instrutions_struct1 = pop_List_instrution(instrutions_struct,2);
+    print_List_instrution(instrutions_struct, ENCODER_IN_16bits);
     //size_t number_of_instrutions = get_number_instrutions(instrucciones1, sizeof(instrucciones1));
     
    uint8_t instrucciones[] = {
@@ -148,24 +190,49 @@ int main(){
         // Las combinaciones válidas y sus significados son:
 
         // si el bit "w" esta activado  y el "s" desactivado, el valor a almacenar es de 32bits
-        0x81, 0xD4, 0x11, 0x11, 0x22, 0x22,                                    // adc esp,                                   0x22221111         = 1000 0001  |11| 010 111  0001 0001
-        0x80, 0xD7, 0x11,                                                      // adc bh,                                    0x11               = 1000 0000  |11| 010 100  0001 0001
+        0x81, 0xD4, 0x11, 0x11, 0x22, 0x22,                                    // adc esp,                                   0x22221111         = 
+        0x83, 0xd5, 0x11,                                                      // adc ebp,                                    0x11               
+        0x81, 0x50, 0x0c, 0x44, 0x33, 0x22, 0x11,                              // adc dword ptr [eax + 0xc], 0x11223344                         = 1000 0001 |01| 010 000
+        // necesita el prefijo 66
+        //0x66, 0x81, 0x50, 0x0c, 0x22, 0x11,                                          // adc  word ptr [eax + 0xc], 0x1122                             = 1000 0001 |01| 010 000 
+        0x80, 0x50, 0x0c, 0x22,                                                // adc  byte ptr [eax + 0xc], 0x22                               = 1000 0000 |01| 010 000
+        0x15, 0x10, 0x00, 0x00, 0x00,                                          // adc eax, 0x00000010
+        0x14, 0x10                                                             // adc al, 0x00
+
+
     };
-    char text[] = " ";
+   
+
+    // solo yo y dios sabemos que hace este codigo.
+    // tal vez mañana solo dios.
+
+    
     print_table_hex(text, (char*)instrucciones, sizeof(instrucciones), ENCODER_IN_32bits);
-    List_instrution *instrutions_struct = format_instruccion(instrucciones, sizeof(instrucciones), ENCODER_IN_32bits);
-    String_list_link *string_asm = get_string_instruction_assembly(instrutions_struct, ENCODER_IN_32bits);
-    String_list_link *string_asm_join = join_list_to_String(string_asm, "\n");
+    instrutions_struct = format_instruccion(instrucciones, sizeof(instrucciones)-1, ENCODER_IN_32bits);
+    string_asm = get_string_instruction_assembly(instrutions_struct, ENCODER_IN_32bits);
+    string_asm_join = join_list_to_String(string_asm, "\n");
     free_String_list_link(string_asm);
     print_String_list_link(string_asm_join);
     free_String_list_link(string_asm_join);
     //instrutions_struct = pop_List_instrution(instrutions_struct,2);
     print_List_instrution(instrutions_struct, ENCODER_IN_32bits);
     //size_t number_of_instrutions = get_number_instrutions(instrucciones, sizeof(instrucciones));
- 
 
     printf("Numero de instrucciones descodificadas: %zu\n", get_number_instrutions(instrutions_struct));
 
     puts("Exit...");
+    
+    /*volatile int dummy = 0;
+    asm volatile("ret"); // 1
+    asm volatile("ret"); // 2
+    asm volatile("ret"); // 3
+    asm volatile("ret"); // 4
+    asm volatile("ret"); // 5
+    asm volatile("ret"); // 6
+    asm volatile("ret"); // 7
+    asm volatile("ret"); // 8
+    */
     return 0;
+    
 }
+

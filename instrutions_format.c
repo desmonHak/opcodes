@@ -441,6 +441,32 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
                         DEBUG_PRINT(DEBUG_LEVEL_INFO, "#{FG:reset}instruccion actual -> #{FG:lpurple}%s#{FG:reset} -> ", get_string_instruction_by_id(actual_node->Instruction.string));
                         printf_color("#{BG:%d;%d;%d} %s#{FG:reset} (color: %u %u %u)\n", (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3,  get_string_instruction_by_id(actual_node->Instruction.string), (unsigned char)Avalue1, (unsigned char)Avalue2, (unsigned char)Avalue3);
                         #endif
+                        if (
+                            actual_node->Instruction.position_tttn == 0b11 && 
+                            actual_node->Instruction.mask_tttn != 0x0 && 
+                            instrutions[i] & actual_node->Instruction.mask_tttn
+                            ) {
+                            // si se indico en position_tttn que no hay bits tttn pero sin embargo mask_tttn no es 0x0
+                            // en ese caso, la instruccion tiene una variante donde se usa el campo tttn de las instrucciones JCC
+                            // o de salto para identificar algun tipo de variante de esta instruccion actualmente examinada.
+                            // en el caso de la instruccion ADC, se usa para la variante 
+                            // immediate to AL, AX, or EAX 0001 010w : immediate data
+                            // donde los campos tttn seran 00tttn  : immediate data
+                            // 14 10          (16 y 32bits) == adc al,  0x10
+                            // 15 10 00 00 00 (32bits)      == adc eax, 0x10
+                            // 66 15 10 00    (32bits)      == adc ax,  0x10 
+                            //        (el prefijo 66 cambia la forma de trabajar de la cpu momentaneamente 
+                            //          haciendo que trabaje en 16bits y por tanto la instruccion que 
+                            //          normalmente operaria con valores de 32bits pasaria a usar 16bits)
+                            //
+                            // 15 10 00       (16bits)      == adc ax,  0x10 
+                            //
+                            // todas las instrucciones en 16 y 32bits del tipo "immediate to AL, AX, or EAX"
+                            // solo usan campo W.
+                            //if (actual_node->Instruction.posicion_w != 0) 
+                            actual_node->Instruction.immediate_data = 0b1;
+                            goto jump_because_there_is_no_mod_rm;
+                        }
                         if (actual_node->Instruction.immediate_instrution) goto the_end_for; // si se trata de una instruccion inmediata no hay nada mas que analizar
                         i+=1;
                         //printf("actual_node->Instruction.number_reg %d, %02x & %02x = %02x", actual_node->Instruction.number_reg, instrutions[i], actual_node->Instruction.mask_reg, instrutions[i] & actual_node->Instruction.mask_reg);
@@ -563,6 +589,9 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
                             default: break; // para 0b11 no de obtiene desplazamientos
                         }
 
+                        // Solo se salta aqui si la instruccion no tiene mod/rm
+                        jump_because_there_is_no_mod_rm:
+
                         // este apartado se usa para obtener los datos de instrucciones con SIB o los datos de instrucciones que van a guardar
                         // valores en registro o memoria. Por ejemplo la instruccion adc siguiente:
                         // immediate to register 1000 00sw : 11 010 R/M(reg en este caso) : immediate data
@@ -577,7 +606,7 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
                             printf("Obteniendo datos inmediatos para la instruccion");
                             printf("bit w: %x\n", get_bit_w(&(actual_node->Instruction)));
                             #endif
-                            if (get_bit_w(&(actual_node->Instruction)) == 0b1) {
+                            if (get_bit_w(&(actual_node->Instruction)) == 0b1) { // para 16 y 32bits
                                 if (encoder_val == 0b0) { // inmediato de 16bits
                                     if (get_bit_s(&(actual_node->Instruction))) {
                                         *((uint8_t*)&(actual_node->Instruction.instruction.immediate)) = *((uint8_t*)(instrutions + i + 1));
@@ -592,8 +621,15 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
                                         printf("Inmediato de 16bits %04x\n", *((uint16_t*)&(actual_node->Instruction.instruction.immediate)));
                                         #endif
                                     }
-                                } else {  
-                                    if (actual_node->Instruction.instruction.Mod_rm.mod == 0b11) {
+                                } else {   // para 32bits
+                                    if (actual_node->Instruction.position_tttn == 0b11 && actual_node->Instruction.mask_tttn != 0x0){
+                                        // solo para variantes de instrucciones de tipo no salto (JCC)
+                                        *((uint32_t*)&(actual_node->Instruction.instruction.immediate)) = *((uint32_t*)(instrutions + i + 1));
+                                        i+=4;
+                                        #ifdef DEBUG_ENABLE
+                                        printf("Inmediato de 32bits para inmediato de registro AL, AX, EAX: %08x\n", *((uint32_t*)&(actual_node->Instruction.instruction.immediate)));
+                                        #endif
+                                    } else if (actual_node->Instruction.instruction.Mod_rm.mod == 0b11) { // para no SIB
                                         // para teoricamente cualqueir caso que no incluya SIB, para eso igual a un MOD 0b11 o 
                                         // diferente a un Mod(00) R/M(100) o Mod(01) R/M(100) o Mod(10) R/M(100)
                                         #ifdef DEBUG_ENABLE
@@ -613,7 +649,7 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
                                             printf("Inmediato de 32bits sin SIB %08x\n", *((uint32_t*)&(actual_node->Instruction.instruction.immediate)));
                                             #endif
                                         }
-                                    }else {
+                                    } else { // con SIB 32bits
                                         // inmediato de 32bits si es SIB
                                         // para instrucciones SIB con inmediatos, solo se puede usar valores de 8 y 32bits
                                         *((uint32_t*)&(actual_node->Instruction.instruction.immediate)) = *((uint32_t*)(instrutions + i + 1));

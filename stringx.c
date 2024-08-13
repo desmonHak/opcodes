@@ -260,6 +260,40 @@ String_list_link* get_string_instruction(Instruction_info *my_instruccion_, enco
     String_list_link *ptr = ptr_org; // copia del puntero que usar para añadir elementos
     int size_len_register = 0;
 
+
+    #ifdef DEBUG_ENABLE
+    printf_color(
+        "\t -> [AL, AX, EAX] my_instruccion_->position_tttn == 0b11 &&\n"
+        "\t -> [AL, AX, EAX] my_instruccion_->mask_tttn != 0x0      &&\n"
+        "\t -> [AL, AX, EAX] my_instruccion_->instruction.opcode[2].opcode_byte.byte(0x%02x) & my_instruccion_->mask_tttn(0x%02x)\n"
+        "\t -> [AL, AX, EAX] %d && %d && %d\n"
+        "\t -> [AL, AX, EAX] my_instruccion_->instruction.opcode[0].opcode_byte.byte = 0x%02x\n"
+        "\t -> [AL, AX, EAX] my_instruccion_->instruction.opcode[1].opcode_byte.byte = 0x%02x\n"
+        "\t -> [AL, AX, EAX] my_instruccion_->instruction.opcode[2].opcode_byte.byte = 0x%02x\n", 
+        my_instruccion_->instruction.opcode[2].opcode_byte.byte,
+        my_instruccion_->mask_tttn,
+        my_instruccion_->position_tttn == 0b11, 
+        my_instruccion_->mask_tttn != 0x0, 
+        my_instruccion_->instruction.opcode[0].opcode_byte.byte & my_instruccion_->mask_tttn,
+        my_instruccion_->instruction.opcode[0].opcode_byte.byte,
+        my_instruccion_->instruction.opcode[1].opcode_byte.byte,
+        my_instruccion_->instruction.opcode[2].opcode_byte.byte
+    );
+    #endif
+    if (
+        my_instruccion_->position_tttn == 0b11 && 
+        my_instruccion_->mask_tttn != 0x0      && 
+        my_instruccion_->instruction.opcode[2].opcode_byte.byte & my_instruccion_->mask_tttn // el primer opcode es el que esta en la posicion 2
+    ) {
+        // para variantes de instrucciones de tipo no salto(JCC)
+        // obtiene el registro AL, AX, o EAX
+        dest->string  = get_string_register(encoder_val, get_bit_w(my_instruccion_), 0b000);
+        if      (encoder_val == ENCODER_IN_32bits) fuent->string = get_build_SIB_format_for_data_inmediate(my_instruccion_);
+        else if (encoder_val == ENCODER_IN_16bits) fuent->string = get_data_inmediate_16bits(my_instruccion_);   
+        fuent->flags |= FLAG_FREE_Sll; // indicar que se a de liberar el espacio
+        goto exit_func_with_push; // finalizar la funcion haciendo un join de los strings
+    } 
+
     switch(my_instruccion_->instruction.Mod_rm.mod) { 
         case 0b00:  // Modo 00 (00b): El operando se codifica como un registro, sin desplazamiento (offset). En este modo, el campo 
                     // "R/M" especifica el registro.
@@ -301,6 +335,10 @@ String_list_link* get_string_instruction(Instruction_info *my_instruccion_, enco
             } else {
                 fuent->string = get_string_register(encoder_val, get_bit_w(my_instruccion_), my_instruccion_->instruction.Mod_rm.reg);
             }
+            if (fuent->string == NULL || dest->string == NULL) {
+                    printf("Mod 00. Error puntero nulos. fuent->string(%p) y dest->string(%p)\n", fuent->string, dest->string);
+                    exit(1);
+            }
             if (get_bit_d(my_instruccion_)) { // si d == 1 se cambia para que reg sea fuente y rm destino
                 //auxi->string  = dest->string;  // c = a
                 //dest->string  = fuent->string; // a = b
@@ -315,6 +353,7 @@ String_list_link* get_string_instruction(Instruction_info *my_instruccion_, enco
                 if(is_free) ptr->string_action.flags |= FLAG_FREE_Sll; // indiciar que se a de liberar el desplazamiento
                                                          // solo si se indico que existe
             } else {
+                exit_func_with_push:
                 #ifdef DEBUG_ENABLE
                 printf("d = 0 -> %s %s\n", dest->string, fuent->string);
                 #endif
@@ -337,15 +376,36 @@ String_list_link* get_string_instruction(Instruction_info *my_instruccion_, enco
                 dest->string = get_build_SIB_format(my_instruccion_);
             } 
             if (my_instruccion_->immediate_data == 0b1 && encoder_val == ENCODER_IN_32bits){ // si es una instruccion inmediata
+                // obtener el registro y desplazamiento para 16bits:
+                dest->string = get_string_mod_1(encoder_val, my_instruccion_);
+                val = *((uint8_t*)&(my_instruccion_->instruction.displacement)); // desplazamientod e 8bits
+                is_free = true; // si se marca en true, se a de marcar en la lista enlazada que el string del desplazamiento a de liberarse
+                                // indicar que el desplazamiento debera liberarse al liberar la lista enlazada
+                
+                size_len_register = (snprintf(NULL, 0, dest->string,  val) + 1) * sizeof(char);
+                auxi->string = (char *)malloc(size_len_register); // almacenar el buffer para guardar la instruccion formateada
+                sprintf(auxi->string, dest->string, val);         // formatear la instruiccion
+                dest->string = auxi->string;                      // poner el string formateado como destino.
                 fuent->string = get_build_SIB_format_for_data_inmediate(my_instruccion_); // asignar valor formateado para SIB.
                 #ifdef DEBUG_ENABLE
-                printf_color("\t -> [get_string_instruction] Instruccion inmediata para SIB con valor: %s\n", fuent->string);
+                printf_color("\t -> [get_string_instruction] Instruccion inmediata para ¿SIB? con valor: %s\n", fuent->string);
                 #endif
-            } else if (my_instruccion_->immediate_data == 0b1){
-                // para 16bits
+            } else if (my_instruccion_->immediate_data == 0b1){// para 16bits
+                // obtener el registro y desplazamiento para 16bits:
+                dest->string = get_string_mod_1(encoder_val, my_instruccion_);
+                val = *((uint8_t*)&(my_instruccion_->instruction.displacement)); // desplazamientod e 8bits
+                is_free = true; // si se marca en true, se a de marcar en la lista enlazada que el string del desplazamiento a de liberarse
+                                // indicar que el desplazamiento debera liberarse al liberar la lista enlazada
+                
+                size_len_register = (snprintf(NULL, 0, dest->string,  val) + 1) * sizeof(char);
+                auxi->string = (char *)malloc(size_len_register); // almacenar el buffer para guardar la instruccion formateada
+                sprintf(auxi->string, dest->string, val);         // formatear la instruiccion
+                dest->string = auxi->string;                      // poner el string formateado como destino.
+
+                // obtener los datos inmediatos de valor de 8 o 16bits
                 fuent->string = get_data_inmediate_16bits(my_instruccion_); // asignar valor formateado.
                 #ifdef DEBUG_ENABLE
-                printf_color("\t -> [get_string_instruction] Instruccion inmediata sin SIB (16bits) con valor: %s\n", fuent->string);
+                printf_color("\t -> [get_string_instruction] Instruccion inmediata sin SIB (16bits u 8bits) con valor: %s\n", fuent->string);
                 #endif
             } else {
                 #ifdef DEBUG_ENABLE
@@ -362,6 +422,12 @@ String_list_link* get_string_instruction(Instruction_info *my_instruccion_, enco
                 dest->string = auxi->string;                      // poner el string formateado como destino.
                 fuent->string = get_string_register(encoder_val, get_bit_w(my_instruccion_), my_instruccion_->instruction.Mod_rm.reg);
             }
+
+            if (fuent->string == NULL || dest->string == NULL) {
+                printf("Mod 01. Error puntero nulos. fuent->string(%p) y dest->string(%p)\n", fuent->string, dest->string);
+                exit(1);
+            }
+
             if (get_bit_d(my_instruccion_)) { // si d == 1 se cambia para que reg sea fuente y rm destino
                 //auxi->string  = dest->string;  // c = a
                 //dest->string  = fuent->string; // a = b
@@ -422,6 +488,10 @@ String_list_link* get_string_instruction(Instruction_info *my_instruccion_, enco
                 printf_color("\t -> [get_string_instruction] Instruccion inmediata sin SIB (16bits) con valor: %s\n", fuent->string);
                 #endif
             } else fuent->string = get_string_register(encoder_val, get_bit_w(my_instruccion_), my_instruccion_->instruction.Mod_rm.reg);
+            if (fuent->string == NULL || dest->string == NULL) {
+                    printf("Mod 02. Error puntero nulos. fuent->string(%p) y dest->string(%p)\n", fuent->string, dest->string);
+                    exit(1);
+            }
             if (get_bit_d(my_instruccion_)) { // si d == 1 se cambia para que reg sea fuente y rm destino
                 //auxi->string  = dest->string;  // c = a
                 //dest->string  = fuent->string; // a = b
@@ -433,8 +503,7 @@ String_list_link* get_string_instruction(Instruction_info *my_instruccion_, enco
                 ptr = push_String(ptr, ",", CALC_SIZE_STRING_FLAG); 
                 // CALC_SIZE_STRING_FLAG especifica que se a de obtener la longitud del string
                 ptr = push_String(ptr, dest->string, CALC_SIZE_STRING_FLAG);
-                ptr->string_action.flags |= FLAG_FREE_Sll; // indiciar que se a de liberar el desplazamiento
-                                                         
+                ptr->string_action.flags |= FLAG_FREE_Sll; // indiciar que se a de liberar el desplazamiento                    
             } else {
                 #ifdef DEBUG_ENABLE
                 printf("d = 0 -> %s %s\n", dest->string, fuent->string);

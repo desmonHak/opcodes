@@ -211,7 +211,8 @@ typedef struct Instruction_info
     uint8_t mask_reg;  // 8bits (24 bits)
     uint8_t mask_mod;  // 8bits (32 bits)
     // 8bits (40 bits)
-    uint8_t mask_tttn:6;  // 6bits para mascara tttn
+    uint8_t mask_tttn:6;  // 6bits para mascara tttn. si position_tttn indica que no hay bits tttn, pero este campo no esta a 0x0
+                          // entonces dicho campo podra usarse para identificar otro tipo de instrucciones.
     uint8_t number_reg:2; // algunas instrucciones no usan Mod/rm y usan este campo(R_m) directamente para almacenar el registro
                           // 0b00 - no usa campo reg
                           // 0b01 - usa un campo reg
@@ -380,7 +381,12 @@ __attribute__((__section__(".instruccion"))) static Instruction_info my_instrucc
         .mask_mod             = 0b11000000,   // los bits mod's estan en los primeros 2 bits del segundo byte de opcode
         .mask_reg             = 0b00111000,   // con esta mascara se obtiene los bits 5, 4 y 3 de 7,6,5,4,3,2,1,0
         .mask_rm              = 0b00000111,   // con esta mascara se obtiene los bits 2, 1 y 0 de 7,6,5,4,3,2,1,0
-        .mask_tttn            = 0b000000,
+        .mask_tttn            = 0b000100,     // al ser el position_tttn 11, quiere decir que no es una instruccion de salto
+        // por tanto podemos usar mask tttn para identificar instrucciones diferentes a los saltos,
+        // en este caso se usara para identicar esta variante:
+        // immediate to AL, AX, or EAX 0001 010w : immediate data
+        // siendo el bit tttn en este caso el 00 0100 de la instruccion, asi podemos identificar esta variante
+        
         .number_reg           = 0b01,         // 0b01 - usa un campo reg 
         .immediate_data       = 0b0,          // no tiene datos inmediatos
         .instruction = { // ADC – ADD with Carry
