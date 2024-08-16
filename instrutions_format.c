@@ -422,14 +422,32 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
                     } break;
                 case 0b01: // dos bytes de opcode
                     #ifdef DEBUG_ENABLE
-                    puts("2byte opcode");
-                    printf(">>> (%02x & %02x = %02x) && ",my_instruccion[j].instruction.opcode[2].opcode_byte.byte, instrutions[i], my_instruccion[j].instruction.opcode[2].opcode_byte.byte & instrutions[i]);
-                    printf("(%02x & %02x = %02x)\n",my_instruccion[j].instruction.opcode[1].opcode_byte.byte, instrutions[i+1], my_instruccion[j].instruction.opcode[1].opcode_byte.byte & instrutions[i+1]);
-                    #endif
-                    if (
+                    printf(">>> (((%02x & %02x)[ = %02x] ==  %02x) && ",
+                        my_instruccion[j].instruction.opcode[2].opcode_byte.byte, 
+                        instrutions[i], 
+                        my_instruccion[j].instruction.opcode[2].opcode_byte.byte & instrutions[i],
+                        my_instruccion[j].instruction.opcode[2].opcode_byte.byte
+                    );
+                    printf("((%02x & %02x)[ = %02x] ==  %02x))) = %d\n",
+                        my_instruccion[j].instruction.opcode[1].opcode_byte.byte, 
+                        instrutions[i+1], 
+                        my_instruccion[j].instruction.opcode[1].opcode_byte.byte & instrutions[i+1],
+                        my_instruccion[j].instruction.opcode[1].opcode_byte.byte,
                         ((my_instruccion[j].instruction.opcode[2].opcode_byte.byte & instrutions[i]) == my_instruccion[j].instruction.opcode[2].opcode_byte.byte) &&
                         ((my_instruccion[j].instruction.opcode[1].opcode_byte.byte & instrutions[i+1]) == my_instruccion[j].instruction.opcode[1].opcode_byte.byte)
+                    );
+                    #endif
+                    if (
+                        (
+                            ((my_instruccion[j].instruction.opcode[2].opcode_byte.byte & instrutions[i]) == my_instruccion[j].instruction.opcode[2].opcode_byte.byte) &&
+                            ((my_instruccion[j].instruction.opcode[1].opcode_byte.byte & instrutions[i+1]) == my_instruccion[j].instruction.opcode[1].opcode_byte.byte)
+                        ) /*|| ((
+                            ((my_instruccion[j].instruction.opcode[2].opcode_byte.byte & instrutions[i]) == instrutions[i]) &&
+                            ((my_instruccion[j].instruction.opcode[1].opcode_byte.byte & instrutions[i+1]) == my_instruccion[j].instruction.opcode[1].opcode_byte.byte)
+                        ) && my_instruccion[j].immediate_instrution != 0b1)*/
                        ) {
+                        parse_as_a_2_byte_instruction:
+
                         actual_node = push_List_instrution(list_instrution_resb); // añadir nodo 
                         memcpy(&(actual_node->Instruction), &(my_instruccion[j]), sizeof(Instruction_info));
                         actual_node->Instruction.instruction.opcode[2].opcode_byte.byte = instrutions[i];
@@ -672,9 +690,50 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
                 case 0b00: // un byte de opcode
                     #ifdef DEBUG_ENABLE
                     puts("1byte opcode");
+                    DEBUG_PRINT(DEBUG_LEVEL_INFO, 
+                        "#{FG:reset}[Opcode 1byte] #{FG:lpurple}my_instruccion[j].instruction.opcode[1].opcode_byte.byte( = %02x) == 0b11111111 #{FG:reset}\n",
+                            my_instruccion[j].instruction.opcode[1].opcode_byte.byte);
+                    DEBUG_PRINT(DEBUG_LEVEL_INFO, 
+                        "#{FG:reset}[Opcode 1byte] #{FG:lpurple}instrutions[i] (= %02x) <= 0b00000011#{FG:reset}\n", 
+                        instrutions[i]);
                     #endif
-                    // las instrucciones de un byte de opcode (no tiene mod/rm ni reg) no necesitan realizar la operacion and
-                    if (instrutions[i] == my_instruccion[j].instruction.opcode[2].opcode_byte.byte) {
+                    if (
+                        (my_instruccion[j].instruction.opcode[1].opcode_byte.byte == 0b11111111) &&
+                        (instrutions[i] <= 0b00000101) // && ((instrutions[i] & 0b00000011) != 0b00000000)
+                        /* la instruccion add usa el valor 0b11111111 en su segundo valor de opcode
+                         * para indicar que usa una forma distinta para identificarse, pues el valor
+                         * 0x00 que puede usar dicha instruccion, no puede ser identificada via AND, como
+                         * se hizo con otras instruccion como ADC, por tanto necesitamos saber si la instruccion
+                         * a anlizar esta entre el rango de 0x0 a 0x3(0b00000011) definido en el manual de intel:
+                         *      register1 to register2             0000 000w : 11 reg1 reg2
+                         *      register2 to register1             0000 001w : 11 reg1 reg2
+                         *      memory to register                 0000 001w : mod reg r/m
+                         *      register to memory                 0000 000w : mod reg r/m
+                         * 
+                         * Tambien se decidio usar la misma solucion para estas variante:
+                         *      immediate to AL, AX, or EAX        0000 010w : immediate data
+                         * 
+                         * Pues solo abria que verificar tambien si el valor 0x4(0b00000100) y el 0x5 adicionalmente, por tanto el
+                         * comprobar el rango 0x0 a 0x5(0b00000101) abrcara las 5 variantes de instrucciones
+                         */
+                        // tambien se i
+                    ) {
+                        // si se indico que la instruccion solo tiene un byte de opcode pero el segundo byte
+                        // o tercero de opcode, no son 0x0, entonces, se esta usando estos campos para procesar
+                        // otras instrucciones de manera distintas.
+
+                        // solo para instrucciones ADD
+                        if (instrutions[i] <= 0b00000101) { 
+                            #ifdef DEBUG_ENABLE
+                            DEBUG_PRINT(DEBUG_LEVEL_INFO, "#{FG:reset}excepcion ADD encontrada(instrutions[i] < 0b00000011) #{FG:lpurple}%02x#{FG:reset}\n", instrutions[i]);
+                            #endif
+                            goto parse_as_a_2_byte_instruction;
+                        }
+
+                    } 
+                    else if ( // las instrucciones de un byte de opcode (no tiene mod/rm ni reg) no necesitan realizar la operacion and
+                        (instrutions[i] == my_instruccion[j].instruction.opcode[2].opcode_byte.byte)
+                    ) {
                         actual_node = push_List_instrution(list_instrution_resb);// añadir nodo 
                         memcpy(&(actual_node->Instruction), &(my_instruccion[j]), sizeof(Instruction_info));
                         actual_node->Instruction.instruction.opcode[2].opcode_byte.byte = instrutions[i];
@@ -689,6 +748,7 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
                         get_rm_form_byte(&(actual_node->Instruction), instrutions + i);
                         get_registers_form_byte(&(actual_node->Instruction), instrutions + i);
                         goto the_end_for; // dejar de buscar instrucciones en el mapa de instrucciones
+
                     } 
                     /*if (pop_nodo_List_instrution(list_instrution_resb, actual_node) == NULL) {
                         puts("pop_nodo_List_instrution - Error");

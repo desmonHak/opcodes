@@ -73,6 +73,22 @@ int main(){
     */
     /**/
     uint8_t instrucciones1[] = {
+        0x00, 0xc0,                                   // add al, al
+        0x01, 0xd6,                                   // add si, dx
+        0x00, 0xd6,                                   // add dh, dl
+        0x01, 0xfe,                                   // add si, di
+        0x02, 0x31,                                   // add dh, byte ptr [bx + di]
+        0x02, 0x30,                                   // add dh, byte ptr [bx + si]
+        0x03, 0x31,                                   // add si, word ptr [bx + di]
+        0x03, 0x05,                                   // add ax, word ptr [di]
+        0x03, 0x3f,                                   // add di, word ptr [bx]
+        0x03, 0xb6, 0xca, 0x00,                       // add si, word ptr [bp + 0xca]
+        0x03, 0xbc, 0xff, 0x00,                       // add di, word ptr [si + 0xff]
+        0x83, 0xc4, 0x11,                             // add sp, 0x11
+        0x81, 0x84, 0xbb, 0x11, 0x33, 0x22,           // add word ptr [si + 0x11bb], 0x2233
+        0x81, 0xc4, 0x22, 0x11,                       // add sp, 0x1122
+        0x83, 0xc0, 0x10,                             // add ax, 0x10
+        0x04, 0x10,                                   // add al, 0x10
         Prefix_operand_size,
         Prefix_CS,
         Prefix_repe_rep_repz,
@@ -135,6 +151,33 @@ int main(){
     //size_t number_of_instrutions = get_number_instrutions(instrucciones1, sizeof(instrucciones1));
     
    uint8_t instrucciones[] = {
+        0x00, 0xC0,                                                          // add                                   al,             al
+        0x01, 0xD6,                                                          // add                                  esi,             edx
+        0x00, 0xD6,                                                          // add                                   dh,             dl
+        0x01, 0xFE,                                                          // add                                  esi,             edi
+        0x12, 0x30,                                                          // adc                                   dh, byte ptr   [eax]
+        0x02, 0x30,                                                          // add                                   dh, byte ptr   [eax]
+        0x03, 0x31,                                                          // add                                  esi, dword ptr  [ecx]
+        0x02, 0x09,                                                          // add                                   cl, byte ptr   [ecx]
+        0x03, 0x2E,                                                          // add                                  ebp, dword ptr  [esi]
+        0x01, 0x2E,                                                          // add                      dword ptr [esi],             ebp
+        0x03, 0x05, 0xAA, 0xBB, 0xCC, 0xDD,                                  // add                                  eax, dword ptr  [0xddccbbaa]
+        0x03, 0x3F,                                                          // add                                  edi, dword ptr  [edi]
+        0x02, 0xA0, 0xFF, 0x00, 0x00, 0x00,                                  // add                                   ah, byte ptr   [eax + 0xff]
+        0x02, 0x60, 0xFF,                                                    // add                                   ah, byte ptr   [eax - 1]
+        0x00, 0xAC, 0xBB, 0x78, 0x56, 0x34, 0x12,                            // add  byte ptr [ebx + edi*4 + 0x12345678],             ch
+        0x03, 0xB6, 0xFF, 0x00, 0xAA, 0xBB,                                  // add                                  esi, dword ptr  [esi - 0x4455ff01]  o dword ptr  [esi + BBAA 00FF] 
+        0x80, 0x84, 0xBB, 0x11, 0x22, 0x33, 0x44, 0x55,                      // add  byte ptr [ebx + edi*4 + 0x44332211],             0x55
+        0x81, 0x84, 0xBB, 0x11, 0x22, 0x33, 0x44, 0x11, 0x55, 0x00, 0x22,    // add dword ptr [ebx + edi*4 + 0x44332211],             0x22005511
+        0x83, 0xC4, 0x11,                                                    // add                                  esp,             0x11
+        0x80, 0xC7, 0x11,                                                    // add                                   bh,             0x11
+        0x81, 0xC4, 0x11, 0x11, 0x22, 0x22,                                  // add                                  esp,             0x22221111
+        0x83, 0xC5, 0x11,                                                    // add                                  ebp,             0x11
+        0x81, 0x40, 0x0C, 0x44, 0x33, 0x22, 0x11,                            // add                dword ptr [eax + 0xc],             0x11223344
+        0x80, 0x40, 0x0C, 0x22,                                              // add                 byte ptr [eax + 0xc],             0x22
+        0x83, 0xC0, 0x10,                                                    // add                                  eax,             0x10
+        0x04, 0x10,                                                          // add                                   al,             0x10
+        0x01, 0xd8,                                                          // add                                  eax,             ebx      = 0000 0001 |11| 011 000
         Prefix_operand_size,
         Prefix_CS,
         Prefix_repe_rep_repz,
@@ -197,8 +240,7 @@ int main(){
         //0x66, 0x81, 0x50, 0x0c, 0x22, 0x11,                                          // adc  word ptr [eax + 0xc], 0x1122                             = 1000 0001 |01| 010 000 
         0x80, 0x50, 0x0c, 0x22,                                                // adc  byte ptr [eax + 0xc], 0x22                               = 1000 0000 |01| 010 000
         0x15, 0x10, 0x00, 0x00, 0x00,                                          // adc eax, 0x00000010
-        0x14, 0x10                                                             // adc al, 0x00
-
+        0x14, 0x10,                                                            // adc al, 0x00
 
     };
    
@@ -208,17 +250,17 @@ int main(){
 
     
     print_table_hex(text, (char*)instrucciones, sizeof(instrucciones), ENCODER_IN_32bits);
-    instrutions_struct = format_instruccion(instrucciones, sizeof(instrucciones)-1, ENCODER_IN_32bits);
-    string_asm = get_string_instruction_assembly(instrutions_struct, ENCODER_IN_32bits);
-    string_asm_join = join_list_to_String(string_asm, "\n");
-    free_String_list_link(string_asm);
-    print_String_list_link(string_asm_join);
-    free_String_list_link(string_asm_join);
-    //instrutions_struct = pop_List_instrution(instrutions_struct,2);
-    print_List_instrution(instrutions_struct, ENCODER_IN_32bits);
+    List_instrution *instrutions_struct32bits = format_instruccion(instrucciones, sizeof(instrucciones)-1, ENCODER_IN_32bits);
+    String_list_link *string_asm32bits = get_string_instruction_assembly(instrutions_struct32bits, ENCODER_IN_32bits);
+    String_list_link *string_asm_join32bits = join_list_to_String(string_asm32bits, "\n");
+    free_String_list_link(string_asm32bits);
+    print_String_list_link(string_asm_join32bits);
+    free_String_list_link(string_asm_join32bits);
+    //instrutions_struct32bits = pop_List_instrution(instrutions_struct32bits,2);
+    print_List_instrution(instrutions_struct32bits, ENCODER_IN_32bits);
     //size_t number_of_instrutions = get_number_instrutions(instrucciones, sizeof(instrucciones));
 
-    printf("Numero de instrucciones descodificadas: %zu\n", get_number_instrutions(instrutions_struct));
+    printf("Numero de instrucciones descodificadas: %zu\n", get_number_instrutions(instrutions_struct32bits));
 
     puts("Exit...");
     

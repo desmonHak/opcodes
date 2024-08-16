@@ -95,6 +95,7 @@ static char *get_string_instruction_by_id(string_instrution_id id) {
         case STRING_AAM: return "aam";
         case STRING_AAS: return "aas";
         case STRING_ADC: return "adc";
+        case STRING_ADD: return "add";
         
         default: return "error - not exits this instruttion.";
     }

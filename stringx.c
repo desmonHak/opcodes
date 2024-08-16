@@ -339,13 +339,15 @@ String_list_link* get_string_instruction(Instruction_info *my_instruccion_, enco
                     printf("Mod 00. Error puntero nulos. fuent->string(%p) y dest->string(%p)\n", fuent->string, dest->string);
                     exit(1);
             }
+
+            DEBUG_PRINT(DEBUG_LEVEL_INFO, "my_instruccion_->posicion_d = %02x\n", my_instruccion_->posicion_d);
+            
             if (get_bit_d(my_instruccion_)) { // si d == 1 se cambia para que reg sea fuente y rm destino
                 //auxi->string  = dest->string;  // c = a
                 //dest->string  = fuent->string; // a = b
                 //fuent->string = auxi->string;  // b = c
-                #ifdef DEBUG_ENABLE
-                printf("d = 1 -> %s %s\n", fuent->string, dest->string);
-                #endif
+                DEBUG_PRINT(DEBUG_LEVEL_INFO, "d = 1 -> %s %s\n", fuent->string, dest->string);
+
                 ptr = push_String(ptr, fuent->string, CALC_SIZE_STRING_FLAG); 
                 ptr = push_String(ptr, ",", CALC_SIZE_STRING_FLAG); 
                 // CALC_SIZE_STRING_FLAG especifica que se a de obtener la longitud del string
@@ -354,9 +356,8 @@ String_list_link* get_string_instruction(Instruction_info *my_instruccion_, enco
                                                          // solo si se indico que existe
             } else {
                 exit_func_with_push:
-                #ifdef DEBUG_ENABLE
-                printf("d = 0 -> %s %s\n", dest->string, fuent->string);
-                #endif
+                DEBUG_PRINT(DEBUG_LEVEL_INFO, "d = 0 -> %s %s\n", dest->string, fuent->string);
+
                 ptr = push_String(ptr, dest->string, CALC_SIZE_STRING_FLAG); 
                 if(is_free) ptr->string_action.flags |= FLAG_FREE_Sll; // indiciar que se a de liberar el desplazamiento
                                                          // solo si se indico que existe

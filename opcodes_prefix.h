@@ -57,6 +57,7 @@ typedef enum string_instrution_id {
     STRING_AAM,
     STRING_AAS,
     STRING_ADC,
+    STRING_ADD
 } string_instrution_id;
 
 typedef enum encoder_x86 { // se especifica el formato a encodificar / descodificar las instrucciones
@@ -409,14 +410,14 @@ __attribute__((__section__(".instruccion"))) static Instruction_info my_instrucc
         .immediate_instrution = 0b0,          // es una instruccion inmediata
         .opcode_size          = 0b01,         // dos byte's de opcode
         .posicion_w           = 0b0001,       // hay bit "w" en el bit 1
-        .posicion_d           = 0b0000,       // no hay bit "d" 
-        .posicion_s           = 0b0010,       // hay bit "s" en el segundo bit
+        .posicion_d           = 0b0000,       // no hay bit 
+        .posicion_s           = 0b0010,       // hay bit "s" el bit 2 del opcode primario
         .position_rm          = 0b01,         // hay r/m en el segundo byte 
         .position_reg         = 0b01,         // hay reg en el segundo byte
         .position_mod         = 0b01,         // hay campo mod en el segundo byte
         .position_tttn        = 0b11,         // no hay tttn
         .mask_mod             = 0b11000000,   // los bits mod's estan en los primeros 2 bits del segundo byte de opcode
-        .mask_reg             = 0b00000111,   // con esta mascara se obtiene los bits 5, 4 y 3 de 7,6,5,4,3,2,1,0
+        .mask_reg             = 0b00111000,   // con esta mascara se obtiene los bits 5, 4 y 3 de 7,6,5,4,3,2,1,0
         .mask_rm              = 0b00000111,   // con esta mascara se obtiene los bits 2, 1 y 0 de 7,6,5,4,3,2,1,0
         .mask_tttn            = 0b000000,
         .number_reg           = 0b01,         // 0b10 - usa un campo reg 
@@ -426,6 +427,83 @@ __attribute__((__section__(".instruccion"))) static Instruction_info my_instrucc
             .opcode = {
                 (opcode){ .opcode_byte.byte = 0b00000000 },
                 (opcode){ .opcode_byte.byte = 0b00010000 }, // opcode secundario
+                (opcode){ .opcode_byte.byte = 0b10000000 }, // opcode primario
+            },
+            .Mod_rm = (Mod_rm){   .mod = 0b00,   .reg = 0b000,  .R_M = 0b000 },
+            .SIB    =    (SIB){ .scale = 0b00, .index = 0b000, .base = 0b000 },
+            .displacement = { 0b00000000, 0b00000000, 0b00000000, 0b00000000},
+            .immediate    = { 0b00000000, 0b00000000, 0b00000000, 0b00000000}
+        }
+    },
+    {
+        // add
+        // register1 to register2 0000 000w : 11 reg1 reg2
+        // register2 to register1 0000 001w : 11 reg1 reg2
+        // memory to register 0000 001w : mod reg r/m
+        // register to memory 0000 000w : mod reg r/m
+        .string               = STRING_ADD,
+        .immediate_instrution = 0b0,          // es una instruccion inmediata
+        .opcode_size          = 0b00,         // dos byte's de opcode
+        .posicion_w           = 0b0001,       // hay bit "w" en el bit 1
+        .posicion_d           = 0b0010,       // hay bit "d" el bit 2 del opcode primario
+        .posicion_s           = 0b0000,       // hay bit "s" en el segundo bit
+        .position_rm          = 0b01,         // hay r/m en el segundo byte 
+        .position_reg         = 0b01,         // hay reg en el segundo byte
+        .position_mod         = 0b01,         // hay campo mod en el segundo byte
+        .position_tttn        = 0b11,         // no hay tttn
+        .mask_mod             = 0b11000000,   // los bits mod's estan en los primeros 2 bits del segundo byte de opcode
+        .mask_reg             = 0b00111000,   // con esta mascara se obtiene los bits 5, 4 y 3 de 7,6,5,4,3,2,1,0
+        .mask_rm              = 0b00000111,   // con esta mascara se obtiene los bits 2, 1 y 0 de 7,6,5,4,3,2,1,0
+        .mask_tttn            = 0b000100,     // al ser el position_tttn 11, quiere decir que no es una instruccion de salto
+        // por tanto podemos usar mask tttn para identificar instrucciones diferentes a los saltos,
+        // en este caso se usara para identicar esta variante:
+        // immediate to AL, AX, or EAX 0000 010w : immediate data
+        // siendo el bit tttn en este caso el 00 0100 de la instruccion, asi podemos identificar esta variante
+        
+        .number_reg           = 0b01,         // 0b10 - usa un campo reg 
+        .immediate_data       = 0b0,          // tiene datos inmediatos
+        .instruction = { // ADC – ADD with Carry
+            .prefix = { 0b00000000, 0b00000000, 0b00000000, 0b00000000 },
+            .opcode = {
+                (opcode){ .opcode_byte.byte = 0b00000000 },
+                (opcode){ .opcode_byte.byte = 0b11111111 }, // opcode secundario
+                // si se indica que se usa un byte de opcode(opcode_size = 0b00), solo se hara uso del valor opcode[2] como unico valor real,
+                // los siguientes campos opcode[1] y opcode[0] se podran usar para codifcar informacion addicional de la instruccion
+                (opcode){ .opcode_byte.byte = 0b00000011 }, // opcode primario
+            },
+            .Mod_rm = (Mod_rm){   .mod = 0b00,   .reg = 0b000,  .R_M = 0b000 },
+            .SIB    =    (SIB){ .scale = 0b00, .index = 0b000, .base = 0b000 },
+            .displacement = { 0b00000000, 0b00000000, 0b00000000, 0b00000000},
+            .immediate    = { 0b00000000, 0b00000000, 0b00000000, 0b00000000}
+        }
+    },
+    {
+        // add
+        // immediate to register 1000 00sw : 11 000 reg : immediate data
+        // immediate to memory 1000 00sw : mod 000 r/m : immediate data
+        .string               = STRING_ADD,
+        .immediate_instrution = 0b0,          // es una instruccion inmediata
+        .opcode_size          = 0b01,         // un/dos byte's de opcode
+        .posicion_w           = 0b0001,       // hay bit "w" en el bit 1
+        .posicion_d           = 0b0000,       // no hay bit "d" 
+        .posicion_s           = 0b0010,       // hay bit "s" en el segundo bit
+        .position_rm          = 0b01,         // hay r/m en el segundo byte 
+        .position_reg         = 0b01,         // hay reg en el segundo byte
+        .position_mod         = 0b01,         // hay campo mod en el segundo byte
+        .position_tttn        = 0b11,         // no hay tttn
+        .mask_mod             = 0b11000000,   // los bits mod's estan en los primeros 2 bits del segundo byte de opcode
+        .mask_reg             = 0b00111000,   // con esta mascara se obtiene los bits 5, 4 y 3 de 7,6,5,4,3,2,1,0
+        .mask_rm              = 0b00000111,   // con esta mascara se obtiene los bits 2, 1 y 0 de 7,6,5,4,3,2,1,0
+        .mask_tttn            = 0b000000,
+        .number_reg           = 0b01,         // 0b10 - usa un campo reg 
+        .immediate_data       = 0b1,          // tiene datos inmediatos
+        .instruction = { // ADC – ADD with Carry
+            .prefix = { 0b00000000, 0b00000000, 0b00000000, 0b00000000 },
+            .opcode = {
+                (opcode){ .opcode_byte.byte = 0b00000000 },
+                (opcode){ .opcode_byte.byte = 0b00000000 }, // opcode secundario
+                // si se indica que se usa un byte de opcode(opcode_size = 0b00), solo se hara uso del valor opcode[2] como unico valor real,
+                // los siguientes campos opcode[1] y opcode[0] se podran usar para codifcar informacion addicional de la instruccion
                 (opcode){ .opcode_byte.byte = 0b10000000 }, // opcode primario
             },
             .Mod_rm = (Mod_rm){   .mod = 0b00,   .reg = 0b000,  .R_M = 0b000 },
