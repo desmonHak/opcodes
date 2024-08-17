@@ -45,11 +45,11 @@ List_instrution* init_List_instrution() {
      * el puntero devuelto por la estructura es NULL.
      *  
      */
-    #ifdef DEBUG_ENABLE
-        DEBUG_PRINT(DEBUG_LEVEL_INFO,
-            INIT_TYPE_FUNC_DBG(List_instrution*, init_List_instrution)
-            END_TYPE_FUNC_DBG);
-    #endif
+
+    DEBUG_PRINT(DEBUG_LEVEL_INFO,
+        INIT_TYPE_FUNC_DBG(List_instrution*, init_List_instrution)
+        END_TYPE_FUNC_DBG);
+    
     List_instrution *list_instrution_resb = (List_instrution *)malloc(sizeof(List_instrution));
     if (list_instrution_resb == NULL) return NULL; // error malloc
     memset(list_instrution_resb, 0x00, sizeof(List_instrution)); // poner la estrcutura a 0
@@ -68,13 +68,12 @@ size_t get_number_instrutions(List_instrution *instrutions) {
      * En caso de que instrutions no sea un puntero valido el valor retornado es 0.
      *  
      */
-    #ifdef DEBUG_ENABLE
-        DEBUG_PRINT(DEBUG_LEVEL_INFO,
-            INIT_TYPE_FUNC_DBG(size_t, get_number_instrutions)
-            TYPE_DATA_DBG(List_instrution *, "instrutions = %p")
-            END_TYPE_FUNC_DBG,
-            instrutions);
-    #endif
+    DEBUG_PRINT(DEBUG_LEVEL_INFO,
+        INIT_TYPE_FUNC_DBG(size_t, get_number_instrutions)
+        TYPE_DATA_DBG(List_instrution *, "instrutions = %p")
+        END_TYPE_FUNC_DBG,
+        instrutions);
+
     size_t number_instrutions = 0;
     for (List_instrution *i = instrutions; i != NULL; i = i->next_list_instrution) number_instrutions++;
     return number_instrutions;
@@ -139,14 +138,13 @@ List_instrution * pop_List_instrution(List_instrution *list_instrution, size_t p
      *  no tiene un elemento "position", la funcion retornara NULL.
      * 
      */
-    #ifdef DEBUG_ENABLE
-        DEBUG_PRINT(DEBUG_LEVEL_INFO,
-            INIT_TYPE_FUNC_DBG(List_instrution *, pop_List_instrution)
-            TYPE_DATA_DBG(List_instrution *, "list_instrution = %p")
-            TYPE_DATA_DBG(size_t, "position = %zu")
-            END_TYPE_FUNC_DBG,
-            list_instrution, position);
-    #endif
+    DEBUG_PRINT(DEBUG_LEVEL_INFO,
+        INIT_TYPE_FUNC_DBG(List_instrution *, pop_List_instrution)
+        TYPE_DATA_DBG(List_instrution *, "list_instrution = %p")
+        TYPE_DATA_DBG(size_t, "position = %zu")
+        END_TYPE_FUNC_DBG,
+        list_instrution, position);
+
     if (list_instrution == NULL) return NULL;
     if (position == 0){
         List_instrution *next_block = list_instrution->next_list_instrution;
@@ -175,13 +173,13 @@ List_instrution * pop_List_instrution(List_instrution *list_instrution, size_t p
 }
 
 List_instrution *push_List_instrution(List_instrution *list_instrution) {
-    #ifdef DEBUG_ENABLE
-        DEBUG_PRINT(DEBUG_LEVEL_INFO,
-            INIT_TYPE_FUNC_DBG(List_instrution *, push_List_instrution)
-                TYPE_DATA_DBG(List_instrution *, "list_instrution = %p")
-            END_TYPE_FUNC_DBG,
-            list_instrution);
-    #endif
+
+    DEBUG_PRINT(DEBUG_LEVEL_INFO,
+        INIT_TYPE_FUNC_DBG(List_instrution *, push_List_instrution)
+            TYPE_DATA_DBG(List_instrution *, "list_instrution = %p")
+        END_TYPE_FUNC_DBG,
+        list_instrution);
+
     /*
      *
      * Se recibe un list_instrution el cual es la lista enlazada, y se retorna un
@@ -216,13 +214,13 @@ void print_List_instrution(List_instrution *list_instrution, encoder_x86 encoder
      * Se espera recibir encoder_val, el cual indique que tamaño descodificar las instrucciones
      * 
      */
-    #ifdef DEBUG_ENABLE
-        DEBUG_PRINT(DEBUG_LEVEL_INFO,
-            INIT_TYPE_FUNC_DBG(void, print_List_instrution)
-                TYPE_DATA_DBG(List_instrution *, "list_instrution = %p")
-            END_TYPE_FUNC_DBG,
-            list_instrution);
-    #endif
+
+    DEBUG_PRINT(DEBUG_LEVEL_INFO,
+        INIT_TYPE_FUNC_DBG(void, print_List_instrution)
+            TYPE_DATA_DBG(List_instrution *, "list_instrution = %p")
+        END_TYPE_FUNC_DBG,
+        list_instrution);
+
     if (list_instrution == NULL) printf("finall list or invalid...");
 
     for (List_instrution *i = list_instrution; i != NULL; i = i->next_list_instrution) {
@@ -238,14 +236,14 @@ void print_List_instrution(List_instrution *list_instrution, encoder_x86 encoder
 }
 
 uint8_t get_rm_form_byte(Instruction_info *Instruction, uint8_t* bytes) {
-    #ifdef DEBUG_ENABLE
-        DEBUG_PRINT(DEBUG_LEVEL_INFO,
-            INIT_TYPE_FUNC_DBG(uint8_t, get_rm_form_byte)
-            TYPE_DATA_DBG(Instruction_info *, "Instruction = %p")
-            TYPE_DATA_DBG(uint8_t, "bytes = %02x")
-            END_TYPE_FUNC_DBG,
-            Instruction, bytes);
-    #endif
+
+    DEBUG_PRINT(DEBUG_LEVEL_INFO,
+        INIT_TYPE_FUNC_DBG(uint8_t, get_rm_form_byte)
+        TYPE_DATA_DBG(Instruction_info *, "Instruction = %p")
+        TYPE_DATA_DBG(uint8_t, "bytes = %02x")
+        END_TYPE_FUNC_DBG,
+        Instruction, bytes);
+
     if (Instruction == NULL) return -1;
     uint8_t byte = *((bytes + 1) - Instruction->position_rm); // obtiene el byte donde esta el campo mod
     Instruction->instruction.Mod_rm.R_M =  ((byte & (uint8_t)Instruction->mask_rm)) >> count_get_mask(Instruction->mask_rm); // obtiene los bits del campo mod
@@ -253,14 +251,14 @@ uint8_t get_rm_form_byte(Instruction_info *Instruction, uint8_t* bytes) {
 }
 
 uint8_t get_mod_form_byte(Instruction_info *Instruction, uint8_t* bytes) {
-    #ifdef DEBUG_ENABLE
-        DEBUG_PRINT(DEBUG_LEVEL_INFO,
-            INIT_TYPE_FUNC_DBG(uint8_t, get_mod_form_byte)
-            TYPE_DATA_DBG(Instruction_info *, "Instruction = %p")
-            TYPE_DATA_DBG(uint8_t, "bytes = %p")
-            END_TYPE_FUNC_DBG,
-            Instruction, bytes);
-    #endif
+
+    DEBUG_PRINT(DEBUG_LEVEL_INFO,
+        INIT_TYPE_FUNC_DBG(uint8_t, get_mod_form_byte)
+        TYPE_DATA_DBG(Instruction_info *, "Instruction = %p")
+        TYPE_DATA_DBG(uint8_t, "bytes = %p")
+        END_TYPE_FUNC_DBG,
+        Instruction, bytes);
+
     if (Instruction == NULL) return -1;
     uint8_t byte = *((bytes + 1) - Instruction->position_mod); // obtiene el byte donde esta el campo mod
     Instruction->instruction.Mod_rm.mod =  ((byte & (uint8_t)Instruction->mask_mod)) >> count_get_mask(Instruction->mask_mod); // obtiene los bits del campo mod
@@ -281,14 +279,14 @@ uint8_t get_registers_form_byte(Instruction_info *Instruction, uint8_t* bytes) {
      * el segundo valor de bytes sea el segundo byte del opcode, etc...
      * 
      */
-    #ifdef DEBUG_ENABLE
-        DEBUG_PRINT(DEBUG_LEVEL_INFO,
-            INIT_TYPE_FUNC_DBG(uint8_t, get_registers_form_byte)
-            TYPE_DATA_DBG(Instruction_info *, "Instruction = %p")
-            TYPE_DATA_DBG(uint8_t, "bytes = %p")
-            END_TYPE_FUNC_DBG,
-            Instruction, bytes);
-    #endif
+
+    DEBUG_PRINT(DEBUG_LEVEL_INFO,
+        INIT_TYPE_FUNC_DBG(uint8_t, get_registers_form_byte)
+        TYPE_DATA_DBG(Instruction_info *, "Instruction = %p")
+        TYPE_DATA_DBG(uint8_t, "bytes = %p")
+        END_TYPE_FUNC_DBG,
+        Instruction, bytes);
+
     if (Instruction == NULL) return -1;
 
     uint8_t byte = *((bytes + 1) - Instruction->position_reg); 
@@ -304,15 +302,14 @@ uint8_t get_registers_form_byte(Instruction_info *Instruction, uint8_t* bytes) {
 
 List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, encoder_x86 encoder_val) {
 
-    #ifdef DEBUG_ENABLE
-        DEBUG_PRINT(DEBUG_LEVEL_INFO,
-            INIT_TYPE_FUNC_DBG(List_instrution *, format_instruccion)
-                TYPE_DATA_DBG(uint8_t *, "instrutions = %hhu")
-                TYPE_DATA_DBG(size_t, "size_in_bytes = %zu")
-                TYPE_DATA_DBG(encoder_x86, "encoder_x86 = %02x")
-            END_TYPE_FUNC_DBG,
-            instrutions, size_in_bytes, encoder_val);
-    #endif
+    DEBUG_PRINT(DEBUG_LEVEL_INFO,
+        INIT_TYPE_FUNC_DBG(List_instrution *, format_instruccion)
+            TYPE_DATA_DBG(uint8_t *, "instrutions = %hhu")
+            TYPE_DATA_DBG(size_t, "size_in_bytes = %zu")
+            TYPE_DATA_DBG(encoder_x86, "encoder_x86 = %02x")
+        END_TYPE_FUNC_DBG,
+        instrutions, size_in_bytes, encoder_val);
+
     List_instrution *list_instrution_resb = init_List_instrution();
     
     for (size_t i = 0; i <= size_in_bytes; i++) {
@@ -724,9 +721,8 @@ List_instrution *format_instruccion(uint8_t *instrutions, size_t size_in_bytes, 
 
                         // solo para instrucciones ADD
                         if (instrutions[i] <= 0b00000101) { 
-                            #ifdef DEBUG_ENABLE
                             DEBUG_PRINT(DEBUG_LEVEL_INFO, "#{FG:reset}excepcion ADD encontrada(instrutions[i] < 0b00000011) #{FG:lpurple}%02x#{FG:reset}\n", instrutions[i]);
-                            #endif
+                            
                             goto parse_as_a_2_byte_instruction;
                         }
 

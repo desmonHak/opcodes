@@ -233,14 +233,14 @@ void print_instruccion_hex(Instruction *my_instruccion, encoder_x86 encoder_val)
 }
 
 String_list_link *get_string_instruction_assembly(List_instrution *my_instruccion_list, encoder_x86 encoder_val) {
-    #ifdef DEBUG_ENABLE
-        DEBUG_PRINT(DEBUG_LEVEL_INFO,
-            INIT_TYPE_FUNC_DBG(String_list_link*, get_string_instruction_assembly)
-                TYPE_DATA_DBG(List_instrution *, "my_instruccion_list = %p")
-                TYPE_DATA_DBG(encoder_x86, "encoder_val = %d")
-            END_TYPE_FUNC_DBG,
-            my_instruccion_list, encoder_val);
-    #endif
+    
+    DEBUG_PRINT(DEBUG_LEVEL_INFO,
+        INIT_TYPE_FUNC_DBG(String_list_link*, get_string_instruction_assembly)
+            TYPE_DATA_DBG(List_instrution *, "my_instruccion_list = %p")
+            TYPE_DATA_DBG(encoder_x86, "encoder_val = %d")
+        END_TYPE_FUNC_DBG,
+        my_instruccion_list, encoder_val);
+    
     String_list_link * all_instruction_assembly = Init_String(NULL, 0); // inicializar en 0
     String_list_link * counter = all_instruction_assembly;
     for (List_instrution *i = my_instruccion_list; i != NULL; i = i->next_list_instrution) {

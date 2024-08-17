@@ -103,13 +103,13 @@ void print_String_list_link(String_list_link *list) {
 }
 
 String_list_link* free_String_list_link(String_list_link* list) {
-    #ifdef DEBUG_ENABLE
-        DEBUG_PRINT(DEBUG_LEVEL_INFO,
-            INIT_TYPE_FUNC_DBG(String_list_link*, free_String_list_link)
-                TYPE_DATA_DBG(Instruction_info *, "list = %p")
-            END_TYPE_FUNC_DBG,
-            list);
-    #endif
+    
+    DEBUG_PRINT(DEBUG_LEVEL_INFO,
+        INIT_TYPE_FUNC_DBG(String_list_link*, free_String_list_link)
+            TYPE_DATA_DBG(Instruction_info *, "list = %p")
+        END_TYPE_FUNC_DBG,
+        list);
+    
     /*
      *  
      * free_String_list_link(String_list_link* list)
@@ -163,26 +163,26 @@ static inline String_list_link *push_String(String_list_link *list, char* string
      * Se espera retornar una lista enlazada con el nuevo nodo creado.
      *  
      */
-    #ifdef DEBUG_ENABLE
-        DEBUG_PRINT(DEBUG_LEVEL_INFO,
-            INIT_TYPE_FUNC_DBG(String_list_link*, push_String)
-                TYPE_DATA_DBG(String_list_link *, "list = %p")
-            END_TYPE_FUNC_DBG,
-            list);
-    #endif
+    
+    DEBUG_PRINT(DEBUG_LEVEL_INFO,
+        INIT_TYPE_FUNC_DBG(String_list_link*, push_String)
+            TYPE_DATA_DBG(String_list_link *, "list = %p")
+        END_TYPE_FUNC_DBG,
+        list);
+    
     if (list == NULL) return NULL; // la lista enlazada recibida es un puntero no valido o es nulo
 
     list->next_string = Init_String(string, size_string);
     return list->next_string;
 }
 Action_Native_String *Start_Action_Native_String(Action_Native_String *string_action_struct) {
-    #ifdef DEBUG_ENABLE
-        DEBUG_PRINT(DEBUG_LEVEL_INFO,
-            INIT_TYPE_FUNC_DBG(Action_Native_String*, Start_Action_Native_String)
-                TYPE_DATA_DBG(Action_Native_String *, "string_action_struct = %p")
-            END_TYPE_FUNC_DBG,
-            string_action_struct);
-    #endif 
+    
+    DEBUG_PRINT(DEBUG_LEVEL_INFO,
+        INIT_TYPE_FUNC_DBG(Action_Native_String*, Start_Action_Native_String)
+            TYPE_DATA_DBG(Action_Native_String *, "string_action_struct = %p")
+        END_TYPE_FUNC_DBG,
+        string_action_struct);
+     
     if (string_action_struct == NULL) {
         #ifdef DEBUG_ENABLE
         printf("\t -> [Start_Action_Native_String] string_action_struct == NULL\n");
@@ -215,14 +215,14 @@ Action_Native_String *Start_Action_Native_String(Action_Native_String *string_ac
 }
 
 String_list_link* get_string_instruction(Instruction_info *my_instruccion_, encoder_x86 encoder_val) {
-    #ifdef DEBUG_ENABLE
-        DEBUG_PRINT(DEBUG_LEVEL_INFO,
-            INIT_TYPE_FUNC_DBG(String_list_link*, get_string_instruction)
-                TYPE_DATA_DBG(Instruction_info *, "my_instruccion_ = %p")
-                TYPE_DATA_DBG(encoder_x86, "encoder_val = %d")
-            END_TYPE_FUNC_DBG,
-            my_instruccion_, encoder_val);
-    #endif
+    
+    DEBUG_PRINT(DEBUG_LEVEL_INFO,
+        INIT_TYPE_FUNC_DBG(String_list_link*, get_string_instruction)
+            TYPE_DATA_DBG(Instruction_info *, "my_instruccion_ = %p")
+            TYPE_DATA_DBG(encoder_x86, "encoder_val = %d")
+        END_TYPE_FUNC_DBG,
+        my_instruccion_, encoder_val);
+    
     /*
      *  
      * get_string_instruction(Instruction_info *my_instruccion_, encoder_x86 encoder_val):
@@ -587,13 +587,13 @@ static inline size_t get_size_to_String(String_list_link *list) {
      * Se retorna el sumario de los tamaños de todos los strings, o en caso de error, -1.
      *  
      */
-    #ifdef DEBUG_ENABLE
-        DEBUG_PRINT(DEBUG_LEVEL_INFO,
-            INIT_TYPE_FUNC_DBG(size_t, get_size_to_String)
-                TYPE_DATA_DBG(list *, " = %p")
-            END_TYPE_FUNC_DBG,
-            list);
-    #endif
+    
+    DEBUG_PRINT(DEBUG_LEVEL_INFO,
+        INIT_TYPE_FUNC_DBG(size_t, get_size_to_String)
+            TYPE_DATA_DBG(list *, " = %p")
+        END_TYPE_FUNC_DBG,
+        list);
+    
     if (list == NULL) return -1; 
 
     size_t size = 0;
@@ -612,13 +612,13 @@ static inline size_t get_number_nodes_String_list_link(String_list_link *list) {
      * Se retorna numero de nodos encontrados.
      *  
      */
-    #ifdef DEBUG_ENABLE
-        DEBUG_PRINT(DEBUG_LEVEL_INFO,
-            INIT_TYPE_FUNC_DBG(size_t, get_size_to_String)
-                TYPE_DATA_DBG(list *, " = %p")
-            END_TYPE_FUNC_DBG,
-            list);
-    #endif
+    
+    DEBUG_PRINT(DEBUG_LEVEL_INFO,
+        INIT_TYPE_FUNC_DBG(size_t, get_size_to_String)
+            TYPE_DATA_DBG(list *, " = %p")
+        END_TYPE_FUNC_DBG,
+        list);
+    
     if (list == NULL) return -1; 
 
     size_t size = 0;
@@ -642,14 +642,14 @@ String_list_link *join_list_to_String(String_list_link *list, char* string_for_j
      * **Si se llama a esta funcion, se a de liberar la memoria de esta funcion, poner campo flags en 1
      *  
      */
-    #ifdef DEBUG_ENABLE
-        DEBUG_PRINT(DEBUG_LEVEL_INFO,
-            INIT_TYPE_FUNC_DBG(String_list_link *, join_list_to_String)
-                TYPE_DATA_DBG(String_list_link *, " list = %p")
-                TYPE_DATA_DBG(char *, " string_for_join = \"%s\"")
-            END_TYPE_FUNC_DBG,
-            list, string_for_join);
-    #endif
+    
+    DEBUG_PRINT(DEBUG_LEVEL_INFO,
+        INIT_TYPE_FUNC_DBG(String_list_link *, join_list_to_String)
+            TYPE_DATA_DBG(String_list_link *, " list = %p")
+            TYPE_DATA_DBG(char *, " string_for_join = \"%s\"")
+        END_TYPE_FUNC_DBG,
+        list, string_for_join);
+    
     if (list == NULL) return NULL; 
     // obtener el tamaño de todos los strings de la lista enlazada y reservar memoria:
     size_t size_all_string = get_size_to_String(list) + 1; // añadir uno para el caracter final \0
