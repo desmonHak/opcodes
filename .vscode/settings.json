@@ -222,5 +222,6 @@
         "*.c": "c",
         "*.s": "arm",
         "*.txt": "c"
-    }
+    },
+    "makefile.configureOnOpen": true
 }

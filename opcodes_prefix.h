@@ -48,7 +48,7 @@
  */
 #include <stdint.h>
 
-
+#include "format_opcode_macros.h"
 #include "debug_c.h"
 
 typedef enum string_instrution_id {
@@ -1217,24 +1217,24 @@ __attribute__((__section__(".instruccion"))) static Instruction_info my_instrucc
         .position_rm          = 0b11,        // no hay r/m
         .position_reg         = 0b11,        // no hay reg
         .position_mod         = 0b11,        // no hay mod
-        .position_tttn        = 0b11,        // no hay tttn
+        .position_tttn        = NOT_JMP_ACTIVATE_EXCEPTIONS,        // no hay tttn
         .mask_mod             = 0b00000000,
         .mask_reg             = 0b00000000,
         .mask_rm              = 0b00000000,
-        .mask_tttn            = 0b000000,
+        .mask_tttn            = NOT_TTTN,
         .number_reg           = 0b00,         // 0b00 - no usa campo reg
-        .immediate_data       = 0b0,          // no tiene datos inmediatos
+        .immediate_data       = NO_IMMEDIATE_DATA,          // no tiene datos inmediatos
         .instruction = { // AAS – ASCII Adjust AL after Subtraction
             .prefix = { 0b00000000, 0b00000000, 0b00000000, 0b00000000 },
             .opcode = {
-                (opcode){ .opcode_byte.byte = 0b00000000 },
-                (opcode){ .opcode_byte.byte = 0b00000000 }, // opcode secundario
+                (opcode){ .opcode_byte.byte = NOT_OPCODE },
+                (opcode){ .opcode_byte.byte = NOT_OPCODE }, // opcode secundario
                 (opcode){ .opcode_byte.byte = 0b00111111 }, // opcode primario
             },
-            .Mod_rm = (Mod_rm){   .mod = 0b00,   .reg = 0b000,  .R_M = 0b000 },
-            .SIB    =    (SIB){ .scale = 0b00, .index = 0b000, .base = 0b000 },
-            .displacement = { 0b00000000, 0b00000000, 0b00000000, 0b00000000},
-            .immediate    = { 0b00000000, 0b00000000, 0b00000000, 0b00000000}
+            .Mod_rm = (Mod_rm){   .mod = NOT_VALUE,   .reg = NOT_VALUE,  .R_M = NOT_VALUE },
+            .SIB    =    (SIB){ .scale = NOT_VALUE, .index = NOT_VALUE, .base = NOT_VALUE },
+            .displacement = { NOT_VALUE, NOT_VALUE, NOT_VALUE, NOT_VALUE},
+            .immediate    = { NOT_VALUE, NOT_VALUE, NOT_VALUE, NOT_VALUE}
         }
     },
     {
@@ -1246,24 +1246,24 @@ __attribute__((__section__(".instruccion"))) static Instruction_info my_instrucc
         .position_rm          = 0b11,        // no hay r/m
         .position_reg         = 0b11,        // no hay reg
         .position_mod         = 0b11,        // no hay mod
-        .position_tttn        = 0b11,        // no hay tttn
+        .position_tttn        = NOT_JMP_ACTIVATE_EXCEPTIONS,        // no hay tttn
         .mask_mod             = 0b00000000,
         .mask_reg             = 0b00000000,
         .mask_rm              = 0b00000000,
-        .mask_tttn            = 0b000000,
+        .mask_tttn            = NOT_TTTN,
         .number_reg           = 0b00,         // 0b00 - no usa campo reg
-        .immediate_data       = 0b0,          // no tiene datos inmediatos
+        .immediate_data       = NO_IMMEDIATE_DATA,          // no tiene datos inmediatos
         .instruction = { // AAA – ASCII Adjust after Addition
             .prefix = { 0b00000000, 0b00000000, 0b00000000, 0b00000000 },
             .opcode = {
-                (opcode){ .opcode_byte.byte = 0b00000000 }, 
-                (opcode){ .opcode_byte.byte = 0b00000000 },
-                (opcode){ .opcode_byte.byte = 0b01100011 }, // opcode primario
+                (opcode){ .opcode_byte.byte = NOT_OPCODE }, 
+                (opcode){ .opcode_byte.byte = NOT_OPCODE },
+                (opcode){ .opcode_byte.byte = 0b00110111 }, // opcode primario
             },
-            .Mod_rm = (Mod_rm){   .mod = 0b00,   .reg = 0b000,  .R_M = 0b000 },
-            .SIB    =    (SIB){ .scale = 0b00, .index = 0b000, .base = 0b000 },
-            .displacement = { 0b00000000, 0b00000000, 0b00000000, 0b00000000},
-            .immediate    = { 0b00000000, 0b00000000, 0b00000000, 0b00000000}
+            .Mod_rm = (Mod_rm){   .mod = NOT_VALUE,   .reg = NOT_VALUE,  .R_M = NOT_VALUE },
+            .SIB    =    (SIB){ .scale = NOT_VALUE, .index = NOT_VALUE, .base = NOT_VALUE },
+            .displacement = { NOT_VALUE, NOT_VALUE, NOT_VALUE, NOT_VALUE},
+            .immediate    = { NOT_VALUE, NOT_VALUE, NOT_VALUE, NOT_VALUE}
         }
     },
     {
@@ -1275,95 +1275,95 @@ __attribute__((__section__(".instruccion"))) static Instruction_info my_instrucc
         .position_rm          = 0b11,        // no hay r/m
         .position_reg         = 0b11,        // no hay reg
         .position_mod         = 0b11,        // no hay mod
-        .position_tttn        = 0b11,        // no hay tttn
+        .position_tttn        = NOT_JMP_ACTIVATE_EXCEPTIONS,        // no hay tttn
         .mask_mod             = 0b00000000,
         .mask_reg             = 0b00000000,
         .mask_rm              = 0b00000000,
-        .mask_tttn            = 0b000000,
+        .mask_tttn            = NOT_TTTN,
         .number_reg           = 0b00,         // 0b00 - no usa campo reg
-        .immediate_data       = 0b0,          // no tiene datos inmediatos
+        .immediate_data       = NO_IMMEDIATE_DATA,          // no tiene datos inmediatos
         .instruction = { // AAS – ASCII Adjust AL after Subtraction
             .prefix = { 0b00000000, 0b00000000, 0b00000000, 0b00000000 },
             .opcode = {
-                (opcode){ .opcode_byte.byte = 0b00000000 },
-                (opcode){ .opcode_byte.byte = 0b00000000 }, // opcode secundario
+                (opcode){ .opcode_byte.byte = NOT_OPCODE },
+                (opcode){ .opcode_byte.byte = NOT_OPCODE }, // opcode secundario
                 (opcode){ .opcode_byte.byte = 0b00111111 }, // opcode primario
             },
-            .Mod_rm = (Mod_rm){   .mod = 0b00,   .reg = 0b000,  .R_M = 0b000 },
-            .SIB    =    (SIB){ .scale = 0b00, .index = 0b000, .base = 0b000 },
-            .displacement = { 0b00000000, 0b00000000, 0b00000000, 0b00000000},
-            .immediate    = { 0b00000000, 0b00000000, 0b00000000, 0b00000000}
+            .Mod_rm = (Mod_rm){   .mod = NOT_VALUE,   .reg = NOT_VALUE,  .R_M = NOT_VALUE },
+            .SIB    =    (SIB){ .scale = NOT_VALUE, .index = NOT_VALUE, .base = NOT_VALUE },
+            .displacement = { NOT_VALUE, NOT_VALUE, NOT_VALUE, NOT_VALUE},
+            .immediate    = { NOT_VALUE, NOT_VALUE, NOT_VALUE, NOT_VALUE}
         }
     },
     {
         .string               = STRING_AAD,
         .immediate_instrution = 0b1,         // es una instruccion inmediata
-        .opcode_size          = 0b01,        // dos byte's de opcode
+        .opcode_size          = SIZE_OF_OPCODE_2_BYTE,        // dos byte's de opcode
         .posicion_w           = 0b0000,      // no hay bit "w"
         .posicion_s           = 0b0000,      // no hay bit "s"
         .position_rm          = 0b11,        // no hay r/m
         .position_reg         = 0b11,        // no hay reg
         .position_mod         = 0b11,        // no hay mod
-        .position_tttn        = 0b11,        // no hay tttn
+        .position_tttn        = NOT_JMP_ACTIVATE_EXCEPTIONS,        // no hay tttn
         .mask_mod             = 0b00000000,
         .mask_reg             = 0b00000000,
         .mask_rm              = 0b00000000,
-        .mask_tttn            = 0b000000,
+        .mask_tttn            = NOT_TTTN,
         .number_reg           = 0b00,         // 0b00 - no usa campo reg
-        .immediate_data       = 0b0,          // no tiene datos inmediatos
+        .immediate_data       = NO_IMMEDIATE_DATA,          // no tiene datos inmediatos
         .instruction = { // AAD – ASCII Adjust AX before Division
             .prefix = { 0b00000000, 0b00000000, 0b00000000, 0b00000000 },
             .opcode = {
-                (opcode){ .opcode_byte.byte = 0b00000000 },
+                (opcode){ .opcode_byte.byte = NOT_OPCODE },
                 (opcode){ .opcode_byte.byte = 0b00001010 }, // opcode secundario
                 (opcode){ .opcode_byte.byte = 0b11010101 }, // opcode primario
             },
-            .Mod_rm = (Mod_rm){   .mod = 0b00,   .reg = 0b000,  .R_M = 0b000 },
-            .SIB    =    (SIB){ .scale = 0b00, .index = 0b000, .base = 0b000 },
-            .displacement = { 0b00000000, 0b00000000, 0b00000000, 0b00000000},
-            .immediate    = { 0b00000000, 0b00000000, 0b00000000, 0b00000000}
+            .Mod_rm = (Mod_rm){   .mod = NOT_VALUE,   .reg = NOT_VALUE,  .R_M = NOT_VALUE },
+            .SIB    =    (SIB){ .scale = NOT_VALUE, .index = NOT_VALUE, .base = NOT_VALUE },
+            .displacement = { NOT_VALUE, NOT_VALUE, NOT_VALUE, NOT_VALUE},
+            .immediate    = { NOT_VALUE, NOT_VALUE, NOT_VALUE, NOT_VALUE}
         }
     },
     {
         .string               = STRING_AAM,
         .immediate_instrution = 0b1,         // es una instruccion inmediata
-        .opcode_size          = 0b01,        // dos byte's de opcode
+        .opcode_size          = SIZE_OF_OPCODE_2_BYTE,        // dos byte's de opcode
         .posicion_w           = 0b0000,      // no hay bit "w"
         .posicion_s           = 0b0000,      // no hay bit "s"
         .position_rm          = 0b11,        // no hay r/m
         .position_reg         = 0b11,        // no hay reg
         .position_mod         = 0b11,        // no hay mod
-        .position_tttn        = 0b11,        // no hay tttn
+        .position_tttn        = NOT_JMP_ACTIVATE_EXCEPTIONS,        // no hay tttn
         .mask_mod             = 0b00000000,
         .mask_reg             = 0b00000000,
         .mask_rm              = 0b00000000,
-        .mask_tttn            = 0b000000,
+        .mask_tttn            = NOT_TTTN,
         .number_reg           = 0b00,         // 0b00 - no usa campo reg
-        .immediate_data       = 0b0,          // no tiene datos inmediatos
+        .immediate_data       = NO_IMMEDIATE_DATA,          // no tiene datos inmediatos
         .instruction = { // AAM – ASCII Adjust AX after Multiply
             .prefix = { 0b00000000, 0b00000000, 0b00000000, 0b00000000 },
             .opcode = {
-                (opcode){ .opcode_byte.byte = 0b00000000 },
+                (opcode){ .opcode_byte.byte = NOT_OPCODE },
                 (opcode){ .opcode_byte.byte = 0b00001010 }, // opcode secundario
                 (opcode){ .opcode_byte.byte = 0b11010100 }, // opcode primario
             },
-            .Mod_rm = (Mod_rm){   .mod = 0b00,   .reg = 0b000,  .R_M = 0b000 },
-            .SIB    =    (SIB){ .scale = 0b00, .index = 0b000, .base = 0b000 },
-            .displacement = { 0b00000000, 0b00000000, 0b00000000, 0b00000000},
-            .immediate    = { 0b00000000, 0b00000000, 0b00000000, 0b00000000}
+            .Mod_rm = (Mod_rm){   .mod = NOT_VALUE,   .reg = NOT_VALUE,  .R_M = NOT_VALUE },
+            .SIB    =    (SIB){ .scale = NOT_VALUE, .index = NOT_VALUE, .base = NOT_VALUE },
+            .displacement = { NOT_VALUE, NOT_VALUE, NOT_VALUE, NOT_VALUE},
+            .immediate    = { NOT_VALUE, NOT_VALUE, NOT_VALUE, NOT_VALUE}
         }
     },
     {
         .string               = STRING_ADC,
-        .immediate_instrution = 0b0,          // no es una instruccion inmediata
-        .opcode_size          = 0b01,         // dos byte's de opcode
-        .posicion_w           = 0b0001,       // hay bit "w" en el bit 1
+        .immediate_instrution = NO_IMMEDIATE_INSTRUCTION,          // no es una instruccion inmediata
+        .opcode_size          = SIZE_OF_OPCODE_2_BYTE,         // dos byte's de opcode
+        .posicion_w           = w_in_bit_1,       // hay bit "w" en el bit 1
         .posicion_d           = 0b0010,       // hay bit "d" el bit 2 del opcode primario
         .posicion_s           = 0b0000,       // no hay bit "s"
-        .position_rm          = 0b01,         // hay r/m en el segundo byte 
-        .position_reg         = 0b01,         // hay reg en el segundo byte
-        .position_mod         = 0b01,         // hay campo mod en el segundo byte
-        .position_tttn        = 0b11,         // no hay tttn
+        .position_rm          = rm_in_byte_2,         // hay r/m en el segundo byte 
+        .position_reg         = reg_in_byte_2,         // hay reg en el segundo byte
+        .position_mod         = mod_in_byte_2,         // hay campo mod en el segundo byte
+        .position_tttn        = NOT_JMP_ACTIVATE_EXCEPTIONS,         // no hay tttn
         .mask_mod             = 0b11000000,   // los bits mod's estan en los primeros 2 bits del segundo byte de opcode
         .mask_reg             = 0b00111000,   // con esta mascara se obtiene los bits 5, 4 y 3 de 7,6,5,4,3,2,1,0
         .mask_rm              = 0b00000111,   // con esta mascara se obtiene los bits 2, 1 y 0 de 7,6,5,4,3,2,1,0
@@ -1373,51 +1373,51 @@ __attribute__((__section__(".instruccion"))) static Instruction_info my_instrucc
         // immediate to AL, AX, or EAX 0001 010w : immediate data
         // siendo el bit tttn en este caso el 00 0100 de la instruccion, asi podemos identificar esta variante
         
-        .number_reg           = 0b01,         // 0b01 - usa un campo reg 
-        .immediate_data       = 0b0,          // no tiene datos inmediatos
+        .number_reg           = INSTRUCTION_OF_ONE_REGISTER,         // 0b01 - usa un campo reg 
+        .immediate_data       = NO_IMMEDIATE_DATA,          // no tiene datos inmediatos
         .instruction = { // ADC – ADD with Carry
             .prefix = { 0b00000000, 0b00000000, 0b00000000, 0b00000000 },
             .opcode = {
-                (opcode){ .opcode_byte.byte = 0b00000000 },
-                (opcode){ .opcode_byte.byte = 0b00000000 }, // opcode secundario
+                (opcode){ .opcode_byte.byte = NOT_OPCODE },
+                (opcode){ .opcode_byte.byte = NOT_OPCODE }, // opcode secundario
                 (opcode){ .opcode_byte.byte = 0b00010000 }, // opcode primario
             },
-            .Mod_rm = (Mod_rm){   .mod = 0b00,   .reg = 0b000,  .R_M = 0b000 },
-            .SIB    =    (SIB){ .scale = 0b00, .index = 0b000, .base = 0b000 },
-            .displacement = { 0b00000000, 0b00000000, 0b00000000, 0b00000000},
-            .immediate    = { 0b00000000, 0b00000000, 0b00000000, 0b00000000}
+            .Mod_rm = (Mod_rm){   .mod = NOT_VALUE,   .reg = NOT_VALUE,  .R_M = NOT_VALUE },
+            .SIB    =    (SIB){ .scale = NOT_VALUE, .index = NOT_VALUE, .base = NOT_VALUE },
+            .displacement = { NOT_VALUE, NOT_VALUE, NOT_VALUE, NOT_VALUE},
+            .immediate    = { NOT_VALUE, NOT_VALUE, NOT_VALUE, NOT_VALUE}
         }
     },
     {
         // immediate to memory   1000 00sw : mod 010 r/m : immediate data
         // immediate to register 1000 00sw : 11  010 reg : immediate data
         .string               = STRING_ADC,
-        .immediate_instrution = 0b0,          // es una instruccion inmediata
-        .opcode_size          = 0b01,         // dos byte's de opcode
-        .posicion_w           = 0b0001,       // hay bit "w" en el bit 1
-        .posicion_d           = 0b0000,       // no hay bit 
-        .posicion_s           = 0b0010,       // hay bit "s" el bit 2 del opcode primario
-        .position_rm          = 0b01,         // hay r/m en el segundo byte 
-        .position_reg         = 0b01,         // hay reg en el segundo byte
-        .position_mod         = 0b01,         // hay campo mod en el segundo byte
-        .position_tttn        = 0b11,         // no hay tttn
+        .immediate_instrution = NO_IMMEDIATE_INSTRUCTION,          // es una instruccion inmediata
+        .opcode_size          = SIZE_OF_OPCODE_2_BYTE,         // dos byte's de opcode
+        .posicion_w           = w_in_bit_1,       // hay bit "w" en el bit 1
+        .posicion_d           = d_not_in_bit,       // no hay bit 
+        .posicion_s           = s_in_bit_2,       // hay bit "s" el bit 2 del opcode primario
+        .position_rm          = rm_in_byte_2,         // hay r/m en el segundo byte 
+        .position_reg         = reg_in_byte_2,         // hay reg en el segundo byte
+        .position_mod         = mod_in_byte_2,         // hay campo mod en el segundo byte
+        .position_tttn        = NOT_JMP_ACTIVATE_EXCEPTIONS,         // no hay tttn
         .mask_mod             = 0b11000000,   // los bits mod's estan en los primeros 2 bits del segundo byte de opcode
         .mask_reg             = 0b00111000,   // con esta mascara se obtiene los bits 5, 4 y 3 de 7,6,5,4,3,2,1,0
         .mask_rm              = 0b00000111,   // con esta mascara se obtiene los bits 2, 1 y 0 de 7,6,5,4,3,2,1,0
-        .mask_tttn            = 0b000000,
-        .number_reg           = 0b01,         // 0b10 - usa un campo reg 
-        .immediate_data       = 0b1,          // tiene datos inmediatos
+        .mask_tttn            = NOT_TTTN,
+        .number_reg           = INSTRUCTION_OF_ONE_REGISTER,         // 0b10 - usa un campo reg 
+        .immediate_data       = HAS_IMMEDIATE_DATA,          // tiene datos inmediatos
         .instruction = { // ADC – ADD with Carry
             .prefix = { 0b00000000, 0b00000000, 0b00000000, 0b00000000 },
             .opcode = {
-                (opcode){ .opcode_byte.byte = 0b00000000 },
+                (opcode){ .opcode_byte.byte = NOT_OPCODE },
                 (opcode){ .opcode_byte.byte = 0b00010000 }, // opcode secundario
                 (opcode){ .opcode_byte.byte = 0b10000000 }, // opcode primario
             },
-            .Mod_rm = (Mod_rm){   .mod = 0b00,   .reg = 0b000,  .R_M = 0b000 },
-            .SIB    =    (SIB){ .scale = 0b00, .index = 0b000, .base = 0b000 },
-            .displacement = { 0b00000000, 0b00000000, 0b00000000, 0b00000000},
-            .immediate    = { 0b00000000, 0b00000000, 0b00000000, 0b00000000}
+            .Mod_rm = (Mod_rm){   .mod = NOT_VALUE,   .reg = NOT_VALUE,  .R_M = NOT_VALUE },
+            .SIB    =    (SIB){ .scale = NOT_VALUE, .index = NOT_VALUE, .base = NOT_VALUE },
+            .displacement = { NOT_VALUE, NOT_VALUE, NOT_VALUE, NOT_VALUE},
+            .immediate    = { NOT_VALUE, NOT_VALUE, NOT_VALUE, NOT_VALUE}
         }
     },
     {
@@ -1425,32 +1425,32 @@ __attribute__((__section__(".instruccion"))) static Instruction_info my_instrucc
         // immediate to register 1000 00sw : 11 100 reg : immediate data
         // immediate to memory 1000 00sw : mod 100 r/m : immediate data
         .string               = STRING_AND,
-        .immediate_instrution = 0b0,          // es una instruccion inmediata
-        .opcode_size          = 0b01,         // dos byte's de opcode
-        .posicion_w           = 0b0001,       // hay bit "w" en el bit 1
-        .posicion_d           = 0b0000,       // no hay bit "d" 
-        .posicion_s           = 0b0010,       // hay bit "s" en el segundo bit
-        .position_rm          = 0b01,         // hay r/m en el segundo byte 
-        .position_reg         = 0b01,         // hay reg en el segundo byte
-        .position_mod         = 0b01,         // hay campo mod en el segundo byte
-        .position_tttn        = 0b11,         // no hay tttn
+        .immediate_instrution = NO_IMMEDIATE_INSTRUCTION,          // es una instruccion inmediata
+        .opcode_size          = SIZE_OF_OPCODE_2_BYTE,         // dos byte's de opcode
+        .posicion_w           = w_in_bit_1,       // hay bit "w" en el bit 1
+        .posicion_d           = d_not_in_bit,       // no hay bit "d" 
+        .posicion_s           = s_in_bit_2,       // hay bit "s" en el segundo bit
+        .position_rm          = rm_in_byte_2,         // hay r/m en el segundo byte 
+        .position_reg         = reg_in_byte_2,         // hay reg en el segundo byte
+        .position_mod         = mod_in_byte_2,         // hay campo mod en el segundo byte
+        .position_tttn        = NOT_JMP_ACTIVATE_EXCEPTIONS,         // no hay tttn
         .mask_mod             = 0b11000000,   // los bits mod's estan en los primeros 2 bits del segundo byte de opcode
         .mask_reg             = 0b00111000,   // con esta mascara se obtiene los bits 5, 4 y 3 de 7,6,5,4,3,2,1,0
         .mask_rm              = 0b00000111,   // con esta mascara se obtiene los bits 2, 1 y 0 de 7,6,5,4,3,2,1,0
-        .mask_tttn            = 0b000000,
-        .number_reg           = 0b01,         // 0b10 - usa un campo reg 
-        .immediate_data       = 0b1,          // tiene datos inmediatos
+        .mask_tttn            = NOT_TTTN,
+        .number_reg           = INSTRUCTION_OF_ONE_REGISTER,         // 0b10 - usa un campo reg 
+        .immediate_data       = HAS_IMMEDIATE_DATA,          // tiene datos inmediatos
         .instruction = { // 
             .prefix = { 0b00000000, 0b00000000, 0b00000000, 0b00000000 },
             .opcode = {
-                (opcode){ .opcode_byte.byte = 0b00000000 },
+                (opcode){ .opcode_byte.byte = NOT_OPCODE },
                 (opcode){ .opcode_byte.byte = 0b00100000 }, // opcode secundario
                 (opcode){ .opcode_byte.byte = 0b10000000 }, // opcode primario
             },
-            .Mod_rm = (Mod_rm){   .mod = 0b00,   .reg = 0b000,  .R_M = 0b000 },
-            .SIB    =    (SIB){ .scale = 0b00, .index = 0b000, .base = 0b000 },
-            .displacement = { 0b00000000, 0b00000000, 0b00000000, 0b00000000},
-            .immediate    = { 0b00000000, 0b00000000, 0b00000000, 0b00000000}
+            .Mod_rm = (Mod_rm){   .mod = NOT_VALUE,   .reg = NOT_VALUE,  .R_M = NOT_VALUE },
+            .SIB    =    (SIB){ .scale = NOT_VALUE, .index = NOT_VALUE, .base = NOT_VALUE },
+            .displacement = { NOT_VALUE, NOT_VALUE, NOT_VALUE, NOT_VALUE},
+            .immediate    = { NOT_VALUE, NOT_VALUE, NOT_VALUE, NOT_VALUE}
         }
     },
     {
@@ -1460,39 +1460,39 @@ __attribute__((__section__(".instruccion"))) static Instruction_info my_instrucc
         // memory to register 0000 001w : mod reg r/m
         // register to memory 0000 000w : mod reg r/m
         .string               = STRING_ADD,
-        .immediate_instrution = 0b0,          // es una instruccion inmediata
-        .opcode_size          = 0b00,         // dos byte's de opcode
-        .posicion_w           = 0b0001,       // hay bit "w" en el bit 1
-        .posicion_d           = 0b0010,       // hay bit "d" el bit 2 del opcode primario
-        .posicion_s           = 0b0000,       // hay bit "s" en el segundo bit
-        .position_rm          = 0b01,         // hay r/m en el segundo byte 
-        .position_reg         = 0b01,         // hay reg en el segundo byte
-        .position_mod         = 0b01,         // hay campo mod en el segundo byte
-        .position_tttn        = 0b11,         // no hay tttn
+        .immediate_instrution = NO_IMMEDIATE_INSTRUCTION,          // es una instruccion inmediata
+        .opcode_size          = SIZE_OF_OPCODE_1_BYTE,         // dos byte's de opcode
+        .posicion_w           = w_in_bit_1,       // hay bit "w" en el bit 1
+        .posicion_d           = d_in_bit_2,       // hay bit "d" el bit 2 del opcode primario
+        .posicion_s           = s_in_bit_undefined,       // hay bit "s" en el segundo bit
+        .position_rm          = rm_in_byte_2,         // hay r/m en el segundo byte 
+        .position_reg         = reg_in_byte_2,         // hay reg en el segundo byte
+        .position_mod         = mod_in_byte_2,         // hay campo mod en el segundo byte
+        .position_tttn        = NOT_JMP_ACTIVATE_EXCEPTIONS,         // no hay tttn
         .mask_mod             = 0b11000000,   // los bits mod's estan en los primeros 2 bits del segundo byte de opcode
         .mask_reg             = 0b00111000,   // con esta mascara se obtiene los bits 5, 4 y 3 de 7,6,5,4,3,2,1,0
         .mask_rm              = 0b00000111,   // con esta mascara se obtiene los bits 2, 1 y 0 de 7,6,5,4,3,2,1,0
-        .mask_tttn            = 0b000100,     // al ser el position_tttn 11, quiere decir que no es una instruccion de salto
+        .mask_tttn            = EXCEPTION_AL_AX_EAX,     // al ser el position_tttn 11, quiere decir que no es una instruccion de salto
         // por tanto podemos usar mask tttn para identificar instrucciones diferentes a los saltos,
         // en este caso se usara para identicar esta variante:
         // immediate to AL, AX, or EAX 0000 010w : immediate data
         // siendo el bit tttn en este caso el 00 0100 de la instruccion, asi podemos identificar esta variante
         
-        .number_reg           = 0b01,         // 0b10 - usa un campo reg 
-        .immediate_data       = 0b0,          // tiene datos inmediatos
+        .number_reg           = INSTRUCTION_OF_ONE_REGISTER,         // 0b10 - usa un campo reg 
+        .immediate_data       = NO_IMMEDIATE_DATA,          // tiene datos inmediatos
         .instruction = { // ADC – ADD with Carry
-            .prefix = { 0b00000000, 0b00000000, 0b00000000, 0b00000000 },
+            .prefix = { NOT_PREFIX, NOT_PREFIX, NOT_PREFIX, NOT_PREFIX },
             .opcode = {
-                (opcode){ .opcode_byte.byte = 0b00000000 },
-                (opcode){ .opcode_byte.byte = 0b11111111 }, // opcode secundario
+                (opcode){ .opcode_byte.byte = EXCEPTION_ADD_OPCODE },
+                (opcode){ .opcode_byte.byte = EXCEPTION_ADD_OPCODE }, // opcode secundario
                 // si se indica que se usa un byte de opcode(opcode_size = 0b00), solo se hara uso del valor opcode[2] como unico valor real,
                 // los siguientes campos opcode[1] y opcode[0] se podran usar para codifcar informacion addicional de la instruccion
                 (opcode){ .opcode_byte.byte = 0b00000011 }, // opcode primario
             },
-            .Mod_rm = (Mod_rm){   .mod = 0b00,   .reg = 0b000,  .R_M = 0b000 },
-            .SIB    =    (SIB){ .scale = 0b00, .index = 0b000, .base = 0b000 },
-            .displacement = { 0b00000000, 0b00000000, 0b00000000, 0b00000000},
-            .immediate    = { 0b00000000, 0b00000000, 0b00000000, 0b00000000}
+            .Mod_rm = (Mod_rm){   .mod = NOT_VALUE,   .reg = NOT_VALUE,  .R_M = NOT_VALUE },
+            .SIB    =    (SIB){ .scale = NOT_VALUE, .index = NOT_VALUE, .base = NOT_VALUE },
+            .displacement = { NOT_VALUE, NOT_VALUE, NOT_VALUE, NOT_VALUE},
+            .immediate    = { NOT_VALUE, NOT_VALUE, NOT_VALUE, NOT_VALUE}
         }
     },
     {
@@ -1500,34 +1500,34 @@ __attribute__((__section__(".instruccion"))) static Instruction_info my_instrucc
         // immediate to register 1000 00sw : 11 000 reg : immediate data
         // immediate to memory 1000 00sw : mod 000 r/m : immediate data
         .string               = STRING_ADD,
-        .immediate_instrution = 0b0,          // es una instruccion inmediata
-        .opcode_size          = 0b01,         // un/dos byte's de opcode
-        .posicion_w           = 0b0001,       // hay bit "w" en el bit 1
-        .posicion_d           = 0b0000,       // no hay bit "d" 
-        .posicion_s           = 0b0010,       // hay bit "s" en el segundo bit
-        .position_rm          = 0b01,         // hay r/m en el segundo byte 
-        .position_reg         = 0b01,         // hay reg en el segundo byte
-        .position_mod         = 0b01,         // hay campo mod en el segundo byte
-        .position_tttn        = 0b11,         // no hay tttn
+        .immediate_instrution = NO_IMMEDIATE_INSTRUCTION,          // es una instruccion inmediata
+        .opcode_size          = SIZE_OF_OPCODE_2_BYTE,         // un/dos byte's de opcode
+        .posicion_w           = w_in_bit_1,       // hay bit "w" en el bit 1
+        .posicion_d           = d_not_in_bit,       // no hay bit "d" 
+        .posicion_s           = s_in_bit_2,       // hay bit "s" en el segundo bit
+        .position_rm          = rm_in_byte_2,         // hay r/m en el segundo byte 
+        .position_reg         = reg_in_byte_2,         // hay reg en el segundo byte
+        .position_mod         = mod_in_byte_2,         // hay campo mod en el segundo byte
+        .position_tttn        = NOT_JMP_ACTIVATE_EXCEPTIONS,         // no hay tttn
         .mask_mod             = 0b11000000,   // los bits mod's estan en los primeros 2 bits del segundo byte de opcode
         .mask_reg             = 0b00111000,   // con esta mascara se obtiene los bits 5, 4 y 3 de 7,6,5,4,3,2,1,0
         .mask_rm              = 0b00000111,   // con esta mascara se obtiene los bits 2, 1 y 0 de 7,6,5,4,3,2,1,0
-        .mask_tttn            = 0b000000,
-        .number_reg           = 0b01,         // 0b10 - usa un campo reg 
-        .immediate_data       = 0b1,          // tiene datos inmediatos
+        .mask_tttn            = NOT_TTTN,
+        .number_reg           = INSTRUCTION_OF_ONE_REGISTER,         // 0b10 - usa un campo reg 
+        .immediate_data       = HAS_IMMEDIATE_DATA,          // tiene datos inmediatos
         .instruction = { // ADC – ADD with Carry
             .prefix = { 0b00000000, 0b00000000, 0b00000000, 0b00000000 },
             .opcode = {
-                (opcode){ .opcode_byte.byte = 0b00000000 },
-                (opcode){ .opcode_byte.byte = 0b00000000 }, // opcode secundario
+                (opcode){ .opcode_byte.byte = NOT_OPCODE },
+                (opcode){ .opcode_byte.byte = NOT_OPCODE }, // opcode secundario
                 // si se indica que se usa un byte de opcode(opcode_size = 0b00), solo se hara uso del valor opcode[2] como unico valor real,
                 // los siguientes campos opcode[1] y opcode[0] se podran usar para codifcar informacion addicional de la instruccion
                 (opcode){ .opcode_byte.byte = 0b10000000 }, // opcode primario
             },
-            .Mod_rm = (Mod_rm){   .mod = 0b00,   .reg = 0b000,  .R_M = 0b000 },
-            .SIB    =    (SIB){ .scale = 0b00, .index = 0b000, .base = 0b000 },
-            .displacement = { 0b00000000, 0b00000000, 0b00000000, 0b00000000},
-            .immediate    = { 0b00000000, 0b00000000, 0b00000000, 0b00000000}
+            .Mod_rm = (Mod_rm){   .mod = NOT_VALUE,   .reg = NOT_VALUE,  .R_M = NOT_VALUE },
+            .SIB    =    (SIB){ .scale = NOT_VALUE, .index = NOT_VALUE, .base = NOT_VALUE },
+            .displacement = { NOT_VALUE, NOT_VALUE, NOT_VALUE, NOT_VALUE},
+            .immediate    = { NOT_VALUE, NOT_VALUE, NOT_VALUE, NOT_VALUE}
         }
     },
     {
@@ -1539,32 +1539,32 @@ __attribute__((__section__(".instruccion"))) static Instruction_info my_instrucc
          * register to memory 0010 000w : mod reg r/m
          */
         .string               = STRING_AND,
-        .immediate_instrution = 0b0,          // es una instruccion inmediata
-        .opcode_size          = 0b01,         // dos byte's de opcode
-        .posicion_w           = 0b0001,       // hay bit "w" en el bit 1
+        .immediate_instrution = NO_IMMEDIATE_INSTRUCTION,          // es una instruccion inmediata
+        .opcode_size          = SIZE_OF_OPCODE_2_BYTE,         // dos byte's de opcode
+        .posicion_w           = w_in_bit_1,       // hay bit "w" en el bit 1
         .posicion_d           = 0b0010,       // hay bit  en el segundo bit
         .posicion_s           = 0b0000,       // no hay bit "s"
-        .position_rm          = 0b01,         // hay r/m en el segundo byte 
-        .position_reg         = 0b01,         // hay reg en el segundo byte
-        .position_mod         = 0b01,         // hay campo mod en el segundo byte
-        .position_tttn        = 0b11,         // no hay tttn
+        .position_rm          = rm_in_byte_2,         // hay r/m en el segundo byte 
+        .position_reg         = reg_in_byte_2,         // hay reg en el segundo byte
+        .position_mod         = mod_in_byte_2,         // hay campo mod en el segundo byte
+        .position_tttn        = NOT_JMP_ACTIVATE_EXCEPTIONS,         // no hay tttn
         .mask_mod             = 0b11000000,   // los bits mod's estan en los primeros 2 bits del segundo byte de opcode
         .mask_reg             = 0b00111000,   // con esta mascara se obtiene los bits 5, 4 y 3 de 7,6,5,4,3,2,1,0
         .mask_rm              = 0b00000111,   // con esta mascara se obtiene los bits 2, 1 y 0 de 7,6,5,4,3,2,1,0
         .mask_tttn            = 0b000100,     // al ser el position_tttn 11, quiere decir que no es una instruccion de salto
-        .number_reg           = 0b01,         // 0b10 - usa un campo reg 
-        .immediate_data       = 0b0,          // tiene datos inmediatos
+        .number_reg           = INSTRUCTION_OF_ONE_REGISTER,         // 0b10 - usa un campo reg 
+        .immediate_data       = NO_IMMEDIATE_DATA,          // tiene datos inmediatos
         .instruction = { // ADC – ADD with Carry
             .prefix = { 0b00000000, 0b00000000, 0b00000000, 0b00000000 },
             .opcode = {
-                (opcode){ .opcode_byte.byte = 0b00000000 },
-                (opcode){ .opcode_byte.byte = 0b00000000 }, // opcode secundario
+                (opcode){ .opcode_byte.byte = NOT_OPCODE },
+                (opcode){ .opcode_byte.byte = NOT_OPCODE }, // opcode secundario
                 (opcode){ .opcode_byte.byte = 0b00100000 }, // opcode primario
             },
-            .Mod_rm = (Mod_rm){   .mod = 0b00,   .reg = 0b000,  .R_M = 0b000 },
-            .SIB    =    (SIB){ .scale = 0b00, .index = 0b000, .base = 0b000 },
-            .displacement = { 0b00000000, 0b00000000, 0b00000000, 0b00000000},
-            .immediate    = { 0b00000000, 0b00000000, 0b00000000, 0b00000000}
+            .Mod_rm = (Mod_rm){   .mod = NOT_VALUE,   .reg = NOT_VALUE,  .R_M = NOT_VALUE },
+            .SIB    =    (SIB){ .scale = NOT_VALUE, .index = NOT_VALUE, .base = NOT_VALUE },
+            .displacement = { NOT_VALUE, NOT_VALUE, NOT_VALUE, NOT_VALUE},
+            .immediate    = { NOT_VALUE, NOT_VALUE, NOT_VALUE, NOT_VALUE}
         }
     },    
 };
