@@ -470,6 +470,10 @@
  *      - 10 El desplazamiento con signo de cuatro bytes sigue a los bytes del modo de direccionamiento.
  *      - 11 Modo de direccionamiento de registro.
  * 
+ * mod A anula el valor 11 en mod. por lo tanto solo se puede usar mod 10, 01 y mod 00
+ * para mod B se anula los valores 01 y 10 en mod. por lo tanto solo se puede usar mod 11 y mod 00ç
+ * para mod AB se anula los valores 00, 01 y 10. por lo tanto solo se puede usar mod 00
+ * 
  * Formas con el Byte ModR/M para 32bits y 16bits:
  * |--------------------------------------------------------------------------------------------------------------|
  * | mod |        00        |                 01              |                  10               |       11      |

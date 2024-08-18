@@ -88,18 +88,196 @@ uint64_t count_get_mask(uint64_t x)
 }
 
 static char *get_string_instruction_by_id(string_instrution_id id) {
-    switch (id)
+    static char *strings[] = {
+        [STRING_AAA]        = "aaa",
+        [STRING_AAD]        = "aad",
+        [STRING_AAM]        = "aam",
+        [STRING_AAS]        = "aas",
+        [STRING_ADC]        = "adc",
+        [STRING_ADD]        = "add",
+        [STRING_AND]        = "and",
+        [STRING_ARPL]       = "arpl",
+        [STRING_BOUND]      = "bound",
+        [STRING_BSF]        = "bsf",
+        [STRING_BSR]        = "bsr",
+        [STRING_BSWAP]      = "bswap",
+        [STRING_BT]         = "bt",
+        [STRING_BTC]        = "btc",
+        [STRING_BTR]        = "btr",
+        [STRING_BTS]        = "bts",
+        [STRING_CALL]       = "call",
+        [STRING_CALL_FAR]   = "call far",
+        [STRING_CBW]        = "cbw",
+        [STRING_CDQ]        = "cdq",
+        [STRING_CLC]        = "clc",
+        [STRING_CLD]        = "cld",
+        [STRING_CLI]        = "cli",
+        [STRING_CLTS]       = "clts",
+        [STRING_CMC]        = "cmc",
+        [STRING_CMP]        = "cmp",
+        [STRING_CMPS]       = "cmps",
+        // [STRING_CMPSB]  = "cmpsb",
+        // [STRING_CMPSW]  = "cmpsw",
+        // [STRING_CMPSD]  = "cmpsd",
+        [STRING_CMPXCHG]    = "cmpxchg",
+        [STRING_CPUID]      = "cpuid",
+        [STRING_CWD]        = "cwd",
+        [STRING_CWDE]       = "cwde",
+        [STRING_DAA]        = "daa",
+        [STRING_DAS]        = "das",
+        [STRING_DEC]        = "dec",
+        [STRING_DIV]        = "div",
+        [STRING_HLT]        = "hlt",
+        [STRING_IDIV]       = "idiv",
+        [STRING_IMUL]       = "imul",
+        [STRING_IN]         = "in",
+        [STRING_INC]        = "inc",
+        [STRING_INS]        = "ins",
+        [STRING_INT_n]      = "int",
+        [STRING_INT_3]      = "int 3",
+        [STRING_INTO]       = "into",
+        [STRING_INVD]       = "invd",
+        [STRING_INVLPG]     = "invlpg",
+        [STRING_INVPCID]    = "invpcid",
+        [STRING_IRET]       = "iret",
+        // [STRING_IRETD]  = "iretd",
+        [STRING_JCC]        = "jcc",
+        [STRING_JCXZ]       = "jcxz",
+        // [STRING_JECXZ]  = "jecxz",
+        [STRING_JMP]        = "jmp",
+        [STRING_JMP_FAR]    = "jmp far",
+        [STRING_LAHF]       = "lahf",
+        [STRING_LAR]        = "lar",
+        [STRING_LDS]        = "lds",
+        [STRING_LEA]        = "lea",
+        [STRING_LEAVE]      = "leave",
+        [STRING_LES]        = "les",
+        [STRING_LFS]        = "lfs",
+        [STRING_LGDT]       = "lgdt",
+        [STRING_LGS]        = "lgs",
+        [STRING_LIDT]       = "lidt",
+        [STRING_LLDT]       = "lldt",
+        [STRING_LMSW]       = "lmsw",
+        [STRING_LOCK]       = "lock",
+        [STRING_LODS]       = "lods",
+        // [STRING_LODSB]  = "lodsb",
+        // [STRING_LODSW]  = "lodsw",
+        // [STRING_LODD]   = "lodsd",
+        [STRING_LOOP]       = "loop",
+        [STRING_LOOPZ]      = "loopz",
+        // [STRING_LOOPE]  = "loope",
+        [STRING_LOOPNZ]     = "loopnz",
+        // [STRING_LOOPNE] = "loopne",
+        [STRING_LSL]        = "lsl",
+        [STRING_LSS]        = "lss",
+        [STRING_LTR]        = "ltr",
+        [STRING_MOV]        = "mov",
+        [STRING_MOVBE]      = "movbe",
+        [STRING_MOVS]       = "movs",
+        // [STRING_MOVSB]  = "movsb",
+        // [STRING_MOVSW]  = "movsw",
+        // [STRING_MOVSD]  = "movsd",
+        [STRING_MOVSX]      = "movsx",
+        [STRING_MOVZX]      = "movzx",
+        [STRING_MUL]        = "mul",
+        [STRING_NEG]        = "neg",
+        [STRING_NOP]        = "nop",
+        [STRING_NOT]        = "not",
+        [STRING_OR]         = "or",
+        [STRING_OUT]        = "out",
+        [STRING_OUTS]       = "outs",
+        [STRING_POP]        = "pop",
+        [STRING_POPA]       = "popa",
+        // [STRING_POPAD]  = "popad",
+        [STRING_POPF]       = "popf",
+        // [STRING_POPFD]  = "popfd",
+        [STRING_PUSH]       = "push",
+        [STRING_PUSHA]      = "pusha",
+        // [STRING_PUSHAD] = "pushad",
+        [STRING_PUSHF]      = "pushf",
+        // [STRING_PUSHFD] = "pushfd",
+        [STRING_RCL]        = "rcl",
+        [STRING_RCR]        = "rcr",
+        [STRING_RDMSR]      = "rdmsr",
+        [STRING_RDPMC]      = "rdpmc",
+        [STRING_RDTSC]      = "rdtsc",
+        [STRING_RDTSCP]     = "rdtscp",
+        [STRING_REP_INS]    = "rep ins",
+        [STRING_REP_LODS]   = "rep lods",
+        [STRING_REP_MOVS]   = "rep movs",
+        [STRING_REP_OUTS]   = "rep outs",
+        [STRING_REP_STOS]   = "rep stos",
+        [STRING_REPE_CMPS]  = "repe cmps",
+        [STRING_REPE_SCAS]  = "repe scas",
+        [STRING_REPNE_CMPS] = "repne cmps",
+        [STRING_REPNE_SCAS] = "repne scas",
+        [STRING_RET]        = "ret",
+        [STRING_RETF]       = "retf",
+        [STRING_ROL]        = "rol",
+        [STRING_ROR]        = "ror",
+        [STRING_RSM]        = "rsm",
+        [STRING_SAHF]       = "sahf",
+        [STRING_SAL]        = "sal",
+        [STRING_SAR]        = "sar",
+        [STRING_SBB]        = "sbb",
+        [STRING_SCAS]       = "scas",
+        // [STRING_SCASB]  = "scasb",
+        // [STRING_SCASW]  = "scasw",
+        // [STRING_SCASD]  = "scasd",
+        [STRING_SETcc]      = "setcc",
+        [STRING_SGDT]       = "sgdt",
+        [STRING_SHL]        = "shl",
+        [STRING_SHLD]       = "shld",
+        [STRING_SHR]        = "shr",
+        [STRING_SHRD]       = "shrd",
+        [STRING_SIDT]       = "sidt",
+        [STRING_SLDT]       = "sldt",
+        [STRING_SMSW]       = "smsw",
+        [STRING_STC]        = "stc",
+        [STRING_STD]        = "std",
+        [STRING_STI]        = "sti",
+        [STRING_STOS]       = "stos",
+        // [STRING_STOSB]  = "stosb",
+        // [STRING_STOSW]  = "stosw",
+        // [STRING_STOSD]  = "stosd",
+        [STRING_STR]        = "str",
+        [STRING_SUB]        = "sub",
+        [STRING_TEST]       = "test",
+        [STRING_UD]         = "ud",
+        [STRING_VERR]       = "verr",
+        [STRING_VERW]       = "verw",
+        [STRING_WAIT]       = "wait",
+        [STRING_WBINVD]     = "wbinvd",
+        [STRING_WRMSR]      = "wrmsr",
+        [STRING_XADD]       = "xadd",
+        [STRING_XCHG]       = "xchg",
+        [STRING_XOR]        = "xor",
+    };
+
+    if (id >= STRING_AAA && id <= STRING_XOR) return strings[id];
+    else return "error - not exits this instruttion.";
+
+    /*switch (id)
     {
-        case STRING_AAA: return "aaa";
-        case STRING_AAD: return "aad";
-        case STRING_AAM: return "aam";
-        case STRING_AAS: return "aas";
-        case STRING_ADC: return "adc";
-        case STRING_ADD: return "add";
-        case STRING_AND: return "and";
-        
+        case STRING_AAA: return ;
+        case STRING_AAD: return ;
+        case STRING_AAM: return ;
+        case STRING_AAS: return ;
+        case STRING_ADC: return ;
+        case STRING_ADD: return ;
+        case STRING_AND: return ;
+        case STRING_ARPL: return ;
+        case STRING_BOUND: return ;
+        case STRING_BSF: return ;
+        case STRING_BSR: return ;
+        case STRING_BSWAP: return ;
+        case STRING_BT: return ;
+        case STRING_BTC: return ;
+        case STRING_BTC: return ;
+        case STRING_BTC: return ;
+        case STRING_BTC: return ;
         default: return "error - not exits this instruttion.";
-    }
+    }*/
 }
 
 char *get_build_SIB_format_for_data_inmediate(Instruction_info *my_instruccion_){

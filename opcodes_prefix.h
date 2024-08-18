@@ -66,45 +66,45 @@ typedef enum string_instrution_id {
     STRING_AAS,
 
     /*
-     * ADC – ADD with Carry
-     * register1 to register2 0001 000w : 11 reg1 reg2
-     * register2 to register1 0001 001w : 11 reg1 reg2
-     * memory to register 0001 001w : mod reg r/m
-     * register to memory 0001 000w : mod reg r/m
-     * immediate to register 1000 00sw : 11 010 reg : immediate data
-     * immediate to AL, AX, or EAX 0001 010w : immediate data
-     * immediate to memory 1000 00sw : mod 010 r/m : immediate data
+     * ADC – ADD with Carry.
+     * register1 to register2 0001 000w : 11 reg1 reg2.
+     * register2 to register1 0001 001w : 11 reg1 reg2.
+     * memory to register 0001 001w : mod reg r/m.
+     * register to memory 0001 000w : mod reg r/m.
+     * immediate to register 1000 00sw : 11 010 reg : immediate data.
+     * immediate to AL, AX, or EAX 0001 010w : immediate data.
+     * immediate to memory 1000 00sw : mod 010 r/m : immediate data.
      */
     STRING_ADC,
 
     /*
-     * ADD – Add
-     * register1 to register2 0000 000w : 11 reg1 reg2
-     * register2 to register1 0000 001w : 11 reg1 reg2
-     * memory to register 0000 001w : mod reg r/m
-     * register to memory 0000 000w : mod reg r/m
-     * immediate to register 1000 00sw : 11 000 reg : immediate data
-     * immediate to AL, AX, or EAX 0000 010w : immediate data
-     * immediate to memory 1000 00sw : mod 000 r/m : immediate data
+     * ADD – Add.
+     * register1 to register2 0000 000w : 11 reg1 reg2.
+     * register2 to register1 0000 001w : 11 reg1 reg2.
+     * memory to register 0000 001w : mod reg r/m.
+     * register to memory 0000 000w : mod reg r/m.
+     * immediate to register 1000 00sw : 11 000 reg : immediate data.
+     * immediate to AL, AX, or EAX 0000 010w : immediate data.
+     * immediate to memory 1000 00sw : mod 000 r/m : immediate data.
      */
     STRING_ADD,
 
     /*
-     * AND – Logical AND
-     * register1 to register2 0010 000w : 11 reg1 reg2
-     * register2 to register1 0010 001w : 11 reg1 reg2
-     * memory to register 0010 001w : mod reg r/m
-     * register to memory 0010 000w : mod reg r/m
-     * immediate to register 1000 00sw : 11 100 reg : immediate data
-     * immediate to AL, AX, or EAX 0010 010w : immediate data
-     * immediate to memory 1000 00sw : mod 100 r/m : immediate data
+     * AND – Logical AND.
+     * register1 to register2 0010 000w : 11 reg1 reg2.
+     * register2 to register1 0010 001w : 11 reg1 reg2.
+     * memory to register 0010 001w : mod reg r/m.
+     * register to memory 0010 000w : mod reg r/m.
+     * immediate to register 1000 00sw : 11 100 reg : immediate data.
+     * immediate to AL, AX, or EAX 0010 010w : immediate data.
+     * immediate to memory 1000 00sw : mod 100 r/m : immediate data.
      */
     STRING_AND,
 
     /*
-     * ARPL – Adjust RPL Field of Selector
-     * from register 0110 0011 : 11 reg1 reg2
-     * from memory 0110 0011 : mod reg r/m
+     * ARPL – Adjust RPL Field of Selector.
+     * from register 0110 0011 : 11 reg1 reg2.
+     * from memory 0110 0011 : mod reg r/m.
      */
     STRING_ARPL,
 
@@ -112,16 +112,16 @@ typedef enum string_instrution_id {
     STRING_BOUND,
 
     /*
-     * BSF – Bit Scan Forward
-     * register1, register2 0000 1111 : 1011 1100 : 11 reg1 reg2
-     * memory, register 0000 1111 : 1011 1100 : mod reg r/m
+     * BSF – Bit Scan Forward.
+     * register1, register2 0000 1111 : 1011 1100 : 11 reg1 reg2.
+     * memory, register 0000 1111 : 1011 1100 : mod reg r/m.
      */
     STRING_BSF,
 
     /*
-     * BSR – Bit Scan Reverse
-     * register1, register2 0000 1111 : 1011 1101 : 11 reg1 reg2
-     * memory, register 0000 1111 : 1011 1101 : mod reg r/m
+     * BSR – Bit Scan Reverse.
+     * register1, register2 0000 1111 : 1011 1101 : 11 reg1 reg2.
+     * memory, register 0000 1111 : 1011 1101 : mod reg r/m.
      */
     STRING_BSR,
 
@@ -129,53 +129,53 @@ typedef enum string_instrution_id {
     STRING_BSWAP,
 
     /*
-     * BT – Bit Test
-     * register, immediate 0000 1111 : 1011 1010 : 11 100 reg: imm8 data
-     * memory, immediate 0000 1111 : 1011 1010 : mod 100 r/m : imm8 data
-     * register1, register2 0000 1111 : 1010 0011 : 11 reg2 reg1
-     * memory, reg 0000 1111 : 1010 0011 : mod reg r/m
+     * BT – Bit Test.
+     * register, immediate 0000 1111 : 1011 1010 : 11 100 reg: imm8 data.
+     * memory, immediate 0000 1111 : 1011 1010 : mod 100 r/m : imm8 data.
+     * register1, register2 0000 1111 : 1010 0011 : 11 reg2 reg1.
+     * memory, reg 0000 1111 : 1010 0011 : mod reg r/m.
      */
     STRING_BT,
 
     /*
-     * BTC – Bit Test and Complement
-     * register, immediate 0000 1111 : 1011 1010 : 11 111 reg: imm8 data
-     * memory, immediate 0000 1111 : 1011 1010 : mod 111 r/m : imm8 data
-     * register1, register2 0000 1111 : 1011 1011 : 11 reg2 reg1
-     * memory, reg 0000 1111 : 1011 1011 : mod reg r/m
+     * BTC – Bit Test and Complement.
+     * register, immediate 0000 1111 : 1011 1010 : 11 111 reg: imm8 data.
+     * memory, immediate 0000 1111 : 1011 1010 : mod 111 r/m : imm8 data.
+     * register1, register2 0000 1111 : 1011 1011 : 11 reg2 reg1.
+     * memory, reg 0000 1111 : 1011 1011 : mod reg r/m.
      */
     STRING_BTC,
 
     /*
-     * BTR – Bit Test and Reset
-     * register, immediate 0000 1111 : 1011 1010 : 11 110 reg: imm8 data
-     * memory, immediate 0000 1111 : 1011 1010 : mod 110 r/m : imm8 data
-     * register1, register2 0000 1111 : 1011 0011 : 11 reg2 reg1
-     * memory, reg 0000 1111 : 1011 0011 : mod reg r/m
+     * BTR – Bit Test and Reset,
+     * register, immediate 0000 1111 : 1011 1010 : 11 110 reg: imm8 data,
+     * memory, immediate 0000 1111 : 1011 1010 : mod 110 r/m : imm8 data,
+     * register1, register2 0000 1111 : 1011 0011 : 11 reg2 reg1,
+     * memory, reg 0000 1111 : 1011 0011 : mod reg r/m,
      */
     STRING_BTR,
 
     /*
-     * BTS – Bit Test and Set
-     * register, immediate 0000 1111 : 1011 1010 : 11 101 reg: imm8 data
-     * memory, immediate 0000 1111 : 1011 1010 : mod 101 r/m : imm8 data
-     * register1, register2 0000 1111 : 1010 1011 : 11 reg2 reg1
-     * memory, reg 0000 1111 : 1010 1011 : mod reg r/m
+     * BTS – Bit Test and Set.
+     * register, immediate 0000 1111 : 1011 1010 : 11 101 reg: imm8 data.
+     * memory, immediate 0000 1111 : 1011 1010 : mod 101 r/m : imm8 data.
+     * register1, register2 0000 1111 : 1010 1011 : 11 reg2 reg1.
+     * memory, reg 0000 1111 : 1010 1011 : mod reg r/m.
      */
     STRING_BTS,
 
     /*
-     * CALL – Call Procedure (in same segment)
-     * direct 1110 1000 : full displacement
-     * register indirect 1111 1111 : 11 010 reg
-     * memory indirect 1111 1111 : mod 010 r/m
+     * CALL – Call Procedure (in same segment).
+     * direct 1110 1000 : full displacement.
+     * register indirect 1111 1111 : 11 010 reg.
+     * memory indirect 1111 1111 : mod 010 r/m.
      */
     STRING_CALL,      
 
     /*
-     * CALL – Call Procedure (in other segment)
-     * direct 1001 1010 : unsigned full offset, selector
-     * indirect 1111 1111 : mod 011 r/m
+     * CALL – Call Procedure (in other segment).
+     * direct 1001 1010 : unsigned full offset, selector.
+     * indirect 1111 1111 : mod 011 r/m.
      */
     STRING_CALL_FAR, 
 
@@ -201,14 +201,14 @@ typedef enum string_instrution_id {
     STRING_CMC,
 
     /*
-     * CMP – Compare Two Operands
-     * register1 with register2 0011 100w : 11 reg1 reg2
-     * register2 with register1 0011 101w : 11 reg1 reg2
-     * memory with register 0011 100w : mod reg r/m
-     * register with memory 0011 101w : mod reg r/m
-     * immediate with register 1000 00sw : 11 111 reg : immediate data
-     * immediate with AL, AX, or EAX 0011 110w : immediate data
-     * immediate with memory 1000 00sw : mod 111 r/m : immediate data
+     * CMP – Compare Two Operands.
+     * register1 with register2 0011 100w : 11 reg1 reg2.
+     * register2 with register1 0011 101w : 11 reg1 reg2.
+     * memory with register 0011 100w : mod reg r/m.
+     * register with memory 0011 101w : mod reg r/m.
+     * immediate with register 1000 00sw : 11 111 reg : immediate data.
+     * immediate with AL, AX, or EAX 0011 110w : immediate data.
+     * immediate with memory 1000 00sw : mod 111 r/m : immediate data.
      */
     STRING_CMP,
 
@@ -219,9 +219,9 @@ typedef enum string_instrution_id {
                 STRING_CMPSD = STRING_CMPS,
     
     /*
-     * CMPXCHG – Compare and Exchange
-     * register1, register2 0000 1111 : 1011 000w : 11 reg2 reg1
-     * memory, register 0000 1111 : 1011 000w : mod reg r/m
+     * CMPXCHG – Compare and Exchange.
+     * register1, register2 0000 1111 : 1011 000w : 11 reg2 reg1.
+     * memory, register 0000 1111 : 1011 000w : mod reg r/m.
      */
     STRING_CMPXCHG,
 
@@ -241,18 +241,19 @@ typedef enum string_instrution_id {
     STRING_DAS,
 
     /*
-     * DEC – Decrement by 1
-     * register 1111 111w : 11 001 reg
-     * register (alternate encoding) 0100 1 reg
-     * memory 1111 111w : mod 001 r/m
+     * DEC – Decrement by 1.
+     * register 1111 111w : 11 001 reg.
+     * register (alternate encoding) 0100 1 reg.
+     * memory 1111 111w : mod 001 r/m.
      */
     STRING_DEC,
 
     /*
-     * DEC – Decrement by 1
-     * register 1111 111w : 11 001 reg
-     * register (alternate encoding) 0100 1 reg
-     * memory 1111 111w : mod 001 r/m
+     * DIV – Unsigned Divide.
+     * AL, AX, or EAX by register 0100 000B 1111 011w : 11 110 reg.
+     * Divide RDX:RAX by qwordregister 0100 100B 1111 0111 : 11 110 qwordreg.
+     * AL, AX, or EAX by memory 0100 00XB 1111 011w : mod 110 r/m.
+     * Divide RDX:RAX by memory64 0100 10XB 1111 0111 : mod 110 r/m.
      */
     STRING_DIV,
 
@@ -260,35 +261,35 @@ typedef enum string_instrution_id {
     STRING_HLT,
 
     /* 
-     * IDIV – Signed Divide
-     * AL, AX, or EAX by register 1111 011w : 11 111 reg
-     * AL, AX, or EAX by memory 1111 011w : mod 111 r/m
+     * IDIV – Signed Divide.
+     * AL, AX, or EAX by register 1111 011w : 11 111 reg.
+     * AL, AX, or EAX by memory 1111 011w : mod 111 r/m.
      */
     STRING_IDIV,
 
     /*
-     * IMUL – Signed Multiply
-     * AL, AX, or EAX with register 1111 011w : 11 101 reg
-     * AL, AX, or EAX with memory 1111 011w : mod 101 reg
-     * register1 with register2 0000 1111 : 1010 1111 : 11 : reg1 reg2
-     * register with memory 0000 1111 : 1010 1111 : mod reg r/m
-     * register1 with immediate to register2 0110 10s1 : 11 reg1 reg2 : immediate data
-     * memory with immediate to register 0110 10s1 : mod reg r/m : immediate data
+     * IMUL – Signed Multiply.
+     * AL, AX, or EAX with register 1111 011w : 11 101 reg.
+     * AL, AX, or EAX with memory 1111 011w : mod 101 reg.
+     * register1 with register2 0000 1111 : 1010 1111 : 11 : reg1 reg2.
+     * register with memory 0000 1111 : 1010 1111 : mod reg r/m.
+     * register1 with immediate to register2 0110 10s1 : 11 reg1 reg2 : immediate data.
+     * memory with immediate to register 0110 10s1 : mod reg r/m : immediate data.
      */
     STRING_IMUL,
 
     /*
-     * IN – Input From Port
-     * fixed port 1110 010w : port number
-     * variable port 1110 110w
+     * IN – Input From Port.
+     * fixed port 1110 010w : port number.
+     * variable port 1110 110w.
      */
     STRING_IN,
 
     /*
-     * INC – Increment by 1
-     * reg 1111 111w : 11 000 reg
-     * reg (alternate encoding) 0100 0 reg
-     * memory 1111 111w : mod 000 r/m
+     * INC – Increment by 1.
+     * reg 1111 111w : 11 000 reg.
+     * reg (alternate encoding) 0100 0 reg.
+     * memory 1111 111w : mod 000 r/m.
      */
     STRING_INC,
 
@@ -318,34 +319,34 @@ typedef enum string_instrution_id {
         STRING_IRETD = STRING_IRET,
 
     /*
-     * Jcc – Jump if Condition is Met
-     * 8-bit displacement 0111 tttn : 8-bit displacement
-     * full displacement 0000 1111 : 1000 tttn : full displacement
+     * Jcc – Jump if Condition is Met.
+     * 8-bit displacement 0111 tttn : 8-bit displacement.
+     * full displacement 0000 1111 : 1000 tttn : full displacement.
      */
     STRING_JCC,
 
     /*
      * JCXZ/JECXZ – Jump on CX/ECX Zero
      *  Address-size prefix differentiates JCXZ
-     *  and JECXZ
-     * 1110 0011 : 8-bit displacement
+     *  and JECXZ.
+     * 1110 0011 : 8-bit displacement.
      */
     STRING_JCXZ,
         STRING_JECXZ = STRING_JCXZ,
 
     /*
-     * JMP – Unconditional Jump (to same segment)
-     * short 1110 1011 : 8-bit displacement
-     * direct 1110 1001 : full displacement
-     * register indirect 1111 1111 : 11 100 reg
-     * memory indirect 1111 1111 : mod 100 r/m
+     * JMP – Unconditional Jump (to same segment).
+     * short 1110 1011 : 8-bit displacement.
+     * direct 1110 1001 : full displacement.
+     * register indirect 1111 1111 : 11 100 reg.
+     * memory indirect 1111 1111 : mod 100 r/m.
      */
     STRING_JMP,    
 
     /*
-     * JMP – Unconditional Jump (to other segment)
-     * direct intersegment 1110 1010 : unsigned full offset, selector
-     * indirect intersegment 1111 1111 : mod 101 r/m
+     * JMP – Unconditional Jump (to other segment).
+     * direct intersegment 1110 1010 : unsigned full offset, selector.
+     * indirect intersegment 1111 1111 : mod 101 r/m.
      */  
     STRING_JMP_FAR,  
     
@@ -353,9 +354,9 @@ typedef enum string_instrution_id {
     STRING_LAHF,
 
     /*
-     * LAR – Load Access Rights Byte
-     * from register 0000 1111 : 0000 0010 : 11 reg1 reg2
-     * from memory 0000 1111 : 0000 0010 : mod reg r/m
+     * LAR – Load Access Rights Byte.
+     * from register 0000 1111 : 0000 0010 : 11 reg1 reg2.
+     * from memory 0000 1111 : 0000 0010 : mod reg r/m.
      */
     STRING_LAR,
 
@@ -384,16 +385,16 @@ typedef enum string_instrution_id {
     STRING_LIDT,
 
     /*
-     * LLDT – Load Local Descriptor Table Register
-     * LDTR from register 0000 1111 : 0000 0000 : 11 010 reg
-     * LDTR from memory 0000 1111 : 0000 0000 : mod 010 r/m
+     * LLDT – Load Local Descriptor Table Register.
+     * LDTR from register 0000 1111 : 0000 0000 : 11 010 reg.
+     * LDTR from memory 0000 1111 : 0000 0000 : mod 010 r/m.
      */
     STRING_LLDT,
 
     /*
-     * LMSW – Load Machine Status Word
-     * from register 0000 1111 : 0000 0001 : 11 110 reg
-     * from memory 0000 1111 : 0000 0001 : mod 110 r/m
+     * LMSW – Load Machine Status Word.
+     * from register 0000 1111 : 0000 0001 : 11 110 reg.
+     * from memory 0000 1111 : 0000 0001 : mod 110 r/m.
      */
     STRING_LMSW,
 
@@ -418,9 +419,9 @@ typedef enum string_instrution_id {
         STRING_LOOPNE = STRING_LOOPNZ,
 
     /*
-     * LSL – Load Segment Limit
-     * from register 0000 1111 : 0000 0011 : 11 reg1 reg2
-     * from memory 0000 1111 : 0000 0011 : mod reg r/m
+     * LSL – Load Segment Limit.
+     * from register 0000 1111 : 0000 0011 : 11 reg1 reg2.
+     * from memory 0000 1111 : 0000 0011 : mod reg r/m.
      */
     STRING_LSL,
 
@@ -428,9 +429,9 @@ typedef enum string_instrution_id {
     STRING_LSS,
 
     /*
-     * LTR – Load Task Register
-     * from register 0000 1111 : 0000 0000 : 11 011 reg
-     * from memory 0000 1111 : 0000 0000 : mod 011 r/m
+     * LTR – Load Task Register.
+     * from register 0000 1111 : 0000 0000 : 11 011 reg.
+     * from memory 0000 1111 : 0000 0000 : mod 011 r/m.
      */
     STRING_LTR,
 
@@ -491,38 +492,38 @@ typedef enum string_instrution_id {
     STRING_MOVSX,
 
     /*
-     * MOVZX – Move with Zero-Extend
-     * register2 to register1 0000 1111 : 1011 011w : 11 reg1 reg2
-     * memory to register 0000 1111 : 1011 011w : mod reg r/m
+     * MOVZX – Move with Zero-Extend.
+     * register2 to register1 0000 1111 : 1011 011w : 11 reg1 reg2.
+     * memory to register 0000 1111 : 1011 011w : mod reg r/m.
      */
     STRING_MOVZX,
 
     /*
-     * MUL – Unsigned Multiply
-     * AL, AX, or EAX with register 1111 011w : 11 100 reg
-     * AL, AX, or EAX with memory 1111 011w : mod 100 r/m
+     * MUL – Unsigned Multiply.
+     * AL, AX, or EAX with register 1111 011w : 11 100 reg.
+     * AL, AX, or EAX with memory 1111 011w : mod 100 r/m.
      */
     STRING_MUL,
 
     /*
-     * NEG – Two's Complement Negation
-     * register 1111 011w : 11 011 reg
-     * memory 1111 011w : mod 011 r/m
+     * NEG – Two's Complement Negation.
+     * register 1111 011w : 11 011 reg.
+     * memory 1111 011w : mod 011 r/m.
      */
     STRING_NEG,
 
     /*
-     * NOP – No Operation 1001 0000
-     * NOP – Multi-byte No Operation1
-     * register 0000 1111 0001 1111 : 11 000 reg
-     * memory 0000 1111 0001 1111 : mod 000 r/m
+     * NOP – No Operation 1001 0000.
+     * NOP – Multi-byte No Operation1.
+     * register 0000 1111 0001 1111 : 11 000 reg.
+     * memory 0000 1111 0001 1111 : mod 000 r/m.
      */
     STRING_NOP,
 
     /* 
-     * NOT – One's Complement Negation
-     * register 1111 011w : 11 010 reg
-     * memory 1111 011w : mod 010 r/m
+     * NOT – One's Complement Negation.
+     * register 1111 011w : 11 010 reg.
+     * memory 1111 011w : mod 010 r/m.
      */
     STRING_NOT,
 
@@ -554,10 +555,10 @@ typedef enum string_instrution_id {
      * register (alternate encoding) 0101 1 reg.
      * memory 1000 1111 : mod 000 r/m.
      * 
-     * POP – Pop a Segment Register from the Stack (Note: CS cannot be sreg2 in this usage.)
-     * segment register DS, ES 000 sreg2 111
-     * segment register SS 000 sreg2 111
-     * segment register FS, GS 0000 1111: 10 sreg3 001
+     * POP – Pop a Segment Register from the Stack (Note: CS cannot be sreg2 in this usage.).
+     * segment register DS, ES 000 sreg2 111.
+     * segment register SS 000 sreg2 111.
+     * segment register FS, GS 0000 1111: 10 sreg3 001.
      */
     STRING_POP,
 
@@ -591,24 +592,24 @@ typedef enum string_instrution_id {
         STRING_PUSHFD = STRING_PUSHF,
     
     /*
-     * RCL – Rotate thru Carry Left
-     * register by 1 1101 000w : 11 010 reg
-     * memory by 1 1101 000w : mod 010 r/m
-     * register by CL 1101 001w : 11 010 reg
-     * memory by CL 1101 001w : mod 010 r/m
-     * register by immediate count 1100 000w : 11 010 reg : imm8 data
-     * memory by immediate count 1100 000w : mod 010 r/m : imm8 data
+     * RCL – Rotate thru Carry Left.
+     * register by 1 1101 000w : 11 010 reg.
+     * memory by 1 1101 000w : mod 010 r/m.
+     * register by CL 1101 001w : 11 010 reg.
+     * memory by CL 1101 001w : mod 010 r/m.
+     * register by immediate count 1100 000w : 11 010 reg : imm8 data.
+     * memory by immediate count 1100 000w : mod 010 r/m : imm8 data.
      */
     STRING_RCL,
 
     /*
-     * RCR – Rotate thru Carry Right
-     * register by 1 1101 000w : 11 011 reg
-     * memory by 1 1101 000w : mod 011 r/m
-     * register by CL 1101 001w : 11 011 reg
-     * memory by CL 1101 001w : mod 011 r/m
-     * register by immediate count 1100 000w : 11 011 reg : imm8 data
-     * memory by immediate count 1100 000w : mod 011 r/m : imm8 data
+     * RCR – Rotate thru Carry Right.
+     * register by 1 1101 000w : 11 011 reg.
+     * memory by 1 1101 000w : mod 011 r/m.
+     * register by CL 1101 001w : 11 011 reg.
+     * memory by CL 1101 001w : mod 011 r/m.
+     * register by immediate count 1100 000w : 11 011 reg : imm8 data.
+     * memory by immediate count 1100 000w : mod 011 r/m : imm8 data.
      */
     STRING_RCR,
 
@@ -652,39 +653,38 @@ typedef enum string_instrution_id {
     STRING_REPNE_SCAS,
 
     /*
-     * RET – Return from Procedure (to same segment)
-     * no argument 1100 0011
-     * adding immediate to SP 1100 0010 : 16-bit displacement
+     * RET – Return from Procedure (to same segment).
+     * no argument 1100 0011.
+     * adding immediate to SP 1100 0010 : 16-bit displacement.
      */
     STRING_RET,
 
     /*
-     * RET – Return from Procedure (to other segment)
-     * intersegment           -> 1100 1011
-     * adding immediate to SP -> 1100 1010 : 16-bit displacement
+     * RET – Return from Procedure (to other segment).
+     * intersegment           -> 1100 1011.
+     * adding immediate to SP -> 1100 1010 : 16-bit displacement.
      */
     STRING_RETF,
 
     /*
-     * ROL – Rotate Left
-     * register by 1 1101 000w : 11 000 reg
-     * memory by 1 1101 000w : mod 000 r/m
-     * register by CL 1101 001w : 11 000 reg
-     * memory by CL 1101 001w : mod 000 r/m
-     * register by immediate count 1100 000w : 11 000 reg : imm8 data
-     * memory by immediate count 1100 000w : mod 000 r/m : imm8 data
+     * ROL – Rotate Left.
+     * register by 1 1101 000w : 11 000 reg.
+     * memory by 1 1101 000w : mod 000 r/m.
+     * register by CL 1101 001w : 11 000 reg.
+     * memory by CL 1101 001w : mod 000 r/m.
+     * register by immediate count 1100 000w : 11 000 reg : imm8 data.
+     * memory by immediate count 1100 000w : mod 000 r/m : imm8 data.
      */
     STRING_ROL,
 
     /*
-     * ROR – Rotate Right
-     * register by 1 1101 000w : 11 001 reg
-     * memory by 1 1101 000w : mod 001 r/m
-     * register by CL 1101 001w : 11 001 reg
-     * memory by CL 1101 001w : mod 001 r/m
-     * register by immediate count 1100 000w : 11 001 reg : imm8 data
-     * memory by immediate count 1100 000w : mod 001 r/m : imm8 data
-
+     * ROR – Rotate Right.
+     * register by 1 1101 000w : 11 001 reg.
+     * memory by 1 1101 000w : mod 001 r/m.
+     * register by CL 1101 001w : 11 001 reg.
+     * memory by CL 1101 001w : mod 001 r/m.
+     * register by immediate count 1100 000w : 11 001 reg : imm8 data.
+     * memory by immediate count 1100 000w : mod 001 r/m : imm8 data.
      */
     STRING_ROR,
 
@@ -698,25 +698,25 @@ typedef enum string_instrution_id {
     STRING_SAL,
 
     /*
-     * SAR – Shift Arithmetic Right
-     * register by 1 1101 000w : 11 111 reg
-     * memory by 1 1101 000w : mod 111 r/m
-     * register by CL 1101 001w : 11 111 reg
-     * memory by CL 1101 001w : mod 111 r/m
-     * register by immediate count 1100 000w : 11 111 reg : imm8 data
-     * memory by immediate count 1100 000w : mod 111 r/m : imm8 data
+     * SAR – Shift Arithmetic Right.
+     * register by 1 1101 000w : 11 111 reg.
+     * memory by 1 1101 000w : mod 111 r/m.
+     * register by CL 1101 001w : 11 111 reg.
+     * memory by CL 1101 001w : mod 111 r/m.
+     * register by immediate count 1100 000w : 11 111 reg : imm8 data.
+     * memory by immediate count 1100 000w : mod 111 r/m : imm8 data.
      */
     STRING_SAR,
 
     /*
-     * SBB – Integer Subtraction with Borrow
-     * register1 to register2 0001 100w : 11 reg1 reg2
-     * register2 to register1 0001 101w : 11 reg1 reg2
-     * memory to register 0001 101w : mod reg r/m
-     * register to memory 0001 100w : mod reg r/m
-     * immediate to register 1000 00sw : 11 011 reg : immediate data
-     * immediate to AL, AX, or EAX 0001 110w : immediate data
-     * immediate to memory 1000 00sw : mod 011 r/m : immediate data
+     * SBB – Integer Subtraction with Borrow.
+     * register1 to register2 0001 100w : 11 reg1 reg2.
+     * register2 to register1 0001 101w : 11 reg1 reg2.
+     * memory to register 0001 101w : mod reg r/m.
+     * register to memory 0001 100w : mod reg r/m.
+     * immediate to register 1000 00sw : 11 011 reg : immediate data.
+     * immediate to AL, AX, or EAX 0001 110w : immediate data.
+     * immediate to memory 1000 00sw : mod 011 r/m : immediate data.
      */
     STRING_SBB,
 
@@ -727,9 +727,9 @@ typedef enum string_instrution_id {
         STRING_SCASD = STRING_SCAS,
     
     /*
-     * SETcc – Byte Set on Condition
-     * register 0000 1111 : 1001 tttn : 11 000 reg
-     * memory 0000 1111 : 1001 tttn : mod 000 r/m
+     * SETcc – Byte Set on Condition.
+     * register 0000 1111 : 1001 tttn : 11 000 reg.
+     * memory 0000 1111 : 1001 tttn : mod 000 r/m.
      */
     STRING_SETcc,
 
@@ -737,42 +737,42 @@ typedef enum string_instrution_id {
     STRING_SGDT,
 
     /*
-     * SHL – Shift Left
-     * register by 1 1101 000w : 11 100 reg
-     * memory by 1 1101 000w : mod 100 r/m
-     * register by CL 1101 001w : 11 100 reg
-     * memory by CL 1101 001w : mod 100 r/m
-     * register by immediate count 1100 000w : 11 100 reg : imm8 data
-     * memory by immediate count 1100 000w : mod 100 r/m : imm8 data
+     * SHL – Shift Left.
+     * register by 1 1101 000w : 11 100 reg.
+     * memory by 1 1101 000w : mod 100 r/m.
+     * register by CL 1101 001w : 11 100 reg.
+     * memory by CL 1101 001w : mod 100 r/m.
+     * register by immediate count 1100 000w : 11 100 reg : imm8 data.
+     * memory by immediate count 1100 000w : mod 100 r/m : imm8 data.
      */
     STRING_SHL,
 
     /*
-     * SHLD – Double Precision Shift Left
-     * register by immediate count 0000 1111 : 1010 0100 : 11 reg2 reg1 : imm8
-     * memory by immediate count 0000 1111 : 1010 0100 : mod reg r/m : imm8
-     * register by CL 0000 1111 : 1010 0101 : 11 reg2 reg1
-     * memory by CL 0000 1111 : 1010 0101 : mod reg r/m
+     * SHLD – Double Precision Shift Left.
+     * register by immediate count 0000 1111 : 1010 0100 : 11 reg2 reg1 : imm8.
+     * memory by immediate count 0000 1111 : 1010 0100 : mod reg r/m : imm8.
+     * register by CL 0000 1111 : 1010 0101 : 11 reg2 reg1.
+     * memory by CL 0000 1111 : 1010 0101 : mod reg r/m.
      */
     STRING_SHLD,
 
     /*
-     * SHR – Shift Right
-     * register by 1 1101 000w : 11 101 reg
-     * memory by 1 1101 000w : mod 101 r/m
-     * register by CL 1101 001w : 11 101 reg
-     * memory by CL 1101 001w : mod 101 r/m
-     * register by immediate count 1100 000w : 11 101 reg : imm8 data
-     * memory by immediate count 1100 000w : mod 101 r/m : imm8 data
+     * SHR – Shift Right.
+     * register by 1 1101 000w : 11 101 reg.
+     * memory by 1 1101 000w : mod 101 r/m.
+     * register by CL 1101 001w : 11 101 reg.
+     * memory by CL 1101 001w : mod 101 r/m.
+     * register by immediate count 1100 000w : 11 101 reg : imm8 data.
+     * memory by immediate count 1100 000w : mod 101 r/m : imm8 data.
      */
     STRING_SHR,
 
     /*
-     * SHRD – Double Precision Shift Right
-     * register by immediate count 0000 1111 : 1010 1100 : 11 reg2 reg1 : imm8
-     * memory by immediate count 0000 1111 : 1010 1100 : mod reg r/m : imm8
-     * register by CL 0000 1111 : 1010 1101 : 11 reg2 reg1
-     * memory by CL 0000 1111 : 1010 1101 : mod reg r/m
+     * SHRD – Double Precision Shift Right.
+     * register by immediate count 0000 1111 : 1010 1100 : 11 reg2 reg1 : imm8.
+     * memory by immediate count 0000 1111 : 1010 1100 : mod reg r/m : imm8.
+     * register by CL 0000 1111 : 1010 1101 : 11 reg2 reg1.
+     * memory by CL 0000 1111 : 1010 1101 : mod reg r/m.
      */
     STRING_SHRD,
 
@@ -780,16 +780,16 @@ typedef enum string_instrution_id {
     STRING_SIDT,
 
     /*
-     * SLDT – Store Local Descriptor Table Register
-     * to register 0000 1111 : 0000 0000 : 11 000 reg
-     * to memory 0000 1111 : 0000 0000 : mod 000 r/m
+     * SLDT – Store Local Descriptor Table Register.
+     * to register 0000 1111 : 0000 0000 : 11 000 reg.
+     * to memory 0000 1111 : 0000 0000 : mod 000 r/m.
      */
     STRING_SLDT,
 
     /*
-     * SMSW – Store Machine Status Word
-     * to register 0000 1111 : 0000 0001 : 11 100 reg
-     * to memory 0000 1111 : 0000 0001 : mod 100 r/m
+     * SMSW – Store Machine Status Word.
+     * to register 0000 1111 : 0000 0001 : 11 100 reg.
+     * to memory 0000 1111 : 0000 0001 : mod 100 r/m.
     */
     STRING_SMSW,
 
@@ -838,23 +838,23 @@ typedef enum string_instrution_id {
     STRING_TEST,
     
     /*
-     * UD0 – Undefined instruction 0000 1111 : 1111 1111. -> 0f ff
-     * UD1 – Undefined instruction 0000 1111 : 1011 1001. -> 0f b9
-     * UD2 – Undefined instruction 0000 1111 : 0000 1011. -> 0f 0b    ud2 
+     * UD0 – Undefined instruction 0000 1111 : 1111 1111. -> 0f ff.
+     * UD1 – Undefined instruction 0000 1111 : 1011 1001. -> 0f b9.
+     * UD2 – Undefined instruction 0000 1111 : 0000 1011. -> 0f 0b.
      */
     STRING_UD,
 
     /*
-     * VERR – Verify a Segment for Reading
-     * register 0000 1111 : 0000 0000 : 11 100 reg
-     * memory 0000 1111 : 0000 0000 : mod 100 r/m
+     * VERR – Verify a Segment for Reading.
+     * register 0000 1111 : 0000 0000 : 11 100 reg.
+     * memory 0000 1111 : 0000 0000 : mod 100 r/m.
      */
     STRING_VERR,
 
     /*
-     * VERW – Verify a Segment for Writing
-     * register 0000 1111 : 0000 0000 : 11 101 reg
-     * memory 0000 1111 : 0000 0000 : mod 101 r/m
+     * VERW – Verify a Segment for Writing.
+     * register 0000 1111 : 0000 0000 : 11 101 reg.
+     * memory 0000 1111 : 0000 0000 : mod 101 r/m.
     */
     STRING_VERW,
 
@@ -868,18 +868,18 @@ typedef enum string_instrution_id {
     STRING_WRMSR,
 
     /*
-     * XADD – Exchange and Add
-     * register1, register2 0000 1111 : 1100 000w : 11 reg2 reg1
-     * memory, reg 0000 1111 : 1100 000w : mod reg r/m
+     * XADD – Exchange and Add.
+     * register1, register2 0000 1111 : 1100 000w : 11 reg2 reg1.
+     * memory, reg 0000 1111 : 1100 000w : mod reg r/m.
      */
     STRING_XADD,
 
     /*
-     * XCHG – Exchange Register/Memory with Register
-     * register1 with register2 1000 011w : 11 reg1 reg2
-     * AX or EAX with reg 1001 0 reg
-     * memory with reg 1000 011w : mod reg r/m
-     * XLAT/XLATB – Table Look-up Translation 1101 0111
+     * XCHG – Exchange Register/Memory with Register.
+     * register1 with register2 1000 011w : 11 reg1 reg2.
+     * AX or EAX with reg 1001 0 reg.
+     * memory with reg 1000 011w : mod reg r/m.
+     * XLAT/XLATB – Table Look-up Translation 1101 0111.
     */
     STRING_XCHG,
 
@@ -915,38 +915,92 @@ typedef enum register_id { // se especifica los registros
 
 #pragma pack(push, 1)
 
-typedef union opcode
+typedef union opcode // estructura para representar los opcodes
 {
     struct opcode_bits_final {
-        uint8_t      s:1; /* 
-                        * Longitud del operando(size?):
-                        * Si s = 0, los operandos son registros de 8 bits y posiciones de memoria.
-                        * Si s = 1, los operandos son de 16 bits o de 32 bits:
-                        */
-        uint8_t      d:1; /* 
-                        * direcion:
-                        * Si d=0, REG es la fuente, MOD R/M <- REG.
-                        * Si d=1, REG es el destino, REG <- MOD R/M.
-                        */
-        uint8_t opcode:6; // opcode de 1 byte
-    } opcode_bits_final; // no siempre se da este formato en las instrucciones
+        uint8_t      s:1;   /* 
+                            * Longitud del operando(size?):
+                            * Si s = 0, los operandos son registros de 8 bits y posiciones de memoria.
+                            * Si s = 1, los operandos son de 16 bits o de 32 bits:
+                            */
+        uint8_t      d:1;   /* 
+                             * direcion:
+                             * Si d=0, REG es la fuente, MOD R/M <- REG.
+                             * Si d=1, REG es el destino, REG <- MOD R/M.
+                             */
+        uint8_t opcode:6;    // opcode de 1 byte
+    } opcode_bits_final;     // no siempre se da este formato en las instrucciones
     struct opcode_bits {
         uint8_t b1:1; uint8_t b2:1; uint8_t b3:1; uint8_t b4:1; 
         uint8_t b5:1; uint8_t b6:1; uint8_t b7:1; uint8_t b8:1; 
-    } opcode_bits; // acceso a los campos de bit a bit (para los casos en los que el campo "w", "d", "s", puedan estar en diferentes ubicaciones)
-    struct opcode_byte {
-        uint8_t byte; 
-    } opcode_byte; // acceso a todos los campos en forma de byte
-} opcode;
+    } opcode_bits;          // acceso a los campos de bit a bit (para los casos en los que el campo "w", "d", "s", puedan estar en diferentes ubicaciones)
 
-typedef struct Mod_rm {
-    uint8_t    R_M:3; // Longitud del operando(size?)
-    uint8_t    reg:3; // direcion
+    struct opcode_byte {
+        uint8_t byte;       // acceder al opcode en forma de byte 
+    } opcode_byte;          // acceso a todos los campos en forma de byte
+} opcode;                   
+
+typedef struct Mod_rm { // estructura para representar el mod/rm (¿Register/Memory?)
+    uint8_t    R_M:3; /* 
+                       * campo ¿Registro/Memoria?  (reg2?).
+                       * dependiendo de la instruccion este campo se usa como indicar de un segundo registro fuente o destino.
+                       * En caso contrario se usa para el acceso a memoria o indicar el uso de un campo SIB.
+                       * 
+                       * Formas con el Byte ModR/M solo para 32bits:
+                       * |===|===|=================================.
+                       * |MOD|R/M|     Addressing Mode             . 
+                       * |===|===|=================================.
+                       * | 00|000|[ eax ]                          .            
+                       * | 01|000|[ eax + disp8 ]               (1).                   
+                       * | 10|000|[ eax + disp32 ]                 .  
+                       * | 11|000|register  ( al / ax / eax )   (2).
+                       * | 00|001|[ ecx ]                          .            
+                       * | 01|001|[ ecx + disp8 ]                  . 
+                       * | 10|001|[ ecx + disp32 ]                 .                     
+                       * | 11|001|register  ( cl / cx / ecx )      .             
+                       * | 00|010|[ edx ]                          .            
+                       * | 01|010|[ edx + disp8 ]                  .                                                          
+                       * | 10|010|[ edx + disp32 ]                 .                     
+                       * | 11|010|register  ( dl / dx / edx )      .                                
+                       * | 00|011|[ ebx ]                          .            
+                       * | 01|011|[ ebx + disp8 ]                  .                    
+                       * | 10|011|[ ebx + disp32 ]                 .                     
+                       * | 11|011|register  ( bl / bx / ebx )      .             
+                       * | 00|100|SIB  Mode                     (3).                   
+                       * | 01|100|SIB  +  disp8  Mode              .     
+                       * | 10|100|SIB  +  disp32  Mode             .                         
+                       * | 11|100|register  ( ah / sp / esp )      .             
+                       * | 00|101|32-bit Displacement-Only Mode (4).                   
+                       * | 01|101|[ ebp + disp8 ]                  .                    
+                       * | 10|101|[ ebp + disp32 ]                 .                     
+                       * | 11|101|register  ( ch / bp / ebp )      .             
+                       * | 00|110|[ esi ]                          .            
+                       * | 01|110|[ esi + disp8 ]                  .                    
+                       * | 10|110|[ esi + disp32 ]                 .                     
+                       * | 11|110|register  ( dh / si / esi )      .                                
+                       * | 00|111|[ edi ]                          .            
+                       * | 01|111|[ edi + disp8 ]                  .                    
+                       * | 10|111|[ edi + disp32 ]                 .                     
+                       * | 11|111|register  ( bh / di / edi )      .     
+                       * |===|===|=================================. 
+                       */
+    uint8_t    reg:3; /* 
+                       * campo registro (reg1?).
+                       * - 000 -> al(si w = 0) / ax(si w = 1) / eax (32bits) / rax.
+                       * - 001 -> cl(si w = 0) / cx(si w = 1) / ecx (32bits) / rcx.
+                       * - 010 -> dl(si w = 0) / dx(si w = 1) / edx (32bits) / rdx.
+                       * - 011 -> bl(si w = 0) / bx(si w = 1) / ebx (32bits) / rbx.
+                       * - 100 -> ah(si w = 0) / sp(si w = 1) / esp (32bits) / rsp.
+                       * - 101 -> ch(si w = 0) / bp(si w = 1) / ebp (32bits) / rbp.
+                       * - 110 -> dh(si w = 0) / si(si w = 1) / esi (32bits) / rsi.
+                       * - 111 -> bh(si w = 0) / di(si w = 1) / edi (32bits) / rdi.
+                       */
     uint8_t    mod:2; /*
                        * campo MOD:
-                       *  - 00 Modo de direccionamiento indirecto de registro o SIB sin desplazamiento (cuando R/M = 100) o modo de direccionamiento de sólo desplazamiento (cuando R/M = 101).
+                       *  - 00 Modo de direccionamiento indirecto de registro o SIB sin desplazamiento (cuando R/M = 100) o 
+                       *        modo de direccionamiento de sólo desplazamiento (cuando R/M = 101).
                        *  - 01 El desplazamiento con signo de un byte sigue a los bytes del modo de direccionamiento.
-                       *  - 10 El desplazamiento con signo de cuatro bytes sigue a los bytes del modo de direccionamiento.
+                       *  - 10 El desplazamiento con signo de cuatro/dos bytes sigue a los bytes del modo de direccionamiento.
                        *  - 11 Modo de direccionamiento de registro.
                        */
 } Mod_rm;
@@ -961,11 +1015,77 @@ typedef struct Mod_rm {
  * 32 bits, en lugar de abandonar simplemente el formato de 16 bits en el modo de 32 bits.
  * Hay buenas razones de hardware para ello, pero el resultado final es un complejo esquema 
  * para especificar los modos de direccionamiento en los opcodes.
+ * 
+ * En cada modo de direccionamiento indexado escalado, el campo MOD del byte MOD-REG-R/M especifica el tamaño del desplazamiento. Puede ser cero, uno o cuatro bytes:
+ *     MOD R/M Modo de direccionamiento.
+ *     --- --- ---------------------------.
+ *      00 100 SIB.
+ *      01 100 SIB + disp8.
+ *      10 100 SIB + disp32.
+ * 
+ *  [ reg32 + eax*n ] MOD = 00.
+ *  [ reg32 + ebx*n ].
+ *  [ reg32 + ecx*n ].
+ *  [ reg32 + edx*n ].
+ *  [ reg32 + ebp*n ].
+ *  [ reg32 + esi*n ].
+ *  [ reg32 + edi*n ].
+ *  
+ *  [ disp + reg8 + eax*n ] MOD = 01.
+ *  [ disp + reg8 + ebx*n ].
+ *  [ disp + reg8 + ecx*n ].
+ *  [ disp + reg8 + edx*n ].
+ *  [ disp + reg8 + ebp*n ].
+ *  [ disp + reg8 + esi*n ].
+ *  [ disp + reg8 + edi*n ].
+ *  
+ *  [ disp + reg32 + eax*n ] MOD = 10.
+ *  [ disp + reg32 + ebx*n ].
+ *  [ disp + reg32 + ecx*n ].
+ *  [ disp + reg32 + edx*n ].
+ *  [ disp + reg32 + ebp*n ].
+ *  [ disp + reg32 + esi*n ].
+ *  [ disp + reg32 + edi*n ].
+ *  
+ *  [ disp + eax*n ] MOD = 00, and.
+ *  [ disp + ebx*n ] BASE field = 101.
+ *  [ disp + ecx*n ].
+ *  [ disp + edx*n ].
+ *  [ disp + ebp*n ].
+ *  [ disp + esi*n ].
+ *  [ disp + edi*n ].
+ * 
  */
 typedef struct SIB {
-    uint8_t    base:3; // Longitud del operando(size?)
-    uint8_t   index:3; // direcion
-    uint8_t   scale:2; 
+    uint8_t    base:3; /*
+                        * BASE (3bits 2 a 0):  
+                        *   bit(000) -> eax. 
+                        *   bit(001) -> ecx.
+                        *   bit(010) -> edx.
+                        *   bit(011) -> ebx.
+                        *   bit(100) -> esp.
+                        *   bit(101) -> ebp -> si MOD = 01 o 10. sino, solo si MOD es 00.
+                        *   bit(110) -> esi.
+                        *   bit(111) -> edi.
+                        */
+    uint8_t   index:3; /*
+                        * INDEX (3bits 5 a 3):
+                        *   bit(000) ->  eax.
+                        *   bit(001) ->  ecx.
+                        *   bit(010) ->  edx.
+                        *   bit(011) ->  ebx.
+                        *   bit(100) -> ilegal.
+                        *   bit(101) ->  ebp.
+                        *   bit(110) ->  esi.
+                        *   bit(111) ->  edi.
+                        */
+    uint8_t   scale:2; /*
+                        * SCALE (2bits 7 a 6):
+                        *   bit(00)  -> index * 1.
+                        *   bit(01)  -> index * 2.
+                        *   bit(10)  -> index * 4.
+                        *   bit(11)  -> index * 8.
+                        */
 } SIB;
 
 /*
